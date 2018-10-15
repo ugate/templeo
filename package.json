@@ -1,0 +1,24 @@
+{
+  "name": "templeo",
+  "version": "1.0.0",
+  "description": "Micro template engine cache and debugging support",
+  "main": "index.js",
+  "scripts": {
+    "test": "lab -t 70 -v"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ugate/templeo.git"
+  },
+  "keywords": [
+    "template",
+    "templates",
+    "micro"
+  ],
+  "author": "ugate",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/ugate/templeo/issues"
+  },
+  "homepage": "https://github.com/ugate/templeo#readme"
+}
