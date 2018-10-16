@@ -78,15 +78,10 @@ class Engine {
   static async filesEngine(opts, formatFunc) {
     // TODO : ESM use... 
     // const new Promise((res, rej) => {
-    //  import('./lib/recall-files').then(rfs => res(new Engine(opts, new RecallFiles(opts, formatFunc)))).catch(err => rej(err));
+    //  import('lib/recall-files').then(rfs => res(new Engine(opts, new RecallFiles(opts, formatFunc)))).catch(err => rej(err));
     // };
     const RecallFiles = require('./lib/recall-files');
     return new Engine(opts, new RecallFiles(opts, formatFunc));
-  }
-
-  static async getCachedTemplate(path) {
-    delete require.cache[require.resolve(path)];
-    return require(path);
   }
 
   /**
@@ -170,7 +165,7 @@ class Engine {
     if (c.strip) str = str.replace(/(?:^|\r|\n)\t* +| +\t*(?:\r|\n|$)/g, ' ').replace(/\r|\n|\t|\/\*[\s\S]*?\*\//g, '');
     str = str.replace(/(\n|\t|\r)/g, '\\$1').replace(/(\s|;|\}|^|\{)out\+='';/g, '$1').replace(/\+''|(\s){2,}/g, '$1');
     if (needhtmlencode) {
-		str = (function encodeHTML(code) {
+		  str = (function encodeHTML(code) {
         try {
           var encodeHTMLRules = { '&': '&#38;', '<': '&#60;', '>': '&#62;', '"': '&#34;', "'": '&#39;', '/': '&#47;' };
           return code ? code.toString().replace(((c.doNotSkipEncoded && /[&<>"'\/]/g) || /&(?!#?\w+;)|<|>|"|'|\//g), function(m) {return encMap[m] || m;}) : '';
@@ -181,16 +176,9 @@ class Engine {
       }).toString().replace('c.doNotSkipEncoded', c.doNotSkipEncoded) + str;
 		}
 		try {
-      if (c.outputPath) {
-        const tpth = `${recall.join(c.outputPath, tnm)}.${c.outputExtension}`;
-        str = `${c.useCommonJs ? 'module.exports=' : 'export'} function ${tnm.replace(/\\|\/|\./g, '_')}(${c.varname}){ ${str} };`;
-        str = recall.write(tpth, str, c);
-        return recall.module(tpth);
-      } else {
-        const fn = new Function(c.varname, str);
-        if (tnm) Object.defineProperty(fn, 'name', { value: tnm });
-        return fn;
-      }
+      const tpth = c.outputPath ? `${recall.join(c.outputPath, tnm)}.${c.outputExtension}` : tnm;
+      const { func } = recall.generateTemplate(tnm, tpth, str, !!c.outputPath);
+      return func;
 		} catch (e) {
       if (c.logger) c.logger(`Could not create a template function (ERROR: ${e.message}): ${str}`);
 			throw e;
@@ -288,7 +276,7 @@ function setFn(ns, eng, name) {
 function refreshPartial(ns, eng, name) {
   const pth = recall.join(ns.options.relativeTo || '', ns.options.partialsPath || '.', name)
     + '.' + ((ns.prts[name] && ns.prts[name].ext) || ns.options.defaultExtension);
-  eng.registerPartial(name, ns.recall.read(pth).toString(ns.options.encoding), true);
+  eng.registerPartial(name, ns.recall.readPartial(pth).toString(ns.options.encoding), true);
   if (ns.options && ns.options.logger) ns.options.logger(`Refreshed partial ${name}`);
 }
 
