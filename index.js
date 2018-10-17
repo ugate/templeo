@@ -315,6 +315,12 @@ async function rplPartial(ns, eng, tmpl, data, name) {
   return !tmplx.length ? '&nbsp;' : tmplx; // nbsp prevents "No partial found" errors
 }
 
+/**
+ * `String.prototype.replace` alternative that supports `async` _replacer_ functions
+ * @param {String} str The string to perform a replace on
+ * @param {RegExp} regex The regular expression that the replace will match
+ * @param {Function} replacer An `async` function that operates the same way as the function passed into `String.prototype.replace`
+ */
 async function replace(str, regex, replacer) {
   const mtchs = [];
   str.replace(regex, function asyncReplacer(match) {
