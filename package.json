@@ -1,10 +1,14 @@
 {
   "name": "templeo",
   "version": "1.0.0",
-  "description": "Micro template engine cache and debugging support",
+  "description": "Micro template engine with cache and debugging support",
   "main": "index.js",
+  "directories": {
+    "test": "test"
+  },
   "scripts": {
-    "test": "lab -t 70 -v"
+    "test": "lab -t 70 -v",
+    "gen-docs": "jsdoc -c jsdoc/conf.json --verbose"
   },
   "repository": {
     "type": "git",
@@ -16,9 +20,23 @@
     "micro"
   ],
   "author": "ugate",
-  "license": "ISC",
+  "license": "MIT",
   "bugs": {
     "url": "https://github.com/ugate/templeo/issues"
   },
-  "homepage": "https://github.com/ugate/templeo#readme"
+  "homepage": "https://github.com/ugate/templeo#readme",
+  "publishConfig": {
+    "access": "public"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "code": "^5.2.0",
+    "js-beautify": "^1.8.8",
+    "jsdoc": "^3.5.5",
+    "lab": "^16.1.0",
+    "minami": "^1.2.3"
+  },
+  "files": [
+    "/index.js"
+  ]
 }

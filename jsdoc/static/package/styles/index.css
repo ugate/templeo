@@ -1,0 +1,31 @@
+#topNav {
+  width: calc(100% - 250px);
+  height: 64px;
+  padding: 16px;
+  font-size: 32px;
+  margin-left: 250px;
+  background-color: #E0E0E0;
+}
+@media only screen and (max-width: 680px) and (min-width: 320px) {
+  #topNav {
+    margin-left: 0px;
+    width: 100%;
+  }
+}
+#versions {
+  height: 24px;
+  float: right;
+}
+#topNav > a {
+  text-decoration: none;
+}
+#topNav > a.icon {
+  height: 24px;
+  width: 24px;
+  padding: 7px;
+  vertical-align: middle;
+}
+.theme-color {
+  color: #FFA726;
+  text-shadow: 1px 1px 0px white;
+}

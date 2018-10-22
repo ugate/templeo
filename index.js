@@ -61,11 +61,11 @@ class Engine {
    */
   constructor(opts, cache) {
     const max = 1e10, min = 0, opt = Engine.genOptions(opts), ns = Cache.internal(this);
-    ns.options = opt;
-    ns.cache = cache instanceof Cache ? cache : new Cache(ns.options);
-    ns.isInit = false;
-    ns.prts = {};
-    ns.marker = Math.floor(Math.random() * (max - min + 1)) + min;
+    ns.at.options = opt;
+    ns.at.cache = cache instanceof Cache ? cache : new Cache(ns.at.options);
+    ns.at.isInit = false;
+    ns.at.prts = {};
+    ns.at.marker = Math.floor(Math.random() * (max - min + 1)) + min;
   }
 
   /**
@@ -84,23 +84,23 @@ class Engine {
 
   /**
    * Generates options to be used in an {@link EngineOpts}
-   * @param {Object} [opts] an optional object with any number of presets
-   * @returns {EngineOpts} a new {@link EngineOpts}
+   * @param {Object} [opts] An optional object with any number of presets
+   * @returns {EngineOpts} A new {@link EngineOpts}
    */
   static genOptions(opts) {
-    return opts instanceof EngineOpts ? opts : new EngineOpts(opts);
+    return opts && opts instanceof EngineOpts ? opts : new EngineOpts(opts);
   }
 
   /**
    * Processes a template
-   * @param {String} tmpl the raw template source
-   * @param {EngineOpts} [options] the options that overrides the default engine options
-   * @param {Object} [def] the object definition to be used in the template
-   * @param {String} [def.filename] when the template name is omitted, an attempt will be made to extract a name from the `filename` using `options.filename`
+   * @param {String} tmpl The raw template source
+   * @param {EngineOpts} [options] The options that overrides the default engine options
+   * @param {Object} [def] The object definition to be used in the template
+   * @param {String} [def.filename] When the template name is omitted, an attempt will be made to extract a name from the `filename` using `options.filename`
    * regular expression
-   * @param {String} [tname] name to be given to the template
+   * @param {String} [tname] Name to be given to the template
    * @param {Cache} [cache] The {@link Cache} instance that will handle the {@link Cache.write} of the template content
-   * @returns {Function} the `function(data)` that returns a template result string based uopn the data object provided
+   * @returns {Function} The `function(data)` that returns a template result string based uopn the data object provided
    */
   static async templater(tmpl, options, def, tname, cache) {
     const c = options instanceof EngineOpts ? options : new EngineOpts(options);
@@ -162,65 +162,55 @@ class Engine {
 
   /**
    * Processes a template via {@link Engine.templater}
-   * @param {String} tmpl the raw template source
-   * @param {EngineOpts} [options] the options that overrides the default engine options
-   * @param {Object} [def] the object definition to be used in the template
-   * @param {String} [tname] name to be given to the template
-   * @returns {function} the function(data) that returns a template result string based uopn the data object provided
+   * @param {String} tmpl The raw template source
+   * @param {EngineOpts} [options] The options that overrides the default engine options
+   * @param {Object} [def] The object definition to be used in the template
+   * @param {String} [tname] Name to be given to the template
+   * @returns {function} The function(data) that returns a template result string based uopn the data object provided
    */
   async template(tmpl, options, def, tname) {
-    const ns = Cache.internal(this), opts = options || ns.options;
-    return Engine.templater(tmpl, opts, def, tname, ns.cache);
+    const ns = Cache.internal(this), opts = options || ns.at.options;
+    return Engine.templater(tmpl, opts, def, tname, ns.at.cache);
   }
 
   /**
    * Processes a template (basic)
-   * @param {String} tmpl the raw template source
-   * @param {Object} [opts] the options sent for compilation
-   * @param {Function} callback Should have a signature of `function callback(error, compiled)` 
-   * @returns {function} the function(data) that returns a template result string based uopn the data object provided
+   * @param {String} tmpl The raw template source
+   * @param {Object} [opts] The options sent for compilation
+   * @param {Function} [callback] Optional _callback_ style support for legacy purposes (e.g. 
+   * `compile(tmpl, opts, (error, func) => { console.log('compiled:', func); })` or omit to run via `await compile(tmpl, opts)`)
+   * @returns {function} The function(data) that returns a template result string based uopn the data object provided
    */
-  compile(tmpl, opts, callback) { // ensures partials are included in the compilation
+  async compile(tmpl, opts, callback) { // ensures partials are included in the compilation
     const ns = Cache.internal(this);
-    (async function compiling(ns, tmpl, opts, callback) {
+    var fn, error;
+    if (callback) {
       try {
-        // when caching some of the partials may reference other partials that were loaded after the parent partial that uses it
-        if (!ns.isInit && (ns.isInit = true)) {
-          const promises = new Array(Object.keys(ns.prts).length);
-          var idx = -1; // set functions in parallel
-          for (let name in ns.prts) promises[idx++] = await setFn(ns, this, name);
-          for (let promise of promises) {
-            await promise;
-          }
-        }
-        const fn = await templFuncPartial(ns, this, tmpl, opts);
-        if (fn && ns.options && ns.options.logger) ns.options.logger(`Compiled ${fn.name}`);
-        callback(null, function processTemplate() {
-          arguments[0] = arguments[0] || {}; // template data
-          return fn.apply(this, arguments);
-        });
+        fn = await compiler(ns, tmpl, opts);
       } catch (err) {
-        callback(err);
+        error = err;
       }
-    })(ns, tmpl, opts, callback);
+      callback(error, fn);
+    } else fn = compiler(ns, tmpl, opts);
+    return fn;
   }
 
   /**
    * Registers and caches a partial template
-   * @param {String} name the template name that uniquely identifies the template content
-   * @param {String} partial the partial template content to register
+   * @param {String} name The template name that uniquely identifies the template content
+   * @param {String} partial The partial template content to register
    */
   registerPartial(name, partial) {
     const ns = Cache.internal(this);
-    ns.prts[name] = { tmpl: partial, name: name };
-    ns.prts[name].ext = ns.options.defaultExtension || '';
+    ns.at.prts[name] = { tmpl: partial, name: name };
+    ns.at.prts[name].ext = ns.at.options.defaultExtension || '';
   }
 
   /**
    * Same as {@link Engine.registerPartial}, but also sets the partial function on a partial namespace
-   * @param {String} name the template name that uniquely identifies the template content
-   * @param {String} partial the partial template content to register
-   * @param {Boolean} initFn true to set the template function
+   * @param {String} name The template name that uniquely identifies the template content
+   * @param {String} partial The partial template content to register
+   * @param {Boolean} initFn `true` to set/cache the template function
    */
   async registerAndSetPartial(name, partial) {
     const ns = Cache.internal(this);
@@ -230,64 +220,88 @@ class Engine {
 
   /**
    * On-Demand compilation of a registered template
-   * @param {String} name the name of the registered tempalte
-   * @param {Object} data the object that contains the data used in the template
-   * @returns {String} the compiled template
+   * @param {String} name The name of the registered tempalte
+   * @param {Object} data The object that contains the data used in the template
+   * @returns {String} The compiled template
    */
   async processPartial(name, data) {
     const ns = Cache.internal(this);
-    if (!ns.options.isCached) await refreshPartial(ns, this, name);
+    if (!ns.at.options.isCached) await refreshPartial(ns, this, name);
     // prevent "No partial found" errors
-    return (data && ns.prts[name] && (typeof ns.prts[name].fn === 'function' || await setFn(ns, this, name)) && ns.prts[name].fn(data)) || '&nbsp;';
+    return (data && ns.at.prts[name] && (typeof ns.at.prts[name].fn === 'function' || await setFn(ns, this, name)) && ns.at.prts[name].fn(data)) || '&nbsp;';
   }
 
   /**
    * Generates a reference safe function for on-demand compilation of a registered templates
-   * @returns {Object} an object that contains: `createdOutputDirs` (any created output template compilations), `partialFunc` (reference safe
+   * @returns {Object} An object that contains: `createdOutputDirs` (any created output template compilations), `partialFunc` (reference safe
    * {@link Engine#processPartial})
    */
   async init() {
-    const engine = this, ns = Cache.internal(engine);
+    const ns = Cache.internal(engine);
     return {
-      createdOutputDirs: await ns.cache.setup(ns.options.outputSourcePath, ns.options.outputPath, true),
-      partialFunc: (name, data) => await engine.processPartial(name, data)
+      createdOutputDirs: await ns.at.cache.setup(ns.at.options.outputSourcePath, ns.at.options.outputPath, true),
+      partialFunc: async (name, data) => await ns.this.processPartial(name, data)
     };
   }
 };
 
 /**
+ * Compiles a template into code
+ * @param {String} tmpl The raw template source
+ * @param {Object} [opts] The options sent for compilation
+ * @returns {function} The function(data) that returns a template result string based uopn the data object provided
+ */
+async function compiler(ns, tmpl, opts) {
+  // when caching some of the partials may reference other partials that were loaded after the parent partial that uses it
+  if (!ns.at.isInit && (ns.at.isInit = true)) {
+    const promises = new Array(Object.keys(ns.at.prts).length);
+    var idx = -1; // set functions in parallel
+    for (let name in ns.at.prts) promises[idx++] = await setFn(ns, ns.this, name);
+    for (let promise of promises) {
+      await promise;
+    }
+  }
+  const fn = await templFuncPartial(ns, ns.this, tmpl, opts);
+  if (fn && ns.at.options && ns.at.options.logger) ns.at.options.logger(`Compiled ${fn.name}`);
+  return function processTemplate() {
+    arguments[0] = arguments[0] || {}; // template data
+    return fn.apply(this, arguments);
+  };
+}
+
+/**
  * Sets a template function on a partial namespace
- * @param {Object} ns the namespace of the template engine
- * @param {Engine} eng the template engine
- * @param {String} name the template name where the function will be set
- * @returns {function} the set template function
+ * @param {Object} ns The namespace of the template engine
+ * @param {Engine} eng The template engine
+ * @param {String} name The template name where the function will be set
+ * @returns {function} The set template function
  */
 async function setFn(ns, eng, name) {
-  if (ns.prts[name].tmpl) return ns.prts[name].fn = await templFuncPartial(ns, eng, ns.prts[name].tmpl, null, name);
+  if (ns.at.prts[name].tmpl) return ns.at.prts[name].fn = await templFuncPartial(ns, eng, ns.at.prts[name].tmpl, null, name);
 }
 
 /**
  * Refreshes template partial content by reading the contents of the partial file
- * @param {Object} ns the namespace of the template engine
- * @param {Engine} eng the template engine
- * @param {String} name the template name where the function will be set
+ * @param {Object} ns The namespace of the template engine
+ * @param {Engine} eng The template engine
+ * @param {String} name The template name where the function will be set
  */
 async function refreshPartial(ns, eng, name) {
-  const pth = ns.cache.join(ns.options.relativeTo || '', ns.options.partialsPath || '.', name)
-    + '.' + ((ns.prts[name] && ns.prts[name].ext) || ns.options.defaultExtension);
-  const partial = await ns.cache.readPartial(pth);
-  eng.registerPartial(name, partial.toString(ns.options.encoding), true);
-  if (ns.options && ns.options.logger) ns.options.logger(`Refreshed partial ${name}`);
+  const pth = ns.at.cache.join(ns.at.options.relativeTo || '', ns.at.options.partialsPath || '.', name)
+    + '.' + ((ns.at.prts[name] && ns.at.prts[name].ext) || ns.at.options.defaultExtension);
+  const partial = await ns.at.cache.readPartial(pth);
+  eng.registerPartial(name, partial.toString(ns.at.options.encoding), true);
+  if (ns.at.options && ns.at.options.logger) ns.at.options.logger(`Refreshed partial ${name}`);
 }
 
 /**
  * Generats a template function for a partial
- * @param {Object} ns the namespace of the template engine
- * @param {Engine} eng the template engine
- * @param {String} tmpl the template contents
- * @param {Object} data the object that contains the data used in the template
- * @param {String} name the template name that uniquely identifies the template content
- * @returns {function} the {@link Engine#template} function
+ * @param {Object} ns The namespace of the template engine
+ * @param {Engine} eng The template engine
+ * @param {String} tmpl The template contents
+ * @param {Object} data The object that contains the data used in the template
+ * @param {String} name The template name that uniquely identifies the template content
+ * @returns {function} The {@link Engine#template} function
  */
 async function templFuncPartial(ns, eng, tmpl, data, name) { // generates a template function that accounts for nested partials
   return eng.template(await rplPartial(ns, eng, tmpl, data, name), null, data, name);
@@ -296,19 +310,19 @@ async function templFuncPartial(ns, eng, tmpl, data, name) { // generates a temp
 /**
  * Replaces any included partials that may be nested within other tempaltes with the raw template content. Each replacement is flagged with the engine
  * marker so that line/column detection can be performed
- * @param {Object} ns the namespace of the template engine
- * @param {Engine} eng the template engine
- * @param {String} tmpl the template contents
- * @param {Object} data the object that contains the data used in the template
- * @param {String} name the template name that uniquely identifies the template content
- * @returns {String} the template with replaced raw partials
+ * @param {Object} ns The namespace of the template engine
+ * @param {Engine} eng The template engine
+ * @param {String} tmpl The template contents
+ * @param {Object} data The object that contains the data used in the template
+ * @param {String} name The template name that uniquely identifies the template content
+ * @returns {String} The template with replaced raw partials
  */
 async function rplPartial(ns, eng, tmpl, data, name) {
-  const tmplx = await replace(tmpl, ns.options.include, async function partialRpl(match, key, pname) {
+  const tmplx = await replace(tmpl, ns.at.options.include, async function partialRpl(match, key, pname) {
     var nm = (pname && pname.trim().replace(/\./g, '/')) || '';
-    if (ns.prts[nm]) {
-      if (!ns.options.isCached) await refreshPartial(ns, eng, nm);
-      return await rplPartial(ns, eng, ns.prts[nm].tmpl, data, name); // any nested partials?
+    if (ns.at.prts[nm]) {
+      if (!ns.at.options.isCached) await refreshPartial(ns, eng, nm);
+      return await rplPartial(ns, eng, ns.at.prts[nm].tmpl, data, name); // any nested partials?
     }
     return match; // leave untouched so error will be thrown (if subsiquent calls cannot find partial)
   });
@@ -344,17 +358,22 @@ async function replace(str, regex, replacer) {
 
 /**
  * Unescapes a code segment and tracks line/column numbers when enabled
- * @param {String} code the code that will be escaped
- * @param {Object} [c] the template options
- * @param {String} [tmpl] the original/unaltered template source that will be used to determine the line number of the code execution
- * @param {Object} [args] the arguments that are passed into the function from the originating String.replace call
- * @param {object} [lnOpts] the line options
- * @param {Integer} [lnOpts.offset] the ongoing line number offset to account for prior replacements that may have changed line/column positioning (set internally)
- * @param {Boolean} [cond] when true the line number variable and unescaped code will be formatted as if it was being used within a conditional statement: (lnCol={ln:123,CAL_LINE_NUMBER:CALC_COLUMN_NUMBER}) && (SOME_UNESCAPED_CODE_HERE)
- * @returns {String} the unescaped value
+ * @param {String} code The code that will be escaped
+ * @param {Object} [c] The template options
+ * @param {String} [tmpl] The original/unaltered template source that will be used to determine the line number of
+ * the code execution
+ * @param {Object} [args] The arguments that are passed into the function from the originating String.replace call
+ * @param {object} [lnOpts] The line options
+ * @param {Integer} [lnOpts.offset] The ongoing line number offset to account for prior replacements that may have
+ * changed line/column positioning (set internally)
+ * @param {Boolean} [cond] When `true` the line number variable and unescaped code will be formatted as if it was
+ * being used within a conditional statement
+ * `(lnCol={ln:123,CAL_LINE_NUMBER:CALC_COLUMN_NUMBER} && (SOME_UNESCAPED_CODE_HERE))`
+ * @returns {String} The unescaped value
  */
 function coded(code, c, tmpl, args, lnOpts, cond) {
   var strt = '', end = code.replace(/\\('|\\)/g, '$1');//.replace(/[\r\t\n]/g, ' ');
+  // NOTE : Removed erroLine option since accuracy is oftentimes skewed
   if (tmpl && c && c.errorLine && !c.outputPath) {
     var offset = args[args.length - 2]; // replace offset
     if (offset !== '' && !isNaN(offset) && (offset = parseInt(offset)) >= 0) {

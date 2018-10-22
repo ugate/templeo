@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1" />
+  <meta name="Description" content="{{= it._app.metax.desc || it._app.metax.label}}" />
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+  {{~ it.meta :m}}
+  <meta name="{{=m.name}}" content="{{=m.content}}" />
+  {{~}}
+  {{~ it.linkdata :l}}
+  <link rel="{{=l.rel}}" {{?l.sizes}}sizes="{{=l.sizes}}"{{?}} href="{{=l.href}}{{=it.pkg && it.pkg.version && l.version !== 0 ? '?' + (l.version || it.pkg.version) : ''}}" />
+  {{~}}
+  <title>{{=it.title || it.label}}</title>
+  {{~ it.css :c}}
+  <link href="{{=c.src}}{{=it.pkg && it.pkg.version && c.version !== 0 ? '?' + (c.version || it.pkg.version) : ''}}" type="text/css" rel="stylesheet" media="screen,projection" />
+  {{~}}
+</head>
+<body data-message="{{=it.message || ''}}">
+  <script id="someJson" type="application/json">
+    {
+      "zero": 0
+      {{? it.json}}
+      "one": {{=it.json.one || ''}},
+      "two": {{=it.json.two || ''}},
+      "three": {{=it.json.three || ''}},
+      {{?}}
+    }
+  </script>
+</body>
+</html>
