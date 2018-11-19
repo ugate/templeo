@@ -53,7 +53,7 @@ exports.getTemplate = getTemplate;
 // export const ENGINE_LOGGER = console.log;
 // export const LOGGER = console.log;
 
-const TMPLS = {};
+const TMPLS = {}, DATA = {};
 
 // TODO : ESM uncomment the following line...
 // export async function httpServer(testFileName, hostname = '127.0.0.1', port = 3000) {
@@ -75,4 +75,11 @@ async function httpServer(testFileName, hostname = '127.0.0.1', port = 3000) {
 async function getTemplate(path, cache = true) {
   if (cache && TMPLS[path]) return TMPLS[path];
   return cache ? TMPLS[path] = await Fs.promises.readFile(path) : Fs.promises.readFile(path);
+}
+
+// TODO : ESM uncomment the following line...
+// export async function getData(path, cache = true) {
+async function getData(path, cache = true) {
+  if (cache && DATA[path]) return DATA[path];
+  return cache ? DATA[path] = await Fs.promises.readFile(path) : Fs.promises.readFile(path);
 }

@@ -4,7 +4,7 @@
   <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1" />
   <meta name="Description" content="{{= it._app.metax.desc || it._app.metax.label}}" />
   <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
-  {{~ it.meta :m}}
+  {{~ it.metadata :m}}
   <meta name="{{=m.name}}" content="{{=m.content}}" />
   {{~}}
   {{~ it.linkdata :l}}
@@ -26,5 +26,8 @@
       {{?}}
     }
   </script>
+  {{~ it.js :c}}
+  <script src="{{=c.src}}{{=it.pkg && it.pkg.version && c.version !== 0 ? '?' + (c.version || it.pkg.version) : ''}}"></script>
+  {{~}}
 </body>
 </html>

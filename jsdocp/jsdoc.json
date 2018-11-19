@@ -1,0 +1,105 @@
+{
+  "source": {
+    "include": ["index.js", "README.md", "lib"],
+    "includePattern": ".js$",
+    "excludePattern": "(node_modules/|docs)"
+  },
+  "tags": {
+    "allowUnknownTags": true,
+    "dictionaries": ["jsdoc"]
+  },
+  "templates": {
+    "cleverLinks": false,
+    "monospaceLinks": true,
+    "showInheritedInNav": true,
+    "default": {
+      "useLongnameInNav": false,
+      "includeDate": false,
+      "staticFiles": {
+        "include": [
+          "./jsdocp/static"
+        ]
+      }
+    }
+  },
+  "opts": {
+    "template": "./node_modules/minami",
+    "tutorials": "./jsdocp/tutorial",
+    "encoding": "utf8",
+    "private": false,
+    "recurse": true,
+    "jsdocp": {
+      "deploy": {
+        "user": {
+          "name": "Travis",
+          "email": "travis@travis-ci.org"
+        }
+      },
+      "menu": {
+        "className": "pkg-menu",
+        "icons": {
+          "className": "pkg-icons"
+        },
+        "logo": {
+          "title": "${package.name}",
+          "src": "favicon-32x32.png",
+          "inlineSvgPath": "./jsdocp/static/logo.svg",
+          "className": "pkg-logo"
+        }
+      },
+      "links": [
+        {
+          "rel": "apple-touch-icon",
+          "sizes": "180x180",
+          "href": "apple-touch-icon.png"
+        },
+        {
+          "rel": "icon",
+          "type": "image/png",
+          "sizes": "32x32",
+          "href": "favicon-32x32.png"
+        },
+        {
+          "rel": "icon",
+          "type": "image/png",
+          "sizes": "16x16",
+          "href": "favicon-16x16.png"
+        },
+        {
+          "rel": "manifest",
+          "href": "site.webmanifest"
+        },
+        {
+          "rel": "mask-icon",
+          "type": "image/png",
+          "sizes": "16x16",
+          "href": "safari-pinned-tab.svg",
+          "color": "#ffab40"
+        },
+        {
+          "type": "text/css",
+          "rel": "stylesheet",
+          "href": "pkg-styles/pkg-style.css"
+        }
+      ],
+      "metas": [
+        {
+          "name": "msapplication-TileColor",
+          "content": "#ffab40"
+        },
+        {
+          "name": "theme-color",
+          "content": "#bdbdbd"
+        },
+        {
+          "name": "viewport",
+          "content": "width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+        }
+      ],
+      "versions": {
+        "from": "1.0.0",
+        "type": ""
+      }
+    }
+  }
+}

@@ -304,7 +304,8 @@ async function refreshPartial(ns, eng, name) {
  * @returns {function} The {@link Engine#template} function
  */
 async function templFuncPartial(ns, eng, tmpl, data, name) { // generates a template function that accounts for nested partials
-  return eng.template(await rplPartial(ns, eng, tmpl, data, name), null, data, name);
+  const prtl = await rplPartial(ns, eng, tmpl, data, name);
+  return eng.template(prtl, null, data, name);
 }
 
 /**

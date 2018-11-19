@@ -8,7 +8,8 @@
   },
   "scripts": {
     "test": "lab -t 70 -v",
-    "gen-docs": "jsdoc -c jsdoc/conf.json --verbose"
+    "jsdocp": "jsdocp ./jsdocp/jsdoc.json",
+    "jsdocp-deploy": "jsdocp -D ./jsdocp/jsdoc.json"
   },
   "repository": {
     "type": "git",
@@ -33,10 +34,12 @@
     "code": "^5.2.0",
     "js-beautify": "^1.8.8",
     "jsdoc": "^3.5.5",
+    "jsdocp": "^1.0.0",
     "lab": "^16.1.0",
     "minami": "^1.2.3"
   },
   "files": [
-    "/index.js"
+    "/index.js",
+    "/lib/**/*"
   ]
 }

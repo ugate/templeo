@@ -1,0 +1,112 @@
+{
+  "css": [
+    { "src": "/a/b/c.css", "version": 0 },
+    { "src": "/d/e/f.css", "version": 0 },
+    { "src": "/g/h/i.css", "version": 0 },
+    { "src": "/j/k/l.css" }
+  ],
+  "js": [
+    { "src": "/a/b/c.js", "version": 0 },
+    { "src": "/d/e/f.js", "version": 0 },
+    { "src": "/g/h/i.js" }
+  ],
+  "metadata": [
+    { "name": "theme-color", "content": "#00897B" },
+    { "name": "viewport", "content": "width=device-width, initial-scale=1, maximum-scale=1.0, user-scalable=no" },
+    { "name": "viewport", "content": "width=device-width, initial-scale=1.0, maximum-scale=1.0" },
+    { "name": "msapplication-TileImage", "content": "/p/img/ms-pin-144x144.png" },
+    { "name": "msapplication-TileColor", "content": "#ffffff" },
+    { "name": "msapplication-tap-highlight", "content": "no" },
+    { "name": "apple-mobile-web-app-capable", "content": "yes" },
+    { "name": "apple-mobile-web-app-status-bar-style", "content": "black" }
+  ],
+  "linkdata": [
+    { "rel": "apple-touch-icon", "href": "/p/img/apple-touch-icon-60x60.png" },
+    { "rel": "apple-touch-icon", "sizes": "76x76", "href": "/p/img/apple-touch-icon-76x76.png" },
+    { "rel": "apple-touch-icon", "sizes": "120x120", "href": "/p/img/apple-touch-icon-120x120.png" },
+    { "rel": "apple-touch-icon", "sizes": "180x180", "href": "/p/img/apple-touch-icon-180x180.png" },
+    { "rel": "apple-touch-icon", "sizes": "152x152", "href": "/p/img/apple-touch-icon-152x152.png" },
+    { "rel": "apple-touch-startup-image", "href": "/p/img/apple-startup-320x480.png" },
+    { "rel": "shortcut icon", "href": "/p/img/favicon.ico" },
+    { "rel": "icon", "sizes": "32x32", "href": "/p/img/favicon.png" }
+  ],
+  "swatch": [ "#2196f3", "#e91e63", "#ff9800", "#9c27b0", "#4caf50", "#009688", "#cddc39", "#3f51b5", "#ff5722", "#607d8b", "#8bc34a", "#00bcd4", "#673ab7", "#ffc107", "#795548", "#b71c1c", "#0d47a1", "#880e4f", "#1a237e", "#004d40", "#4a148c", "#006064", "#827717", "#01579b", "#1b5e20", "#e65100", "#3e2723", "#ff6f00", "#263238", "#bf360c", "#263238" ],
+  "formats": [
+    {
+      "date": { "month": "2-digit", "day": "2-digit", "year": "numeric" },
+      "datetime": { "month": "2-digit", "day": "2-digit", "year": "numeric", "hour": "2-digit", "minute": "2-digit" },
+      "calendar": { "month": "short", "year": "numeric", "timeZone": "UTC" },
+      "day": { "day": "2-digit" },
+      "time": { "hour": "2-digit", "minute": "2-digit" },
+      "currency": { "style": "currency", "currency": "USD", "minimumFractionDigits": 2 }
+    }
+  ],
+  "globals": {
+    "states": {
+      "AL": "Alabama",
+      "AK": "Alaska",
+      "AS": "American Samoa",
+      "AZ": "Arizona",
+      "AR": "Arkansas",
+      "CA": "California",
+      "CO": "Colorado",
+      "CT": "Connecticut",
+      "DE": "Delaware",
+      "DC": "District Of Columbia",
+      "FM": "Federated States Of Micronesia",
+      "FL": "Florida",
+      "GA": "Georgia",
+      "GU": "Guam",
+      "HI": "Hawaii",
+      "ID": "Idaho",
+      "IL": "Illinois",
+      "IN": "Indiana",
+      "IA": "Iowa",
+      "KS": "Kansas",
+      "KY": "Kentucky",
+      "LA": "Louisiana",
+      "ME": "Maine",
+      "MH": "Marshall Islands",
+      "MD": "Maryland",
+      "MA": "Massachusetts",
+      "MI": "Michigan",
+      "MN": "Minnesota",
+      "MS": "Mississippi",
+      "MO": "Missouri",
+      "MT": "Montana",
+      "NE": "Nebraska",
+      "NV": "Nevada",
+      "NH": "New Hampshire",
+      "NJ": "New Jersey",
+      "NM": "New Mexico",
+      "NY": "New York",
+      "NC": "North Carolina",
+      "ND": "North Dakota",
+      "MP": "Northern Mariana Islands",
+      "OH": "Ohio",
+      "OK": "Oklahoma",
+      "OR": "Oregon",
+      "PW": "Palau",
+      "PA": "Pennsylvania",
+      "PR": "Puerto Rico",
+      "RI": "Rhode Island",
+      "SC": "South Carolina",
+      "SD": "South Dakota",
+      "TN": "Tennessee",
+      "TX": "Texas",
+      "UT": "Utah",
+      "VT": "Vermont",
+      "VI": "Virgin Islands",
+      "VA": "Virginia",
+      "WA": "Washington",
+      "WV": "West Virginia",
+      "WI": "Wisconsin",
+      "WY": "Wyoming"
+    }
+  },
+  "json": {
+    "one": 1,
+    "two": 2,
+    "three": 3
+  }
+}
