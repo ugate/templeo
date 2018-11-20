@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1" />
-  <meta name="Description" content="{{= it._app.metax.desc || it._app.metax.label}}" />
+  <meta name="Description" content="{{= it.desc || 'test'}}" />
   <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
   {{~ it.metadata :m}}
   <meta name="{{=m.name}}" content="{{=m.content}}" />
@@ -16,6 +16,16 @@
   {{~}}
 </head>
 <body data-message="{{=it.message || ''}}">
+  <select id="state">
+    {{* it.globals.states :state:abbr}}
+    {{? abbr === 'FL' && state[abbr] === 'Florida'}}
+    <option id="state{{= abbr}}" value="{{= abbr}}" selected>{{= state[abbr]}}</option>
+    {{??}}
+    <option id="state{{= abbr}}" value="{{= abbr}}">{{= state[abbr]}}</option>
+    {{?}}
+    {{*}}
+  </select>
+  {{#styles.selectors.swatch}}
   <script id="someJson" type="application/json">
     {
       "zero": 0

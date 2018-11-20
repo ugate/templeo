@@ -111,7 +111,11 @@ class Engine {
   		split:  { start: "';out+=(", end: ");out+='", startencode: "';out+=encodeHTML(" }
   	}, skip = /$^/, cse = c.append ? startend.append : startend.split, ostr = tmpl.replace(/'|\\/g, '\\$&');
 		var needhtmlencode, sid = 0, indv, lnOpts = { offset: 0 };
-		var str = "var out='" + ostr
+    var str = "var out='" + ostr
+      .replace(c.include || skip, function rplInclude(match) {
+        if (c.logger.warn) c.logger.warn(`No partial found for include ${match} in (ensure the partial has be registered): ${ostr}`);
+        return '';
+      })
 			.replace(c.interpolate || skip, function rplInterpolate(m, code) {
         return cse.start + coded(code, c, ostr, arguments, lnOpts, true) + cse.end;
 			})
@@ -130,7 +134,14 @@ class Engine {
         indv = iname || 'i' + sid; // w/o duplicate iterator validation there is a potential for endless loop conditions
         iterate = coded(`var arr${sid}=${iterate}`, c, ostr, arguments, lnOpts);
         return `';${iterate};if(arr${sid}){var ${vname},${indv}=-1,l${sid}=arr${sid}.length-1;while(${indv}<l${sid}){${vname}=arr${sid}[${indv}+=1];out+='`;
-			})
+      })
+			.replace(c.iterateIn || skip, function rplIterateIn(m, iterate, vname, iname) {
+        if (!iterate) return "';} } out+='";
+        sid += 1;
+        indv = iname || 'i' + sid; // w/o duplicate iterator validation there is a potential for endless loop conditions
+        iterate = coded(`var arr${sid}=${iterate}`, c, ostr, arguments, lnOpts);
+        return `';${iterate};if(arr${sid}){var ${vname}=arr${sid};for(var ${indv} in ${vname}){out+='`;
+      })
 			.replace(c.evaluate || skip, function rplEvaluate(m, code) {
 				return "';" + coded(code, c, ostr, arguments, lnOpts) + "out+='";
 			}) + "';return out;"; // remove consecutive spaces
@@ -142,7 +153,7 @@ class Engine {
     if (needhtmlencode) {
 		  str = (function encodeHTML(code) {
         try {
-          var encodeHTMLRules = { '&': '&#38;', '<': '&#60;', '>': '&#62;', '"': '&#34;', "'": '&#39;', '/': '&#47;' };
+          const encMap = { '&': '&#38;', '<': '&#60;', '>': '&#62;', '"': '&#34;', "'": '&#39;', '/': '&#47;' };
           return code ? code.toString().replace(((c.doNotSkipEncoded && /[&<>"'\/]/g) || /&(?!#?\w+;)|<|>|"|'|\//g), function(m) {return encMap[m] || m;}) : '';
         } catch (e) {
           e.message += ` While encoding HTML at: ${code}`;
@@ -155,7 +166,7 @@ class Engine {
       const { func } = await cache.generateTemplate(tnm, tpth, str, !!c.outputPath);
       return func;
 		} catch (e) {
-      if (c.logger) c.logger(`Could not create a template function (ERROR: ${e.message}): ${str}`);
+      if (c.logger.error) c.logger.error(`Could not create a template function (ERROR: ${e.message}): ${str}`);
 			throw e;
 		}
 	}
@@ -233,13 +244,18 @@ class Engine {
 
   /**
    * Generates a reference safe function for on-demand compilation of a registered templates
-   * @returns {Object} An object that contains: `createdOutputDirs` (any created output template compilations), `partialFunc` (reference safe
+   * @param {Boolean} [registerPartials] `true` __and when supported__, indicates that the {@link Cache} _implementation_ should attempt to
+   * {@link Engine.registerPartial} for any partials found during {@link Cache.setup} ({@link Cache} is specified during {@link Engine} construction).
+   * __NOTE:__ If the {@link Engine} is being used as _pulgin_, there typically isn't a need to register partials during initialization since
+   * {@link Engine.registerPartial} is normally part of the _plugin_ contract.
+   * @returns {Object|} An object that contains: `createdOutputDirs` (any created output template compilations), `partialFunc` (reference safe
    * {@link Engine#processPartial})
    */
-  async init() {
-    const ns = Cache.internal(engine);
+  async init(registerPartials) {
+    const ns = Cache.internal(this);
+    const rptrl = registerPartials ? (name, data) => ns.this.registerPartial(name, data) : null;
     return {
-      createdOutputDirs: await ns.at.cache.setup(ns.at.options.outputSourcePath, ns.at.options.outputPath, true),
+      createdOutputDirs: await ns.at.cache.setup(rptrl),
       partialFunc: async (name, data) => await ns.this.processPartial(name, data)
     };
   }
@@ -247,6 +263,7 @@ class Engine {
 
 /**
  * Compiles a template into code
+ * @private
  * @param {String} tmpl The raw template source
  * @param {Object} [opts] The options sent for compilation
  * @returns {function} The function(data) that returns a template result string based uopn the data object provided
@@ -262,7 +279,7 @@ async function compiler(ns, tmpl, opts) {
     }
   }
   const fn = await templFuncPartial(ns, ns.this, tmpl, opts);
-  if (fn && ns.at.options && ns.at.options.logger) ns.at.options.logger(`Compiled ${fn.name}`);
+  if (fn && ns.at.options && ns.at.options.logger.debug) ns.at.options.logger.debug(`Compiled ${fn.name}`);
   return function processTemplate() {
     arguments[0] = arguments[0] || {}; // template data
     return fn.apply(this, arguments);
@@ -271,6 +288,7 @@ async function compiler(ns, tmpl, opts) {
 
 /**
  * Sets a template function on a partial namespace
+ * @private
  * @param {Object} ns The namespace of the template engine
  * @param {Engine} eng The template engine
  * @param {String} name The template name where the function will be set
@@ -282,6 +300,7 @@ async function setFn(ns, eng, name) {
 
 /**
  * Refreshes template partial content by reading the contents of the partial file
+ * @private
  * @param {Object} ns The namespace of the template engine
  * @param {Engine} eng The template engine
  * @param {String} name The template name where the function will be set
@@ -291,11 +310,12 @@ async function refreshPartial(ns, eng, name) {
     + '.' + ((ns.at.prts[name] && ns.at.prts[name].ext) || ns.at.options.defaultExtension);
   const partial = await ns.at.cache.readPartial(pth);
   eng.registerPartial(name, partial.toString(ns.at.options.encoding), true);
-  if (ns.at.options && ns.at.options.logger) ns.at.options.logger(`Refreshed partial ${name}`);
+  if (ns.at.options && ns.at.options.logger.info) ns.at.options.logger.info(`Refreshed partial ${name}`);
 }
 
 /**
  * Generats a template function for a partial
+ * @private
  * @param {Object} ns The namespace of the template engine
  * @param {Engine} eng The template engine
  * @param {String} tmpl The template contents
@@ -311,6 +331,7 @@ async function templFuncPartial(ns, eng, tmpl, data, name) { // generates a temp
 /**
  * Replaces any included partials that may be nested within other tempaltes with the raw template content. Each replacement is flagged with the engine
  * marker so that line/column detection can be performed
+ * @private
  * @param {Object} ns The namespace of the template engine
  * @param {Engine} eng The template engine
  * @param {String} tmpl The template contents
@@ -319,7 +340,7 @@ async function templFuncPartial(ns, eng, tmpl, data, name) { // generates a temp
  * @returns {String} The template with replaced raw partials
  */
 async function rplPartial(ns, eng, tmpl, data, name) {
-  const tmplx = await replace(tmpl, ns.at.options.include, async function partialRpl(match, key, pname) {
+  const tmplx = await replace(tmpl, ns.at.options.include, async function partialRpl(match, pname) {
     var nm = (pname && pname.trim().replace(/\./g, '/')) || '';
     if (ns.at.prts[nm]) {
       if (!ns.at.options.isCached) await refreshPartial(ns, eng, nm);
@@ -332,6 +353,8 @@ async function rplPartial(ns, eng, tmpl, data, name) {
 
 /**
  * `String.prototype.replace` alternative that supports `async` _replacer_ functions
+ * @private
+ * @ignore
  * @param {String} str The string to perform a replace on
  * @param {RegExp} regex The regular expression that the replace will match
  * @param {Function} replacer An `async` function that operates the same way as the function passed into `String.prototype.replace`
@@ -359,6 +382,7 @@ async function replace(str, regex, replacer) {
 
 /**
  * Unescapes a code segment and tracks line/column numbers when enabled
+ * @private
  * @param {String} code The code that will be escaped
  * @param {Object} [c] The template options
  * @param {String} [tmpl] The original/unaltered template source that will be used to determine the line number of
