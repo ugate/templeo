@@ -57,12 +57,13 @@ class Engine {
   /**
    * Creates a template parsing engine
    * @param {EngineOpts} [opts] The {@link EngineOpts} to use
-   * @param {Cache} [cache] A {@link Cache} instance that will handle compiled template persistence
+   * @param {Function} [formatFunc] The `function(string, outputFormatting)` that will return a formatted string when __writting__
+   * data using the `outputFormatting` from {@link EngineOpts} as the formatting options.
    */
-  constructor(opts, cache) {
+  constructor(opts, formatFunc) {
     const max = 1e10, min = 0, opt = Engine.genOptions(opts), ns = Cache.internal(this);
     ns.at.options = opt;
-    ns.at.cache = cache instanceof Cache ? cache : new Cache(ns.at.options);
+    ns.at.cache = formatFunc instanceof Cache ? formatFunc : new Cache(ns.at.options, formatFunc);
     ns.at.isInit = false;
     ns.at.prts = {};
     ns.at.marker = Math.floor(Math.random() * (max - min + 1)) + min;
@@ -105,7 +106,7 @@ class Engine {
   static async templater(tmpl, options, def, tname, cache) {
     const c = options instanceof EngineOpts ? options : new EngineOpts(options);
     cache = cache instanceof Cache ? cache : new Cache(c);
-    const tnm = tname || (def && def.filename && def.filename.match(c.filename)[2]) || ('template_' + cache.guid(null, false));
+    const tnm = tname || (def && def.filename && def.filename.match && def.filename.match(c.filename)[2]) || ('template_' + cache.guid(null, false));
     const startend = {
   		append: { start: "'+(", end: ")+'", startencode: "'+encodeHTML(" },
   		split:  { start: "';out+=(", end: ");out+='", startencode: "';out+=encodeHTML(" }
@@ -113,7 +114,7 @@ class Engine {
 		var needhtmlencode, sid = 0, indv, lnOpts = { offset: 0 };
     var str = "var out='" + ostr
       .replace(c.include || skip, function rplInclude(match) {
-        if (c.logger.warn) c.logger.warn(`No partial found for include ${match} in (ensure the partial has be registered): ${ostr}`);
+        if (c.logger.warn) c.logger.warn(`No partial registered for include ${match} in: ${ostr}`);
         return '';
       })
 			.replace(c.interpolate || skip, function rplInterpolate(m, code) {
@@ -187,13 +188,14 @@ class Engine {
   /**
    * Processes a template (basic)
    * @param {String} tmpl The raw template source
-   * @param {Object} [opts] The options sent for compilation
+   * @param {Object} [opts] The options sent for compilation (omit to use the options set on the {@link Engine})
    * @param {Function} [callback] Optional _callback_ style support for legacy purposes (e.g. 
    * `compile(tmpl, opts, (error, func) => { console.log('compiled:', func); })` or omit to run via `await compile(tmpl, opts)`)
    * @returns {function} The function(data) that returns a template result string based uopn the data object provided
    */
   async compile(tmpl, opts, callback) { // ensures partials are included in the compilation
     const ns = Cache.internal(this);
+    opts = opts || ns.at.options;
     var fn, error;
     if (callback) {
       try {
@@ -248,14 +250,14 @@ class Engine {
    * {@link Engine.registerPartial} for any partials found during {@link Cache.setup} ({@link Cache} is specified during {@link Engine} construction).
    * __NOTE:__ If the {@link Engine} is being used as _pulgin_, there typically isn't a need to register partials during initialization since
    * {@link Engine.registerPartial} is normally part of the _plugin_ contract.
-   * @returns {Object|} An object that contains: `createdOutputDirs` (any created output template compilations), `partialFunc` (reference safe
-   * {@link Engine#processPartial})
+   * @returns {Object|} An object that contains: `{ created: { files: { content: String, parts: Path.parse() }, dirs: String[] }, partialFunc: Function }`
+   * where `created` is the registered file metadata (when `registerPartials = true`) and `partialFunc` (reference safe {@link Engine#processPartial})
    */
   async init(registerPartials) {
     const ns = Cache.internal(this);
     const rptrl = registerPartials ? (name, data) => ns.this.registerPartial(name, data) : null;
     return {
-      createdOutputDirs: await ns.at.cache.setup(rptrl),
+      created: await ns.at.cache.setup(rptrl),
       partialFunc: async (name, data) => await ns.this.processPartial(name, data)
     };
   }
@@ -264,6 +266,7 @@ class Engine {
 /**
  * Compiles a template into code
  * @private
+ * @param {Object} ns The namespace of the template engine
  * @param {String} tmpl The raw template source
  * @param {Object} [opts] The options sent for compilation
  * @returns {function} The function(data) that returns a template result string based uopn the data object provided
@@ -412,4 +415,3 @@ function coded(code, c, tmpl, args, lnOpts, cond) {
 // TODO : ESM remove the following lines...
 exports.Engine = Engine;
 exports.JsonEngine = JsonEngine;
-exports.Cache = Cache;
