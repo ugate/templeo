@@ -59,11 +59,12 @@ class Engine {
    * @param {EngineOpts} [opts] The {@link EngineOpts} to use
    * @param {Function} [formatFunc] The `function(string, outputFormatting)` that will return a formatted string when __writting__
    * data using the `outputFormatting` from {@link EngineOpts} as the formatting options.
+   * @param {Object} [indexedDB] The `IndexedDB` implementation that will be used for caching (defaults to `window.indexedDB`)
    */
-  constructor(opts, formatFunc) {
+  constructor(opts, formatFunc, indexedDB) {
     const max = 1e10, min = 0, opt = Engine.genOptions(opts), ns = Cache.internal(this);
     ns.at.options = opt;
-    ns.at.cache = formatFunc instanceof Cache ? formatFunc : new Cache(ns.at.options, formatFunc);
+    ns.at.cache = formatFunc instanceof Cache ? formatFunc : new Cache(ns.at.options, formatFunc, indexedDB);
     ns.at.isInit = false;
     ns.at.prts = {};
     ns.at.marker = Math.floor(Math.random() * (max - min + 1)) + min;
@@ -245,13 +246,14 @@ class Engine {
   }
 
   /**
-   * Generates a reference safe function for on-demand compilation of a registered templates
+   * Initializes the {@link Cache} and generates a reference safe function for on-demand compilation of a registered templates
    * @param {Boolean} [registerPartials] `true` __and when supported__, indicates that the {@link Cache} _implementation_ should attempt to
    * {@link Engine.registerPartial} for any partials found during {@link Cache.setup} ({@link Cache} is specified during {@link Engine} construction).
    * __NOTE:__ If the {@link Engine} is being used as _pulgin_, there typically isn't a need to register partials during initialization since
    * {@link Engine.registerPartial} is normally part of the _plugin_ contract.
-   * @returns {Object|} An object that contains: `{ created: { files: { content: String, parts: Path.parse() }, dirs: String[] }, partialFunc: Function }`
-   * where `created` is the registered file metadata (when `registerPartials = true`) and `partialFunc` (reference safe {@link Engine#processPartial})
+   * @returns {Object|undefined} An object that contains: `{ created: { files: { content: String, parts: Path.parse() }, dirs: String[] }, partialFunc:
+   * Function }` where `created` is the registered file metadata (when `registerPartials = true` and the {@link Cache} used supports files) and 
+   * `partialFunc` (reference safe {@link Engine#processPartial}).
    */
   async init(registerPartials) {
     const ns = Cache.internal(this);

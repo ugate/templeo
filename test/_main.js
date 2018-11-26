@@ -84,7 +84,7 @@ async function getFile(path, cache = true) {
 // export function expectDOM(html, data) {
 function expectDOM(html, data) {
   const dom = new JSDOM(html);
-  var el, hasFL;
+  var el;
 
   // array iteration test
   for (let i = 0, arr = data.metadata; i < arr.length; i++) {
@@ -94,18 +94,40 @@ function expectDOM(html, data) {
   }
 
   // object property iteration test
+  var el, hasSel, idx = -1;
   for (let state in data.globals.states) {
-    el = dom.window.document.querySelector(`option[id="state${state}"]`) || {};
+    el = dom.window.document.querySelector(`option[id="stateSelect${state}"]`) || {};
     expect(el.value).to.equal(state);
     expect(el.innerHTML).to.equal(data.globals.states[state]);
     if (state === 'FL') {
-      hasFL = true;
+      hasSel = true;
       expect(el.selected).to.be.true(); // conditional check
     }
   }
 
-  expect(hasFL).to.be.true();
+  expect(hasSel).to.be.true();
+  expectColorDOM(dom, data, 'swatchSelectColor'); // select options
+  expectColorDOM(dom, data, 'swatchDatalistColor'); // datalist options
+
+  // check nested partial
+  const swatchDatalist = dom.window.document.getElementById('swatchDatalist');
+  expect(swatchDatalist).to.be.object();
 
   //console.log(fn, rslt);
   return dom;
+}
+
+function expectColorDOM(dom, data, prefix) {
+  var el, hasSel, idx = -1;
+  for (let color of data.swatch) {
+    el = dom.window.document.getElementById(`${prefix}${++idx}`) || {};
+    expect(el.value).to.equal(color);
+    expect(el.innerHTML).to.equal(color);
+    if (color === '#ff5722') {
+      hasSel = true;
+      expect(el.selected).to.be.true(); // conditional check
+    }
+  }
+
+  expect(hasSel).to.be.true();
 }

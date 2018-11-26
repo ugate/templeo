@@ -24,7 +24,8 @@ lab.experiment(plan, () => {
 
     expect(fn).to.be.function();
 
-    const rslt = fn(data), dom = expectDOM(rslt, data);
-
+    const rslt = fn(data);
+    expectDOM(rslt, data);
+    //console.log(rslt);
   });
 });

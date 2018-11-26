@@ -1,5 +1,10 @@
 <select id="swatch">
   {{~ it.swatch :sw:si}}
-  <option id="swatch{{= si}}" value="{{= sw}}">{{= sw}}</option>
+  {{? sw === '#ff5722'}}
+  <option id="swatchSelectColor{{= si}}" value="{{= sw}}" selected>{{= sw}}</option>
+  {{??}}
+  <option id="swatchSelectColor{{= si}}" value="{{= sw}}">{{= sw}}</option>
+  {{?}}
   {{~}}
 </select>
+{{#swatch}}

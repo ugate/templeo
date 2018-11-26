@@ -19,9 +19,9 @@
   <select id="state">
     {{* it.globals.states :state:abbr}}
     {{? abbr === 'FL' && state[abbr] === 'Florida'}}
-    <option id="state{{= abbr}}" value="{{= abbr}}" selected>{{= state[abbr]}}</option>
+    <option id="stateSelect{{= abbr}}" value="{{= abbr}}" selected>{{= state[abbr]}}</option>
     {{??}}
-    <option id="state{{= abbr}}" value="{{= abbr}}">{{= state[abbr]}}</option>
+    <option id="stateSelect{{= abbr}}" value="{{= abbr}}">{{= state[abbr]}}</option>
     {{?}}
     {{*}}
   </select>
