@@ -19,7 +19,7 @@ lab.experiment(plan, () => {
       outputSourcePath: 'test/views/partials',
       logger: ENGINE_LOGGER
     }, JsFrmt);
-    await eng.init(true);
+    await eng.scan(true);
     const fn = await eng.compile(html);
 
     expect(fn).to.be.function();

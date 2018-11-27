@@ -7,6 +7,7 @@
 
 const http = require('http');
 exports.http = http;
+const Os = require('os');
 const Fs = require('fs');
 exports.Fs = Fs;
 const Path = require('path');
@@ -19,6 +20,7 @@ const JsFrmt = require('js-beautify').js;
 exports.JsFrmt = JsFrmt;
 const { JSDOM } = require('jsdom');
 exports.JSDOM = JSDOM;
+const Level = require('level');
 const { Engine, JsonEngine } = require('../index.js');
 exports.Engine = Engine;
 exports.JsonEngine = JsonEngine;
@@ -30,9 +32,11 @@ exports.LOGGER = null;//console.log;
 exports.httpServer = httpServer;
 exports.getFile = getFile;
 exports.expectDOM = expectDOM;
+exports.genIndexedDB = genIndexedDB;
 // TODO : ESM uncomment the following lines...
 // import * as http from 'http';
 // export * as http from http;
+// import * as Os from 'os';
 // import * as Fs from 'fs';
 // export * as Fs from Fs;
 // import * as Path from 'path';
@@ -47,6 +51,7 @@ exports.expectDOM = expectDOM;
 // export * as JsFrmt from JsFrmt;
 // import { JSDOM } as JSDOM from 'jsdom';
 // export * as JSDOM from JSDOM;
+// import * as Level from 'level';
 // import { Engine, JsonEngine } from '../index.mjs';
 // export * as Engine from Engine;
 // export * as JsonEngine from JsonEngine;
@@ -56,7 +61,17 @@ exports.expectDOM = expectDOM;
 // export const ENGINE_LOGGER = console.log;
 // export const LOGGER = console.log;
 
+const DB = {};
 const FILES = {};
+
+// TODO : ESM uncomment the following line...
+// export async function genIndexedDB(locPrefix = 'templeo-test-indexedDB-') {
+async function genIndexedDB(locPrefix = 'templeo-test-indexedDB-') {
+  if (DB[locPrefix]) return DB[locPrefix];
+  const loc = await Fs.promises.mkdtemp(Path.join(Os.tmpdir(), locPrefix));
+  DB[locPrefix] = { loc, indexedDB: Level(loc) };
+  return DB[locPrefix];
+}
 
 // TODO : ESM uncomment the following line...
 // export async function httpServer(testFileName, hostname = '127.0.0.1', port = 3000) {

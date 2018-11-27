@@ -32,13 +32,15 @@
   "dependencies": {},
   "devDependencies": {
     "code": "^5.2.0",
+    "hapi": "^17.8.1",
     "js-beautify": "^1.8.8",
     "jsdoc": "^3.5.5",
     "jsdocp": "^1.0.0",
     "jsdom": "^13.0.0",
     "lab": "^16.1.0",
     "level": "^4.0.0",
-    "minami": "^1.2.3"
+    "minami": "^1.2.3",
+    "vision": "^5.4.3"
   },
   "files": [
     "/index.js",

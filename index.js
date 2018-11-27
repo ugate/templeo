@@ -246,20 +246,21 @@ class Engine {
   }
 
   /**
-   * Initializes the {@link Cache} and generates a reference safe function for on-demand compilation of a registered templates
-   * @param {Boolean} [registerPartials] `true` __and when supported__, indicates that the {@link Cache} _implementation_ should attempt to
-   * {@link Engine.registerPartial} for any partials found during {@link Cache.setup} ({@link Cache} is specified during {@link Engine} construction).
-   * __NOTE:__ If the {@link Engine} is being used as _pulgin_, there typically isn't a need to register partials during initialization since
-   * {@link Engine.registerPartial} is normally part of the _plugin_ contract.
+   * Scans the {@link Cache} for templates/partials and generates a reference safe function for on-demand compilation of a registered templates
+   * @param {Boolean} [registerPartials] `true` __and when supported__, indicates that the {@link Cache} implementation should attempt to
+   * {@link Engine.registerPartial} for any partials found during {@link Cache.scan}. __NOTE: If the {@link Engine} is being used as pulgin, there
+   * typically isn't a need to register partials during initialization since {@link Engine.registerPartial} is normally part of the plugin contract and
+   * will be handled automatically/internally, negating the need to explicitly do it during the scan. Doing so may duplicate the partial registration
+   * procedure.__
    * @returns {Object|undefined} An object that contains: `{ created: { files: { content: String, parts: Path.parse() }, dirs: String[] }, partialFunc:
    * Function }` where `created` is the registered file metadata (when `registerPartials = true` and the {@link Cache} used supports files) and 
    * `partialFunc` (reference safe {@link Engine#processPartial}).
    */
-  async init(registerPartials) {
+  async scan(registerPartials) {
     const ns = Cache.internal(this);
     const rptrl = registerPartials ? (name, data) => ns.this.registerPartial(name, data) : null;
     return {
-      created: await ns.at.cache.setup(rptrl),
+      created: await ns.at.cache.scan(rptrl),
       partialFunc: async (name, data) => await ns.this.processPartial(name, data)
     };
   }
@@ -313,7 +314,7 @@ async function setFn(ns, eng, name) {
 async function refreshPartial(ns, eng, name) {
   const pth = ns.at.cache.join(ns.at.options.relativeTo || '', ns.at.options.partialsPath || '.', name)
     + '.' + ((ns.at.prts[name] && ns.at.prts[name].ext) || ns.at.options.defaultExtension);
-  const partial = await ns.at.cache.readPartial(pth);
+  const partial = await ns.at.cache.readTemplate(pth);
   eng.registerPartial(name, partial.toString(ns.at.options.encoding), true);
   if (ns.at.options && ns.at.options.logger.info) ns.at.options.logger.info(`Refreshed partial ${name}`);
 }
