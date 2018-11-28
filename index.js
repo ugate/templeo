@@ -2,7 +2,11 @@
 
 const EngineOpts = require('./lib/engine-opts');
 const JsonEngine = require('./lib/json-engine');
-const Cache = require('./lib/cache');
+const Cachier = require('./lib/cachier');
+// TODO : ESM uncomment the following lines...
+// import * as EngineOpts from './lib/engine-opts.mjs';
+// import * as JsonEngine from './lib/json-engine.mjs';
+// import * as Cachier from './lib/cachier.mjs';
 
 /**
  * Micro rendering template engine
@@ -59,29 +63,41 @@ class Engine {
    * @param {EngineOpts} [opts] The {@link EngineOpts} to use
    * @param {Function} [formatFunc] The `function(string, outputFormatting)` that will return a formatted string when __writting__
    * data using the `outputFormatting` from {@link EngineOpts} as the formatting options.
-   * @param {Object} [indexedDB] The `IndexedDB` implementation that will be used for caching (defaults to `window.indexedDB`)
    */
-  constructor(opts, formatFunc, indexedDB) {
-    const max = 1e10, min = 0, opt = Engine.genOptions(opts), ns = Cache.internal(this);
+  constructor(opts, formatFunc) {
+    const max = 1e10, min = 0, opt = opts instanceof EngineOpts ? opts : Engine.genOptions(opts), ns = Cachier.internal(this);
     ns.at.options = opt;
-    ns.at.cache = formatFunc instanceof Cache ? formatFunc : new Cache(ns.at.options, formatFunc, indexedDB);
+    ns.at.cache = formatFunc instanceof Cachier ? formatFunc : new Cachier(ns.at.options, formatFunc);
     ns.at.isInit = false;
     ns.at.prts = {};
     ns.at.marker = Math.floor(Math.random() * (max - min + 1)) + min;
   }
 
   /**
-   * A {@link https://nodejs.org|Node.js} __only__ {@link Engine} to cache templates as files for better debugging/caching
+   * An [IndexedDB]{@link https://developer.mozilla.org/en-US/docs/Web/API/IndexedDB_API} template cached {@link Engine}
+   * @param {EngineOpts} [opts] The {@link EngineOpts}
+   * @param {Object} [indexedDB] The `IndexedDB` implementation that will be used for caching (defaults to `window.indexedDB`)
+   * @param {Function} [formatFunc] The `function(string, outputFormatting)` that will return a formatted string when __writting__
+   * data using the `outputFormatting` from {@link EngineOpts} as the formatting options.
+   * @returns {Engine} A new {@link Engine} instance that will cache compiled templates in IndexedDB
+   */
+  static async engineIndexedDB(opts, indexedDB, formatFunc) {
+    opts = opts instanceof EngineOpts ? opts : Engine.genOptions(opts);
+    const CachierDB = opts.useCommonJs ? require('./lib/cachier-db.js') : import('./lib/cachier-db.mjs');
+    return new Engine(opts, new CachierDB(opts, indexedDB, formatFunc));
+  }
+
+  /**
+   * A [Node.js]{@link https://nodejs.org} __only__ {@link Engine} to cache templates as files for improved debugging/caching
    * @param {EngineOpts} [opts] The {@link EngineOpts}
    * @param {Function} [formatFunc] The `function(string, outputFormatting)` that will return a formatted string when __writting__
    * data using the `outputFormatting` from {@link EngineOpts} as the formatting options.
    * @returns {Engine} A new {@link Engine} instance that will cache compiled templates in the file system
    */
-  static async filesEngine(opts, formatFunc) {
-    // TODO : ESM use... 
-    // const CacheFiles = await import('lib/cache-files');
-    const CacheFiles = require('./lib/cache-files');
-    return new Engine(opts, new CacheFiles(opts, formatFunc));
+  static async engineFiles(opts, formatFunc) {
+    opts = opts instanceof EngineOpts ? opts : Engine.genOptions(opts);
+    const CachierFiles = opts.useCommonJs ? require('./lib/cachier-files.js') : import('./lib/cachier-files.mjs');
+    return new Engine(opts, new CachierFiles(opts, formatFunc));
   }
 
   /**
@@ -101,13 +117,13 @@ class Engine {
    * @param {String} [def.filename] When the template name is omitted, an attempt will be made to extract a name from the `filename` using `options.filename`
    * regular expression
    * @param {String} [tname] Name to be given to the template
-   * @param {Cache} [cache] The {@link Cache} instance that will handle the {@link Cache.write} of the template content
+   * @param {Cachier} [cache] The {@link Cachier} instance that will handle the {@link Cachier.write} of the template content
    * @returns {Function} The `function(data)` that returns a template result string based uopn the data object provided
    */
   static async templater(tmpl, options, def, tname, cache) {
     const c = options instanceof EngineOpts ? options : new EngineOpts(options);
-    cache = cache instanceof Cache ? cache : new Cache(c);
-    const tnm = tname || (def && def.filename && def.filename.match && def.filename.match(c.filename)[2]) || ('template_' + cache.guid(null, false));
+    cache = cache instanceof Cachier ? cache : new Cachier(c);
+    const tnm = tname || (def && def.filename && def.filename.match && def.filename.match(c.filename)[2]) || ('template_' + Cachier.guid(null, false));
     const startend = {
   		append: { start: "'+(", end: ")+'", startencode: "'+encodeHTML(" },
   		split:  { start: "';out+=(", end: ");out+='", startencode: "';out+=encodeHTML(" }
@@ -165,7 +181,7 @@ class Engine {
 		}
 		try {
       const tpth = c.outputPath ? `${cache.join(c.outputPath, tnm)}.${c.outputExtension}` : tnm;
-      const { func } = await cache.generateTemplate(tnm, tpth, str, !!c.outputPath);
+      const { func } = await cache.generateCode(tnm, tpth, str, !!c.outputPath);
       return func;
 		} catch (e) {
       if (c.logger.error) c.logger.error(`Could not create a template function (ERROR: ${e.message}): ${str}`);
@@ -182,7 +198,7 @@ class Engine {
    * @returns {function} The function(data) that returns a template result string based uopn the data object provided
    */
   async template(tmpl, options, def, tname) {
-    const ns = Cache.internal(this), opts = options || ns.at.options;
+    const ns = Cachier.internal(this), opts = options || ns.at.options;
     return Engine.templater(tmpl, opts, def, tname, ns.at.cache);
   }
 
@@ -195,7 +211,7 @@ class Engine {
    * @returns {function} The function(data) that returns a template result string based uopn the data object provided
    */
   async compile(tmpl, opts, callback) { // ensures partials are included in the compilation
-    const ns = Cache.internal(this);
+    const ns = Cachier.internal(this);
     opts = opts || ns.at.options;
     var fn, error;
     if (callback) {
@@ -215,7 +231,7 @@ class Engine {
    * @param {String} partial The partial template content to register
    */
   registerPartial(name, partial) {
-    const ns = Cache.internal(this);
+    const ns = Cachier.internal(this);
     ns.at.prts[name] = { tmpl: partial, name: name };
     ns.at.prts[name].ext = ns.at.options.defaultExtension || '';
   }
@@ -227,7 +243,7 @@ class Engine {
    * @param {Boolean} initFn `true` to set/cache the template function
    */
   async registerAndSetPartial(name, partial) {
-    const ns = Cache.internal(this);
+    const ns = Cachier.internal(this);
     this.registerPartial(name, partial);
     return setFn(ns, this, name);
   }
@@ -239,25 +255,25 @@ class Engine {
    * @returns {String} The compiled template
    */
   async processPartial(name, data) {
-    const ns = Cache.internal(this);
+    const ns = Cachier.internal(this);
     if (!ns.at.options.isCached) await refreshPartial(ns, this, name);
     // prevent "No partial found" errors
     return (data && ns.at.prts[name] && (typeof ns.at.prts[name].fn === 'function' || await setFn(ns, this, name)) && ns.at.prts[name].fn(data)) || '&nbsp;';
   }
 
   /**
-   * Scans the {@link Cache} for templates/partials and generates a reference safe function for on-demand compilation of a registered templates
-   * @param {Boolean} [registerPartials] `true` __and when supported__, indicates that the {@link Cache} implementation should attempt to
-   * {@link Engine.registerPartial} for any partials found during {@link Cache.scan}. __NOTE: If the {@link Engine} is being used as pulgin, there
+   * Scans the {@link Cachier} for templates/partials and generates a reference safe function for on-demand compilation of a registered templates
+   * @param {Boolean} [registerPartials] `true` __and when supported__, indicates that the {@link Cachier} implementation should attempt to
+   * {@link Engine.registerPartial} for any partials found during {@link Cachier.scan}. __NOTE: If the {@link Engine} is being used as pulgin, there
    * typically isn't a need to register partials during initialization since {@link Engine.registerPartial} is normally part of the plugin contract and
    * will be handled automatically/internally, negating the need to explicitly do it during the scan. Doing so may duplicate the partial registration
    * procedure.__
    * @returns {Object|undefined} An object that contains: `{ created: { files: { content: String, parts: Path.parse() }, dirs: String[] }, partialFunc:
-   * Function }` where `created` is the registered file metadata (when `registerPartials = true` and the {@link Cache} used supports files) and 
+   * Function }` where `created` is the registered file metadata (when `registerPartials = true` and the {@link Cachier} used supports files) and 
    * `partialFunc` (reference safe {@link Engine#processPartial}).
    */
   async scan(registerPartials) {
-    const ns = Cache.internal(this);
+    const ns = Cachier.internal(this);
     const rptrl = registerPartials ? (name, data) => ns.this.registerPartial(name, data) : null;
     return {
       created: await ns.at.cache.scan(rptrl),
@@ -314,7 +330,7 @@ async function setFn(ns, eng, name) {
 async function refreshPartial(ns, eng, name) {
   const pth = ns.at.cache.join(ns.at.options.relativeTo || '', ns.at.options.partialsPath || '.', name)
     + '.' + ((ns.at.prts[name] && ns.at.prts[name].ext) || ns.at.options.defaultExtension);
-  const partial = await ns.at.cache.readTemplate(pth);
+  const partial = (await ns.at.cache.read(name, pth, true)).content;
   eng.registerPartial(name, partial.toString(ns.at.options.encoding), true);
   if (ns.at.options && ns.at.options.logger.info) ns.at.options.logger.info(`Refreshed partial ${name}`);
 }

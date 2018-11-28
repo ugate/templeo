@@ -10,22 +10,38 @@ const plan = `${PLAN} Files`;
 
 lab.experiment(plan, () => {
 
-  lab.test(`${plan}: HTML`, { timeout: TEST_TKO }, async (flags) => {
-    const html = (await getFile('./test/views/template.html')).toString();
-    const data = JSON.parse((await getFile('./test/data/it.json')).toString());
-    const eng = await Engine.filesEngine({
+  lab.test(`${plan}: HTML (engine cache)`, { timeout: TEST_TKO }, async (flags) => {
+    return baseTest({
+      relativeTo: '.',
       path: 'test/views',
       partialsPath: 'test/views/partials',
       outputSourcePath: 'test/views/partials',
       logger: ENGINE_LOGGER
-    }, JsFrmt);
-    await eng.scan(true);
-    const fn = await eng.compile(html);
+    });
+  });
 
-    expect(fn).to.be.function();
-
-    const rslt = fn(data);
-    expectDOM(rslt, data);
-    //console.log(rslt);
+  lab.test(`${plan}: HTML (engine no-cache)`, { timeout: TEST_TKO }, async (flags) => {
+    return baseTest({
+      relativeTo: '.',
+      path: 'test/views',
+      partialsPath: 'test/views/partials',
+      outputSourcePath: 'test/views/partials',
+      isCached: false,
+      logger: ENGINE_LOGGER
+    });
   });
 });
+
+async function baseTest(opts) {
+  const html = (await getFile('./test/views/template.html')).toString();
+  const data = JSON.parse((await getFile('./test/data/it.json')).toString());
+  const eng = await Engine.engineFiles(opts, JsFrmt);
+  await eng.scan(true);
+  const fn = await eng.compile(html);
+
+  expect(fn).to.be.function();
+
+  const rslt = fn(data);
+  expectDOM(rslt, data);
+  //console.log(rslt);
+}
