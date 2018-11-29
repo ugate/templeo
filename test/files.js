@@ -6,15 +6,15 @@ const lab = exports.lab = Lab.script();
 // import { expect, Lab, PLAN, TEST_TKO, ENGINE_LOGGER, Engine, JsFrmt, getFile, expectDOM } from './_main.mjs';
 const plan = `${PLAN} Files`;
 
-// "node_modules/.bin/lab" test/files.js -vi 1
+// "node_modules/.bin/lab" test/files.js -vi 2
 
 lab.experiment(plan, () => {
 
   lab.test(`${plan}: HTML (engine cache)`, { timeout: TEST_TKO }, async (flags) => {
     return baseTest({
-      relativeTo: '.',
+      pathBase: '.',
       path: 'test/views',
-      partialsPath: 'test/views/partials',
+      pathPartials: 'test/views/partials',
       outputSourcePath: 'test/views/partials',
       logger: ENGINE_LOGGER
     });
@@ -22,9 +22,9 @@ lab.experiment(plan, () => {
 
   lab.test(`${plan}: HTML (engine no-cache)`, { timeout: TEST_TKO }, async (flags) => {
     return baseTest({
-      relativeTo: '.',
+      pathBase: '.',
       path: 'test/views',
-      partialsPath: 'test/views/partials',
+      pathPartials: 'test/views/partials',
       outputSourcePath: 'test/views/partials',
       isCached: false,
       logger: ENGINE_LOGGER

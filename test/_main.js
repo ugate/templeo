@@ -83,7 +83,7 @@ async function httpServer(testFileName, hostname = '127.0.0.1', port = 3000) {
     res.end(html);
   });
   server.listen(port, hostname, () => {
-    console.log(`Server running at http://${hostname}:${port}/`);
+    if (LOGGER) LOGGER(`Server running at http://${hostname}:${port}/`);
   });
   return server;
 }

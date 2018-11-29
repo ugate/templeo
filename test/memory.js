@@ -15,7 +15,7 @@ lab.experiment(plan, () => {
     const data = JSON.parse((await getFile('./test/data/it.json')).toString());
     const eng = new Engine({
       path: 'test/views',
-      partialsPath: 'test/views/partials',
+      pathPartials: 'test/views/partials',
       logger: ENGINE_LOGGER
     });
     await eng.scan(true);
@@ -33,7 +33,7 @@ lab.experiment(plan, () => {
     const db = await genIndexedDB();
     const eng = new Engine({
       path: 'test/views',
-      partialsPath: 'test/views/partials',
+      pathPartials: 'test/views/partials',
       logger: ENGINE_LOGGER
     }, null, db.indexedDB);
     if (ENGINE_LOGGER && ENGINE_LOGGER.info) ENGINE_LOGGER.info(`Using indexedDB: ${db.loc}`);

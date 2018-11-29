@@ -10,6 +10,7 @@ const Cachier = require('./lib/cachier');
 
 /**
  * Micro rendering template engine
+ * @module templeo
  * @example
  * // Basic example in browser
  * const Tmpl = require('templeo');
@@ -17,11 +18,11 @@ const Cachier = require('./lib/cachier');
  *  compileMode: 'sync',
  *  defaultExtension: 'html', // can be HTML, JSON, etc.
  *  isCached: true, // use with caution: when false, loades partial file(s) on every request!!!
- *  relativeTo: '/', // used to build template identifiers
+ *  pathBase: '/', // used to build template identifiers
  *  path: 'views',
  *  layoutPath: 'views/layout',
  *  layout: true,
- *  partialsPath: 'views/partials',
+ *  pathPartials: 'views/partials',
  *  helpersPath: 'views/helpers'
  * };
  * const htmlEngine = new Tmpl.Engine(vconf);
@@ -33,11 +34,11 @@ const Cachier = require('./lib/cachier');
  *  compileMode: 'sync',
  *  defaultExtension: 'html', // can be HTML, JSON, etc.
  *  isCached: true, // use with caution: when false, loades partial file(s) on every request!!!
- *  relativeTo: process.cwd(),
+ *  pathBase: process.cwd(),
  *  path: 'views',
  *  layoutPath: 'views/layout',
  *  layout: true,
- *  partialsPath: 'views/partials',
+ *  pathPartials: 'views/partials',
  *  helpersPath: 'views/helpers'
  * };
  * const htmlEngine = await Tmpl.filesEngine(vconf, JsFrmt);
@@ -61,11 +62,11 @@ class Engine {
   /**
    * Creates a template parsing engine
    * @param {EngineOpts} [opts] The {@link EngineOpts} to use
-   * @param {Function} [formatFunc] The `function(string, outputFormatting)` that will return a formatted string when __writting__
-   * data using the `outputFormatting` from {@link EngineOpts} as the formatting options.
+   * @param {Function} [formatFunc] The `function(string, formatOptions)` that will return a formatted string when __writting__
+   * data passing the formatting options from `opts.formatOptions`. Used when formatting compiled code.
    */
   constructor(opts, formatFunc) {
-    const max = 1e10, min = 0, opt = opts instanceof EngineOpts ? opts : Engine.genOptions(opts), ns = Cachier.internal(this);
+    const max = 1e10, min = 0, opt = opts instanceof EngineOpts ? opts : Engine.engineDefault(opts), ns = Cachier.internal(this);
     ns.at.options = opt;
     ns.at.cache = formatFunc instanceof Cachier ? formatFunc : new Cachier(ns.at.options, formatFunc);
     ns.at.isInit = false;
@@ -77,26 +78,29 @@ class Engine {
    * An [IndexedDB]{@link https://developer.mozilla.org/en-US/docs/Web/API/IndexedDB_API} template cached {@link Engine}
    * @param {EngineOpts} [opts] The {@link EngineOpts}
    * @param {Object} [indexedDB] The `IndexedDB` implementation that will be used for caching (defaults to `window.indexedDB`)
-   * @param {Function} [formatFunc] The `function(string, outputFormatting)` that will return a formatted string when __writting__
-   * data using the `outputFormatting` from {@link EngineOpts} as the formatting options.
+   * @param {Function} [formatFunc] The `function(string, formatOptions)` that will return a formatted string when __writting__
+   * data passing the formatting options from `opts.formatOptions`. Used when formatting compiled code.
    * @returns {Engine} A new {@link Engine} instance that will cache compiled templates in IndexedDB
    */
   static async engineIndexedDB(opts, indexedDB, formatFunc) {
-    opts = opts instanceof EngineOpts ? opts : Engine.genOptions(opts);
+    opts = opts instanceof EngineOpts ? opts : Engine.engineDefault(opts);
     const CachierDB = opts.useCommonJs ? require('./lib/cachier-db.js') : import('./lib/cachier-db.mjs');
     return new Engine(opts, new CachierDB(opts, indexedDB, formatFunc));
   }
 
   /**
-   * A [Node.js]{@link https://nodejs.org} __only__ {@link Engine} to cache templates as files for improved debugging/caching
-   * @param {EngineOpts} [opts] The {@link EngineOpts}
-   * @param {Function} [formatFunc] The `function(string, outputFormatting)` that will return a formatted string when __writting__
-   * data using the `outputFormatting` from {@link EngineOpts} as the formatting options.
+   * A [Node.js]{@link https://nodejs.org/api/fs.html} __only__ {@link Engine} to cache templates as files for improved
+   * debugging/caching
+   * @param {EngineOpts} [opts] The {@link EngineFileOpts}
+   * @param {Function} [formatFunc] The `function(string, formatOptions)` that will return a formatted string when __writting__
+   * data passing the formatting options from `opts.formatOptions`. Used when formatting compiled code.
    * @returns {Engine} A new {@link Engine} instance that will cache compiled templates in the file system
    */
   static async engineFiles(opts, formatFunc) {
-    opts = opts instanceof EngineOpts ? opts : Engine.genOptions(opts);
-    const CachierFiles = opts.useCommonJs ? require('./lib/cachier-files.js') : import('./lib/cachier-files.mjs');
+    const useCommonJs = (opts && opts.useCommonJs) || EngineOpts.defaultOptions.useCommonJs;
+    const CachierFiles = useCommonJs ? require('./lib/cachier-files.js') : await import('./lib/cachier-files.mjs');
+    const EngineFileOpts = useCommonJs ? require('./lib/engine-file-opts.js') : await import('./lib/engine-file-opts.mjs');
+    opts = opts instanceof EngineFileOpts ? opts : new EngineFileOpts(opts);
     return new Engine(opts, new CachierFiles(opts, formatFunc));
   }
 
@@ -105,7 +109,7 @@ class Engine {
    * @param {Object} [opts] An optional object with any number of presets
    * @returns {EngineOpts} A new {@link EngineOpts}
    */
-  static genOptions(opts) {
+  static engineDefault(opts) {
     return opts && opts instanceof EngineOpts ? opts : new EngineOpts(opts);
   }
 
@@ -163,7 +167,7 @@ class Engine {
 			.replace(c.evaluate || skip, function rplEvaluate(m, code) {
 				return "';" + coded(code, c, ostr, arguments, lnOpts) + "out+='";
 			}) + "';return out;"; // remove consecutive spaces
-    if (c.errorLine && !c.outputPath) {
+    if (c.errorLine) {
       str = `var lnCol={};try{${str}}catch(e){e.message+=' at template ${((tnm && '"' + tnm + '" ') || '')}line '+lnCol.ln+' column '+lnCol.col;throw e;}`;
     }
     if (c.strip) str = str.replace(/(?:^|\r|\n)\t* +| +\t*(?:\r|\n|$)/g, ' ').replace(/\r|\n|\t|\/\*[\s\S]*?\*\//g, '');
@@ -180,8 +184,7 @@ class Engine {
       }).toString().replace('c.doNotSkipEncoded', c.doNotSkipEncoded) + str;
 		}
 		try {
-      const tpth = c.outputPath ? `${cache.join(c.outputPath, tnm)}.${c.outputExtension}` : tnm;
-      const { func } = await cache.generateCode(tnm, tpth, str, !!c.outputPath);
+      const { func } = await cache.generateCode(tnm, str, cache.isWritable);
       return func;
 		} catch (e) {
       if (c.logger.error) c.logger.error(`Could not create a template function (ERROR: ${e.message}): ${str}`);
@@ -301,7 +304,7 @@ async function compiler(ns, tmpl, opts) {
     }
   }
   const fn = await templFuncPartial(ns, ns.this, tmpl, opts);
-  if (fn && ns.at.options && ns.at.options.logger.debug) ns.at.options.logger.debug(`Compiled ${fn.name}`);
+  if (fn && ns.at.options.logger.debug) ns.at.options.logger.debug(`Compiled ${fn.name}`);
   return function processTemplate() {
     arguments[0] = arguments[0] || {}; // template data
     return fn.apply(this, arguments);
@@ -328,11 +331,9 @@ async function setFn(ns, eng, name) {
  * @param {String} name The template name where the function will be set
  */
 async function refreshPartial(ns, eng, name) {
-  const pth = ns.at.cache.join(ns.at.options.relativeTo || '', ns.at.options.partialsPath || '.', name)
-    + '.' + ((ns.at.prts[name] && ns.at.prts[name].ext) || ns.at.options.defaultExtension);
-  const partial = (await ns.at.cache.read(name, pth, true)).content;
+  const partial = (await ns.at.cache.read(name, true)).content;
   eng.registerPartial(name, partial.toString(ns.at.options.encoding), true);
-  if (ns.at.options && ns.at.options.logger.info) ns.at.options.logger.info(`Refreshed partial ${name}`);
+  if (ns.at.options.logger.info) ns.at.options.logger.info(`Refreshed template partial "${name}"`);
 }
 
 /**
@@ -421,7 +422,7 @@ async function replace(str, regex, replacer) {
 function coded(code, c, tmpl, args, lnOpts, cond) {
   var strt = '', end = code.replace(/\\('|\\)/g, '$1');//.replace(/[\r\t\n]/g, ' ');
   // NOTE : Removed erroLine option since accuracy is oftentimes skewed
-  if (tmpl && c && c.errorLine && !c.outputPath) {
+  if (tmpl && c && c.errorLine) {
     var offset = args[args.length - 2]; // replace offset
     if (offset !== '' && !isNaN(offset) && (offset = parseInt(offset)) >= 0) {
       strt = tmpl.substring(0, offset).split(c.errorLine);
