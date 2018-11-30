@@ -31,6 +31,7 @@ exports.ENGINE_LOGGER = console;//console;
 exports.LOGGER = null;//console.log;
 exports.httpServer = httpServer;
 exports.getFile = getFile;
+exports.getTemplateFiles = getTemplateFiles;
 exports.expectDOM = expectDOM;
 exports.genIndexedDB = genIndexedDB;
 // TODO : ESM uncomment the following lines...
@@ -93,6 +94,20 @@ async function httpServer(testFileName, hostname = '127.0.0.1', port = 3000) {
 async function getFile(path, cache = true) {
   if (cache && FILES[path]) return FILES[path];
   return cache ? FILES[path] = await Fs.promises.readFile(path) : Fs.promises.readFile(path);
+}
+
+// TODO : ESM uncomment the following line...
+// export async function getFile(filename, cache = true) {
+async function getTemplateFiles(cache = true) {
+  const rtn = {
+    tpmlPth: './test/views/template.html',
+    dtaPth: './test/data/it.json'
+  };
+
+  rtn.html = (await getFile(rtn.tpmlPth, cache)).toString();
+  rtn.data = JSON.parse((await getFile(rtn.dtaPth, cache)).toString());
+  
+  return rtn;
 }
 
 // TODO : ESM uncomment the following line...

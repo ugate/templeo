@@ -229,6 +229,15 @@ class Engine {
   }
 
   /**
+   * Unregisters a partial template from cache
+   * @param {String} name The template name that uniquely identifies the template content
+   */
+  unregisterPartial(name) {
+    const ns = Cachier.internal(this);
+    if (ns.at.prts[name]) delete ns.at.prts[name];
+  }
+
+  /**
    * Registers and caches a partial template
    * @param {String} name The template name that uniquely identifies the template content
    * @param {String} partial The partial template content to register
@@ -270,17 +279,24 @@ class Engine {
    * {@link Engine.registerPartial} for any partials found during {@link Cachier.scan}. __NOTE: If the {@link Engine} is being used as pulgin, there
    * typically isn't a need to register partials during initialization since {@link Engine.registerPartial} is normally part of the plugin contract and
    * will be handled automatically/internally, negating the need to explicitly do it during the scan. Doing so may duplicate the partial registration
-   * procedure.__
-   * @returns {Object|undefined} An object that contains: `{ created: { files: { content: String, parts: Path.parse() }, dirs: String[] }, partialFunc:
-   * Function }` where `created` is the registered file metadata (when `registerPartials = true` and the {@link Cachier} used supports files) and 
-   * `partialFunc` (reference safe {@link Engine#processPartial}).
+   * procedures.__
+   * @returns {Object|undefined} An object that contains the scan results:
+   * 
+   * - `created` The metadata object that contains details about the scan
+   * - - `partials` The `partials` object that contains the fragments that have been registered
+   * - - - `name` The template name
+   * - - - `id` The template identifier
+   * - - - `content` The template content
+   * - - `dirs` Present __only__ when {@link Engine.engineFiles} was used. Contains the directories/sub-directories that were created
+   * - `partialFunc` A reference safe async function to {@link Engine#processPartial}
    */
   async scan(registerPartials) {
     const ns = Cachier.internal(this);
     const rptrl = registerPartials ? (name, data) => ns.this.registerPartial(name, data) : null;
+    const urptrl = registerPartials ? (name) => ns.this.unregisterPartial(name) : null;
     return {
-      created: await ns.at.cache.scan(rptrl),
-      partialFunc: async (name, data) => await ns.this.processPartial(name, data)
+      created: await ns.at.cache.scan(rptrl, urptrl),
+      partialFunc: async (name, data) => ns.this.processPartial(name, data)
     };
   }
 };
