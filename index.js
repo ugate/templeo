@@ -66,7 +66,7 @@ class Engine {
    * data passing the formatting options from `opts.formatOptions`. Used when formatting compiled code.
    */
   constructor(opts, formatFunc) {
-    const max = 1e10, min = 0, opt = opts instanceof EngineOpts ? opts : Engine.engineDefault(opts), ns = Cachier.internal(this);
+    const max = 1e10, min = 0, opt = opts instanceof EngineOpts ? opts : new EngineOpts(opts), ns = Cachier.internal(this);
     ns.at.options = opt;
     ns.at.cache = formatFunc instanceof Cachier ? formatFunc : new Cachier(ns.at.options, formatFunc);
     ns.at.isInit = false;
@@ -77,13 +77,13 @@ class Engine {
   /**
    * An [IndexedDB]{@link https://developer.mozilla.org/en-US/docs/Web/API/IndexedDB_API} template cached {@link Engine}
    * @param {EngineOpts} [opts] The {@link EngineOpts}
-   * @param {Object} [indexedDB] The `IndexedDB` implementation that will be used for caching (defaults to `window.indexedDB`)
    * @param {Function} [formatFunc] The `function(string, formatOptions)` that will return a formatted string when __writting__
+   * @param {Object} [indexedDB] The `IndexedDB` implementation that will be used for caching (defaults to `window.indexedDB`)
    * data passing the formatting options from `opts.formatOptions`. Used when formatting compiled code.
    * @returns {Engine} A new {@link Engine} instance that will cache compiled templates in IndexedDB
    */
-  static async engineIndexedDB(opts, indexedDB, formatFunc) {
-    opts = opts instanceof EngineOpts ? opts : Engine.engineDefault(opts);
+  static async engineIndexedDB(opts, formatFunc, indexedDB) {
+    opts = opts instanceof EngineOpts ? opts : new EngineOpts(opts);
     const CachierDB = opts.useCommonJs ? require('./lib/cachier-db.js') : import('./lib/cachier-db.mjs');
     return new Engine(opts, new CachierDB(opts, indexedDB, formatFunc));
   }
@@ -102,15 +102,6 @@ class Engine {
     const EngineFileOpts = useCommonJs ? require('./lib/engine-file-opts.js') : await import('./lib/engine-file-opts.mjs');
     opts = opts instanceof EngineFileOpts ? opts : new EngineFileOpts(opts);
     return new Engine(opts, new CachierFiles(opts, formatFunc));
-  }
-
-  /**
-   * Generates options to be used in an {@link EngineOpts}
-   * @param {Object} [opts] An optional object with any number of presets
-   * @returns {EngineOpts} A new {@link EngineOpts}
-   */
-  static engineDefault(opts) {
-    return opts && opts instanceof EngineOpts ? opts : new EngineOpts(opts);
   }
 
   /**

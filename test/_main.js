@@ -21,6 +21,7 @@ exports.JsFrmt = JsFrmt;
 const { JSDOM } = require('jsdom');
 exports.JSDOM = JSDOM;
 const Level = require('level');
+exports.Level = Level;
 const { Engine, JsonEngine } = require('../index.js');
 exports.Engine = Engine;
 exports.JsonEngine = JsonEngine;
@@ -30,10 +31,11 @@ exports.TEST_TKO = 20000;
 exports.ENGINE_LOGGER = console;//console;
 exports.LOGGER = null;//console.log;
 exports.httpServer = httpServer;
+exports.baseTest = baseTest;
 exports.getFile = getFile;
 exports.getTemplateFiles = getTemplateFiles;
+exports.init = init;
 exports.expectDOM = expectDOM;
-exports.genIndexedDB = genIndexedDB;
 // TODO : ESM uncomment the following lines...
 // import * as http from 'http';
 // export * as http from http;
@@ -53,6 +55,7 @@ exports.genIndexedDB = genIndexedDB;
 // import { JSDOM } as JSDOM from 'jsdom';
 // export * as JSDOM from JSDOM;
 // import * as Level from 'level';
+// export * as Level from Level;
 // import { Engine, JsonEngine } from '../index.mjs';
 // export * as Engine from Engine;
 // export * as JsonEngine from JsonEngine;
@@ -62,17 +65,7 @@ exports.genIndexedDB = genIndexedDB;
 // export const ENGINE_LOGGER = console.log;
 // export const LOGGER = console.log;
 
-const DB = {};
-const FILES = {};
-
-// TODO : ESM uncomment the following line...
-// export async function genIndexedDB(locPrefix = 'templeo-test-indexedDB-') {
-async function genIndexedDB(locPrefix = 'templeo-test-indexedDB-') {
-  if (DB[locPrefix]) return DB[locPrefix];
-  const loc = await Fs.promises.mkdtemp(Path.join(Os.tmpdir(), locPrefix));
-  DB[locPrefix] = { loc, indexedDB: Level(loc) };
-  return DB[locPrefix];
-}
+const TEST_FILES = {};
 
 // TODO : ESM uncomment the following line...
 // export async function httpServer(testFileName, hostname = '127.0.0.1', port = 3000) {
@@ -90,14 +83,7 @@ async function httpServer(testFileName, hostname = '127.0.0.1', port = 3000) {
 }
 
 // TODO : ESM uncomment the following line...
-// export async function getFile(filename, cache = true) {
-async function getFile(path, cache = true) {
-  if (cache && FILES[path]) return FILES[path];
-  return cache ? FILES[path] = await Fs.promises.readFile(path) : Fs.promises.readFile(path);
-}
-
-// TODO : ESM uncomment the following line...
-// export async function getFile(filename, cache = true) {
+// export async function getTemplateFiles(cache = true) {
 async function getTemplateFiles(cache = true) {
   const rtn = {
     tpmlPth: './test/views/template.html',
@@ -107,6 +93,35 @@ async function getTemplateFiles(cache = true) {
   rtn.html = (await getFile(rtn.tpmlPth, cache)).toString();
   rtn.data = JSON.parse((await getFile(rtn.dtaPth, cache)).toString());
   
+  return rtn;
+}
+
+// TODO : ESM uncomment the following line...
+// export async function baseTest(opts, scan, engine) {
+async function baseTest(opts, scan, engine) {
+  const test = await init(opts, scan, engine);
+  test.fn = await test.engine.compile(test.html);
+  expect(test.fn).to.be.function();
+  const rslt = test.fn(test.data);
+  expectDOM(rslt, test.data);
+  //console.log(rslt);
+  return test;
+}
+
+// TODO : ESM uncomment the following line...
+// export async function getFile(filename, cache = true) {
+async function getFile(path, cache = true) {
+  if (cache && TEST_FILES[path]) return TEST_FILES[path];
+  return cache ? TEST_FILES[path] = await Fs.promises.readFile(path) : Fs.promises.readFile(path);
+}
+
+// TODO : ESM uncomment the following line...
+// export async function init(opts, scan, engine) {
+async function init(opts, scan, engine) {
+  const rtn = await getTemplateFiles();
+  rtn.engine = engine || new Engine(opts, JsFrmt);
+  rtn.scanned = scan ? await rtn.engine.scan(true) : null;
+  rtn.opts = opts;
   return rtn;
 }
 
@@ -136,6 +151,8 @@ function expectDOM(html, data) {
   }
 
   expect(hasSel).to.be.true();
+
+  // check for partials
   expectColorDOM(dom, data, 'swatchSelectColor'); // select options
   expectColorDOM(dom, data, 'swatchDatalistColor'); // datalist options
 
