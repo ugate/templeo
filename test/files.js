@@ -1,10 +1,10 @@
 'use strict';
 
-const { Lab, PLAN, TEST_TKO, ENGINE_LOGGER, Engine, baseTest, init, expectDOM, JSDOM, Path, Fs, JsFrmt } = require('./_main.js');
+const { Lab, PLAN, TEST_TKO, ENGINE_LOGGER, Engine, getFiles,  baseTest, init, expectDOM, JSDOM, Path, Fs, JsFrmt } = require('./_main.js');
 const lab = exports.lab = Lab.script();
 const { expect } = require('code');
 // ESM uncomment the following lines...
-// import { Lab, PLAN, ENGINE_LOGGER, TEST_TKO, Engine, baseTest, init, expectDOM, JSDOM, Path, Fs, JsFrmt } from './_main.mjs';
+// import { Lab, PLAN, TEST_TKO, ENGINE_LOGGER, Engine, getFiles,  baseTest, init, expectDOM, JSDOM, Path, Fs, JsFrmt } from './_main.mjs';
 const plan = `${PLAN} Files`;
 const PARTIAL_DETECT_DELAY_MS = 100;
 
@@ -12,22 +12,28 @@ const PARTIAL_DETECT_DELAY_MS = 100;
 
 lab.experiment(plan, () => {
 
-  lab.test(`${plan}: HTML (engine cache)`, { timeout: TEST_TKO }, async flags => {
+  lab.test(`${plan}: HTML (cache)`, { timeout: TEST_TKO }, async flags => {
     const opts = baseOptions();
     return baseTest(opts, true, await Engine.engineFiles(opts, JsFrmt));
   });
 
-  lab.test(`${plan}: HTML (engine no-cache)`, { timeout: TEST_TKO }, async flags => {
+  lab.test(`${plan}: HTML (no-cache)`, { timeout: TEST_TKO }, async flags => {
     const opts = baseOptions();
     opts.isCached = false;
     return baseTest(opts, true, await Engine.engineFiles(opts, JsFrmt));
   });
 
-  lab.test(`${plan}: HTML (engine cache watch)`, { timeout: TEST_TKO }, async flags => {
+  lab.test(`${plan}: HTML (cache w/watch)`, { timeout: TEST_TKO }, async flags => {
     const opts = baseOptions();
     opts.pathScanSrcWatch = true;
     const test = await init(opts, true, await Engine.engineFiles(opts, JsFrmt));
     return await partialFrag(test);
+  });
+
+  lab.test(`${plan}: HTML (cache w/options.partials)`, { timeout: TEST_TKO }, async flags => {
+    const opts = baseOptions();
+    opts.partials = await getFiles(opts.pathPartials, true);
+    return baseTest(opts, true, await Engine.engineFiles(opts, JsFrmt));
   });
 });
 

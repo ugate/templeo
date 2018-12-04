@@ -33,6 +33,7 @@ exports.LOGGER = null;//console.log;
 exports.httpServer = httpServer;
 exports.baseTest = baseTest;
 exports.getFile = getFile;
+exports.getFiles = getFiles;
 exports.getTemplateFiles = getTemplateFiles;
 exports.init = init;
 exports.expectDOM = expectDOM;
@@ -109,10 +110,30 @@ async function baseTest(opts, scan, engine) {
 }
 
 // TODO : ESM uncomment the following line...
-// export async function getFile(filename, cache = true) {
+// export async function getFile(path, cache = true) {
 async function getFile(path, cache = true) {
   if (cache && TEST_FILES[path]) return TEST_FILES[path];
   return cache ? TEST_FILES[path] = await Fs.promises.readFile(path) : Fs.promises.readFile(path);
+}
+// TODO : ESM uncomment the following line...
+// export async function getFiles(dir, rmBasePartial, cache = true) {
+async function getFiles(dir, rmBasePartial, cache = true) {
+  const sdirs = await Fs.promises.readdir(dir);
+  var spth, stat, sfiles, files = [];
+  for (let sdir of sdirs) {
+    spth = Path.join(dir, sdir), stat = await Fs.promises.stat(spth);
+    if (stat.isDirectory()) {
+      sfiles = await getFiles(spth, rmBasePartial, cache);
+      files = sfiles && sfiles.length ? files.length ? files.concat(sfiles) : sfiles : files;
+    } else if (stat.isFile()) {
+      files.push({
+        name: (rmBasePartial ? spth.replace(/[\/\\]?test[\/\\]views[\/\\]partials[\/\\]?/, '') : spth).replace(/\..+$/, '').replace(/\\+/g, '/'),
+        path: spth,
+        content: (await Fs.promises.readFile(spth)).toString()
+      });
+    }
+  }
+  return files;
 }
 
 // TODO : ESM uncomment the following line...
