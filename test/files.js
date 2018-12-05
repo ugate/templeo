@@ -8,32 +8,32 @@ const { expect } = require('code');
 const plan = `${PLAN} Files`;
 const PARTIAL_DETECT_DELAY_MS = 100;
 
-// "node_modules/.bin/lab" test/files.js -vi 3
+// "node_modules/.bin/lab" test/files.js -vi 4
 
 lab.experiment(plan, () => {
 
   lab.test(`${plan}: HTML (cache)`, { timeout: TEST_TKO }, async flags => {
     const opts = baseOptions();
-    return baseTest(opts, true, await Engine.engineFiles(opts, JsFrmt));
+    return baseTest(opts, true, await getFilesEngine(opts));
   });
 
   lab.test(`${plan}: HTML (no-cache)`, { timeout: TEST_TKO }, async flags => {
     const opts = baseOptions();
     opts.isCached = false;
-    return baseTest(opts, true, await Engine.engineFiles(opts, JsFrmt));
+    return baseTest(opts, true, await getFilesEngine(opts));
   });
 
   lab.test(`${plan}: HTML (cache w/watch)`, { timeout: TEST_TKO }, async flags => {
     const opts = baseOptions();
     opts.pathScanSrcWatch = true;
-    const test = await init(opts, true, await Engine.engineFiles(opts, JsFrmt));
+    const test = await init(opts, true, await getFilesEngine(opts));
     return await partialFrag(test);
   });
 
   lab.test(`${plan}: HTML (cache w/options.partials)`, { timeout: TEST_TKO }, async flags => {
     const opts = baseOptions();
     opts.partials = await getFiles(opts.pathPartials, true);
-    return baseTest(opts, true, await Engine.engineFiles(opts, JsFrmt));
+    return baseTest(opts, true, await getFilesEngine(opts));
   });
 });
 
@@ -45,6 +45,12 @@ function baseOptions() {
     pathScanSrc: 'test/views/partials',
     logger: ENGINE_LOGGER
   };
+}
+
+async function getFilesEngine(opts) {
+  const engine = await Engine.engineFiles(opts, JsFrmt);
+  //await engine.clearCache(true);
+  return engine;
 }
 
 async function partialFrag(test, elId, name) {

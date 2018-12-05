@@ -8,6 +8,7 @@
 const http = require('http');
 exports.http = http;
 const Os = require('os');
+exports.Os = Os;
 const Fs = require('fs');
 exports.Fs = Fs;
 const Path = require('path');
@@ -41,6 +42,7 @@ exports.expectDOM = expectDOM;
 // import * as http from 'http';
 // export * as http from http;
 // import * as Os from 'os';
+// export * as Os from Os;
 // import * as Fs from 'fs';
 // export * as Fs from Fs;
 // import * as Path from 'path';

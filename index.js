@@ -64,11 +64,15 @@ class Engine {
    * @param {EngineOpts} [opts] The {@link EngineOpts} to use
    * @param {Function} [formatFunc] The `function(string, formatOptions)` that will return a formatted string when __writting__
    * data passing the formatting options from `opts.formatOptions`. Used when formatting compiled code.
+   * @param {Boolean} [fetchPartials=false] `true` to `GET` partial contents during reads. Uses `window.fetch` for browsers or the `https`
+   * module when running on the server. When calling {@link registerPartial} the `name` should be the URL that will be fetched.
+   * @param {Boolean} [postPartials=false] `true` to `POST` partial contents during writes. Uses `window.fetch` to upload content in
+   * browsers or the `https` module when running on the server.
    */
-  constructor(opts, formatFunc) {
+  constructor(opts, formatFunc, fetchPartials = false, postPartials = false) {
     const max = 1e10, min = 0, opt = opts instanceof EngineOpts ? opts : new EngineOpts(opts), ns = Cachier.internal(this);
     ns.at.options = opt;
-    ns.at.cache = formatFunc instanceof Cachier ? formatFunc : new Cachier(ns.at.options, formatFunc);
+    ns.at.cache = formatFunc instanceof Cachier ? formatFunc : new Cachier(ns.at.options, formatFunc, fetchPartials, postPartials);
     ns.at.isInit = false;
     ns.at.prts = {};
     ns.at.marker = Math.floor(Math.random() * (max - min + 1)) + min;
@@ -289,6 +293,15 @@ class Engine {
       created: await ns.at.cache.scan(rptrl, urptrl),
       partialFunc: async (name, data) => ns.this.processPartial(name, data)
     };
+  }
+
+  /**
+   * Clears the underlying cache
+   * @param {Boolean} [all=false] `true` to clear all unassociated cache instances when possible 
+   */
+  async clearCache(all = false) {
+    const ns = Cachier.internal(this);
+    return ns.at.cache.clear(all);
   }
 };
 
