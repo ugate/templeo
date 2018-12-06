@@ -53,7 +53,7 @@ const Cachier = require('./lib/cachier');
  *  server.views(vconf);
  *  server.app.htmlPartial = htmlEngine.genPartialFunc(); // optinal HTML partial processing access via app/server
  * } catch (err) {
- *   console.error(err);
+ *   throw err;
  * }
  */
 class Engine {
@@ -205,7 +205,7 @@ class Engine {
    * @param {String} tmpl The raw template source
    * @param {Object} [opts] The options sent for compilation (omit to use the options set on the {@link Engine})
    * @param {Function} [callback] Optional _callback_ style support for legacy purposes (e.g. 
-   * `compile(tmpl, opts, (error, func) => { console.log('compiled:', func); })` or omit to run via `await compile(tmpl, opts)`)
+   * `compile(tmpl, opts, (error, func) => {})` or omit to run via `await compile(tmpl, opts)`)
    * @returns {function} The function(data) that returns a template result string based uopn the data object provided
    */
   async compile(tmpl, opts, callback) { // ensures partials are included in the compilation

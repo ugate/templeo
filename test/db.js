@@ -25,13 +25,13 @@ lab.experiment(plan, async () => {
     return rmrf(db.loc);
   });
 
-  lab.test(`${plan}: HTML/LevelDB partials`, { timeout: TEST_TKO }, async flags => {
+  lab.test(`${plan}: HTML/LevelDB from options.partials`, { timeout: TEST_TKO }, async flags => {
     const opts = baseOptions();
     opts.partials = await getFiles('test/views/partials', true);
     return baseTest(opts, true, await Engine.engineIndexedDB(opts, JsFrmt, db.indexedDB));
   });
 
-  lab.test(`${plan}: HTML/LevelDB scanned`, { timeout: TEST_TKO }, async flags => {
+  lab.test(`${plan}: HTML/LevelDB from partials in DB`, { timeout: TEST_TKO }, async flags => {
     const opts = baseOptions();
     return baseTest(opts, true, await Engine.engineIndexedDB(opts, JsFrmt, db.indexedDB));
   });
