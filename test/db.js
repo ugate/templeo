@@ -1,9 +1,9 @@
 'use strict';
 
-const { expect, Lab, PLAN, TEST_TKO, ENGINE_LOGGER, Engine, getFiles, Level, baseTest, JsFrmt, Fs, Path, Os } = require('./_main.js');
+const { expect, Lab, PLAN, TEST_TKO, ENGINE_LOGGER, Engine, getFiles, Level, baseTest, JsFrmt, Fs, Path, Os, rmrf } = require('./_main.js');
 const lab = exports.lab = Lab.script();
 // ESM uncomment the following lines...
-// import { expect, Lab, PLAN, TEST_TKO, ENGINE_LOGGER, Engine, getFiles, Level, baseTest, JsFrmt, Fs, Path, Os } from './_main.mjs';
+//import { expect, Lab, PLAN, TEST_TKO, ENGINE_LOGGER, Engine, getFiles, Level, baseTest, JsFrmt, Fs, Path, Os, rmrf } from './_main.mjs';
 const plan = `${PLAN} IndexedDB`;
 const DB = {};
 
@@ -16,6 +16,13 @@ lab.experiment(plan, async () => {
   lab.before(async () => {
     db = await getIndexedDB();
     if (ENGINE_LOGGER && ENGINE_LOGGER.info) ENGINE_LOGGER.info(`Using LevelDB @ ${db.loc}`);
+  });
+
+  lab.after(async () => {
+    if (!db) return;
+    if (ENGINE_LOGGER && ENGINE_LOGGER.info) ENGINE_LOGGER.info(`Closing/Removing LevelDB @ ${db.loc}`);
+    await db.indexedDB.close();
+    return rmrf(db.loc);
   });
 
   lab.test(`${plan}: HTML/LevelDB partials`, { timeout: TEST_TKO }, async flags => {

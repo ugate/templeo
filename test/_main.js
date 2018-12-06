@@ -29,9 +29,10 @@ exports.JsonEngine = JsonEngine;
 exports.PLAN = 'Template Engine';
 exports.TASK_DELAY = 500;
 exports.TEST_TKO = 20000;
-exports.ENGINE_LOGGER = console;//console;
+exports.ENGINE_LOGGER = { info: console.info, warn: console.warn, error: console.error };//console;
 exports.LOGGER = null;//console.log;
 exports.httpServer = httpServer;
+exports.rmrf = rmrf;
 exports.baseTest = baseTest;
 exports.getFile = getFile;
 exports.getFiles = getFiles;
@@ -39,36 +40,37 @@ exports.getTemplateFiles = getTemplateFiles;
 exports.init = init;
 exports.expectDOM = expectDOM;
 // TODO : ESM uncomment the following lines...
-// import * as http from 'http';
-// export * as http from http;
-// import * as Os from 'os';
-// export * as Os from Os;
-// import * as Fs from 'fs';
-// export * as Fs from Fs;
-// import * as Path from 'path';
-// export * as Path from Path;
-// import * as code from 'code';
-// export * as code from code;
-// import * as expect from 'expect';
-// export * as expect from expect;
-// import * as Lab from 'lab';
-// export * as Lab from Lab;
-// import { js } as JsFrmt from 'js-beautify';
-// export * as JsFrmt from JsFrmt;
-// import { JSDOM } as JSDOM from 'jsdom';
-// export * as JSDOM from JSDOM;
-// import * as Level from 'level';
-// export * as Level from Level;
-// import { Engine, JsonEngine } from '../index.mjs';
-// export * as Engine from Engine;
-// export * as JsonEngine from JsonEngine;
-// export const PLAN = 'Template Engine';
-// export const TASK_DELAY = 500;
-// export const TEST_TKO = 20000;
-// export const ENGINE_LOGGER = console.log;
-// export const LOGGER = console.log;
+//import * as http from 'http';
+//export * as http from http;
+//import * as Os from 'os';
+//export * as Os from Os;
+//import * as Fs from 'fs';
+//export * as Fs from Fs;
+//import * as Path from 'path';
+//export * as Path from Path;
+//import * as code from 'code';
+//export * as code from code;
+//import * as expect from 'expect';
+//export * as expect from expect;
+//import * as Lab from 'lab';
+//export * as Lab from Lab;
+//import { js } as JsFrmt from 'js-beautify';
+//export * as JsFrmt from JsFrmt;
+//import { JSDOM } as JSDOM from 'jsdom';
+//export * as JSDOM from JSDOM;
+//import * as Level from 'level';
+//export * as Level from Level;
+//import { Engine, JsonEngine } from '../index.mjs';
+//export * as Engine from Engine;
+//export * as JsonEngine from JsonEngine;
+//export const PLAN = 'Template Engine';
+//export const TASK_DELAY = 500;
+//export const TEST_TKO = 20000;
+//export const ENGINE_LOGGER = console.log;
+//export const LOGGER = console.log;
 
 const TEST_FILES = {};
+const Fsp = Fs.promises;
 
 // TODO : ESM uncomment the following line...
 // export async function httpServer(testFileName, hostname = '127.0.0.1', port = 3000) {
@@ -97,6 +99,26 @@ async function getTemplateFiles(cache = true) {
   rtn.data = JSON.parse((await getFile(rtn.dtaPth, cache)).toString());
   
   return rtn;
+}
+
+// TODO : ESM uncomment the following line...
+// export async function rmrf(path) {
+async function rmrf(path) {
+  var stats, subx;
+  try {
+    stats = await Fsp.stat(path);
+  } catch (e) {
+    stats = null;
+  }
+  if (stats && stats.isDirectory()) {
+    for (let sub of await Fsp.readdir(path)) {
+      subx = Path.resolve(path, sub);
+      stats = await Fsp.stat(subx);
+      if (stats.isDirectory()) await rmrf(subx);
+      else if (stats.isFile() || stats.isSymbolicLink()) await Fsp.unlink(subx);
+    }
+    await Fsp.rmdir(path); // dir path should be empty
+  } else if (stats && (stats.isFile() || stats.isSymbolicLink())) await Fsp.unlink(path);
 }
 
 // TODO : ESM uncomment the following line...

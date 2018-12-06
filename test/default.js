@@ -3,7 +3,7 @@
 const { expect, Lab, PLAN, TEST_TKO, ENGINE_LOGGER, Engine, getFiles, baseTest, JsonEngine, JsFrmt } = require('./_main.js');
 const lab = exports.lab = Lab.script();
 // ESM uncomment the following lines...
-// import { expect, Lab, PLAN, TEST_TKO, ENGINE_LOGGER, Engine, getFiles, baseTest, JsonEngine, JsFrmt } from './_main.mjs';
+//import { expect, Lab, PLAN, TEST_TKO, ENGINE_LOGGER, Engine, getFiles, baseTest, JsonEngine, JsFrmt } from './_main.mjs';
 const plan = `${PLAN} Default`;
 
 // "node_modules/.bin/lab" test/default.js -vi 1

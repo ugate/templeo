@@ -4,13 +4,25 @@ const { Lab, PLAN, TEST_TKO, ENGINE_LOGGER, Engine, getFiles,  baseTest, init, e
 const lab = exports.lab = Lab.script();
 const { expect } = require('code');
 // ESM uncomment the following lines...
-// import { Lab, PLAN, TEST_TKO, ENGINE_LOGGER, Engine, getFiles,  baseTest, init, expectDOM, JSDOM, Path, Fs, JsFrmt } from './_main.mjs';
+//import { Lab, PLAN, TEST_TKO, ENGINE_LOGGER, Engine, getFiles,  baseTest, init, expectDOM, JSDOM, Path, Fs, JsFrmt } from './_main.mjs';
 const plan = `${PLAN} Files`;
 const PARTIAL_DETECT_DELAY_MS = 100;
 
 // "node_modules/.bin/lab" test/files.js -vi 4
 
 lab.experiment(plan, () => {
+
+  var engine;
+
+  async function getFilesEngine(opts) {
+    if (engine) await engine.clearCache(true); // clear out temp files
+    engine = await Engine.engineFiles(opts, JsFrmt);
+    return engine;
+  }
+
+  lab.after(async () => {
+    return engine ? engine.clearCache(true) : null;
+  });
 
   lab.test(`${plan}: HTML (cache)`, { timeout: TEST_TKO }, async flags => {
     const opts = baseOptions();
@@ -27,7 +39,8 @@ lab.experiment(plan, () => {
     const opts = baseOptions();
     opts.pathScanSrcWatch = true;
     const test = await init(opts, true, await getFilesEngine(opts));
-    return await partialFrag(test);
+    await partialFrag(test);
+    return engine.clearCache(true); // should clear the cache/watches 
   });
 
   lab.test(`${plan}: HTML (cache w/options.partials)`, { timeout: TEST_TKO }, async flags => {
@@ -45,12 +58,6 @@ function baseOptions() {
     pathScanSrc: 'test/views/partials',
     logger: ENGINE_LOGGER
   };
-}
-
-async function getFilesEngine(opts) {
-  const engine = await Engine.engineFiles(opts, JsFrmt);
-  //await engine.clearCache(true);
-  return engine;
 }
 
 async function partialFrag(test, elId, name) {

@@ -4,9 +4,9 @@ const EngineOpts = require('./lib/engine-opts');
 const JsonEngine = require('./lib/json-engine');
 const Cachier = require('./lib/cachier');
 // TODO : ESM uncomment the following lines...
-// import * as EngineOpts from './lib/engine-opts.mjs';
-// import * as JsonEngine from './lib/json-engine.mjs';
-// import * as Cachier from './lib/cachier.mjs';
+//import * as EngineOpts from './lib/engine-opts.mjs';
+//import * as JsonEngine from './lib/json-engine.mjs';
+//import * as Cachier from './lib/cachier.mjs';
 
 /**
  * Micro rendering template engine
@@ -297,10 +297,12 @@ class Engine {
 
   /**
    * Clears the underlying cache
-   * @param {Boolean} [all=false] `true` to clear all unassociated cache instances when possible 
+   * @param {Boolean} [all=false] `true` to clear all unassociated cache instances when possible as well as any partials
+   * that have been registered
    */
   async clearCache(all = false) {
     const ns = Cachier.internal(this);
+    if (all) ns.at.prts = {};
     return ns.at.cache.clear(all);
   }
 };
