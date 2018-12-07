@@ -10,6 +10,11 @@ const plan = `${PLAN} Default`;
 
 lab.experiment(plan, () => {
 
+  lab.test(`${plan}: HTML (cache)`, { timeout: TEST_TKO }, async flags => {
+    const opts = baseOptions();
+    return baseTest(opts, true, new Engine(opts, JsFrmt));
+  });
+
   lab.test(`${plan}: HTML (cache w/options.partials)`, { timeout: TEST_TKO }, async flags => {
     const opts = baseOptions();
     opts.partials = await getFiles('test/views/partials', true);
