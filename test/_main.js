@@ -5,8 +5,9 @@
 // generate jsdoc:
 // npm run gen-docs
 
-const http = require('http');
-exports.http = http;
+const Forge = require('node-forge');
+const https = require('https');
+exports.https = https;
 const Os = require('os');
 exports.Os = Os;
 const Fs = require('fs');
@@ -31,7 +32,7 @@ exports.TASK_DELAY = 500;
 exports.TEST_TKO = 20000;
 exports.ENGINE_LOGGER = { info: console.info, warn: console.warn, error: console.error };//console;
 exports.LOGGER = null;//console.log;
-exports.httpServer = httpServer;
+exports.httpsServer = httpsServer;
 exports.rmrf = rmrf;
 exports.baseTest = baseTest;
 exports.getFile = getFile;
@@ -40,51 +41,69 @@ exports.getTemplateFiles = getTemplateFiles;
 exports.init = init;
 exports.expectDOM = expectDOM;
 // TODO : ESM uncomment the following lines...
-//import * as http from 'http';
-//export * as http from http;
-//import * as Os from 'os';
-//export * as Os from Os;
-//import * as Fs from 'fs';
-//export * as Fs from Fs;
-//import * as Path from 'path';
-//export * as Path from Path;
-//import * as code from 'code';
-//export * as code from code;
-//import * as expect from 'expect';
-//export * as expect from expect;
-//import * as Lab from 'lab';
-//export * as Lab from Lab;
-//import { js } as JsFrmt from 'js-beautify';
-//export * as JsFrmt from JsFrmt;
-//import { JSDOM } as JSDOM from 'jsdom';
-//export * as JSDOM from JSDOM;
-//import * as Level from 'level';
-//export * as Level from Level;
-//import { Engine, JsonEngine } from '../index.mjs';
-//export * as Engine from Engine;
-//export * as JsonEngine from JsonEngine;
-//export const PLAN = 'Template Engine';
-//export const TASK_DELAY = 500;
-//export const TEST_TKO = 20000;
-//export const ENGINE_LOGGER = console.log;
-//export const LOGGER = console.log;
+// TODO : import * as Forge from 'node-forge';
+// TODO : import * as http from 'https';
+// export * as https from https;
+// TODO : import * as Os from 'os';
+// export * as Os from Os;
+// TODO : import * as Fs from 'fs';
+// export * as Fs from Fs;
+// TODO : import * as Path from 'path';
+// export * as Path from Path;
+// TODO : import * as code from 'code';
+// export * as code from code;
+// TODO : import * as expect from 'expect';
+// export * as expect from expect;
+// TODO : import * as Lab from 'lab';
+// export * as Lab from Lab;
+// TODO : import { js } as JsFrmt from 'js-beautify';
+// export * as JsFrmt from JsFrmt;
+// TODO : import { JSDOM } as JSDOM from 'jsdom';
+// export * as JSDOM from JSDOM;
+// TODO : import * as Level from 'level';
+// export * as Level from Level;
+// TODO : import { Engine, JsonEngine } from '../index.mjs';
+// export * as Engine from Engine;
+// export * as JsonEngine from JsonEngine;
+// export const PLAN = 'Template Engine';
+// export const TASK_DELAY = 500;
+// export const TEST_TKO = 20000;
+// export const ENGINE_LOGGER = console.log;
+// export const LOGGER = console.log;
 
 const TEST_FILES = {};
 const Fsp = Fs.promises;
 
 // TODO : ESM uncomment the following line...
-// export async function httpServer(testFileName, hostname = '127.0.0.1', port = 3000) {
-async function httpServer(testFileName, hostname = '127.0.0.1', port = 3000) {
-  const server = http.createServer((req, res) => {
-    const html = Fs.readFileSync(Path.join('./data/', testFileName));
-    res.statusCode = 200;
-    res.setHeader('Content-Type', 'text/html');
-    res.end(html);
+// export function httpsServer(baseFilePath, hostname = '127.0.0.1', port = 3000) {
+function httpsServer(baseFilePath, hostname = '127.0.0.1', port = 3000) {
+  return new Promise((resolve, reject) => {
+    const url = `https://${hostname}:${port}/`, sec = selfSignedCert();
+    const server = https.createServer({ key: sec.key, cert: sec.cert }, async (req, res) => {
+      const mthd = req.method.toUpperCase();
+      try {
+        const prms = new URL(`${url}${req.url}`).searchParams, type = prms.get('type');
+        const file = Path.join(baseFilePath, req.url);
+        const contents = await Fsp.readFile(file);
+        res.statusCode = 200;
+        res.setHeader('Content-Type', type || 'text/html');
+        res.end(contents);
+      } catch (err) {
+        console.error(err);
+        res.statusCode = 500;
+        res.setHeader('Content-Type', 'text/html');
+        res.end(`Failed to ${mthd} for: ${req.url}`);
+      }
+    });
+    server.listen(port, hostname, () => {
+      if (exports.LOGGER) exports.LOGGER(`Server running at ${url}`);
+      resolve({ url, close: () => {
+        return new Promise((resolve, reject) => {
+          server.close(err => err ? reject(err) : resolve());
+        });
+      }});
+    });
   });
-  server.listen(port, hostname, () => {
-    if (LOGGER) LOGGER(`Server running at http://${hostname}:${port}/`);
-  });
-  return server;
 }
 
 // TODO : ESM uncomment the following line...
@@ -222,4 +241,29 @@ function expectColorDOM(dom, data, prefix) {
   }
 
   expect(hasSel).to.be.true();
+}
+
+function selfSignedCert(publicKey) {
+  Forge.options.usePureJavaScript = true;
+  const pki = Forge.pki, keys = pki.rsa.generateKeyPair(2048), cert = pki.createCertificate();
+  cert.publicKey = keys.publicKey;
+  cert.serialNumber = '01';
+  cert.validity.notBefore = new Date();
+  cert.validity.notAfter = new Date();
+  cert.validity.notAfter.setFullYear(cert.validity.notBefore.getFullYear() + 1);
+  const attrs = [
+    {name:'commonName',value:'example.org'}
+   ,{name:'countryName',value:'US'}
+   ,{shortName:'ST',value:'Arizona'}
+   ,{name:'localityName',value:'Tucson'}
+   ,{name:'organizationName',value:'Test'}
+   ,{shortName:'OU',value:'Test'}
+  ];
+  cert.setSubject(attrs);
+  cert.setIssuer(attrs);
+  cert.sign(keys.privateKey);
+  return {
+    key: publicKey ? pki.publicKeyToPem(keys.publicKey) : pki.privateKeyToPem(keys.privateKey),
+    cert: pki.certificateToPem(cert)
+  };
 }

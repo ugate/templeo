@@ -4,9 +4,9 @@ const EngineOpts = require('./lib/engine-opts');
 const JsonEngine = require('./lib/json-engine');
 const Cachier = require('./lib/cachier');
 // TODO : ESM uncomment the following lines...
-//import * as EngineOpts from './lib/engine-opts.mjs';
-//import * as JsonEngine from './lib/json-engine.mjs';
-//import * as Cachier from './lib/cachier.mjs';
+// TODO : import * as EngineOpts from './lib/engine-opts.mjs';
+// TODO : import * as JsonEngine from './lib/json-engine.mjs';
+// TODO : import * as Cachier from './lib/cachier.mjs';
 
 /**
  * Micro rendering template engine
@@ -64,15 +64,25 @@ class Engine {
    * @param {EngineOpts} [opts] The {@link EngineOpts} to use
    * @param {Function} [formatFunc] The `function(string, formatOptions)` that will return a formatted string when __writting__
    * data passing the formatting options from `opts.formatOptions`. Used when formatting compiled code.
-   * @param {Boolean} [fetchPartials=false] `true` to `GET` partial contents during reads. Uses `window.fetch` for browsers or the `https`
-   * module when running on the server. When calling {@link registerPartial} the `name` should be the URL that will be fetched.
-   * @param {Boolean} [postPartials=false] `true` to `POST` partial contents during writes. Uses `window.fetch` to upload content in
-   * browsers or the `https` module when running on the server.
+   * @param {Object} [servePartials] The options to detemine if partial content will be loaded/read or uploaded/write to an `HTTPS` server (omit
+   * to serve template partials locally)
+   * none) 
+   * @param {Object} [servePartials.read] The configuration for reading/`GET` partial contents during reads. Uses `window.fetch` for browsers or
+   * the `https` module when running on the server (omit to prevent retrieving template partial content)
+   * @param {String} [servePartials.read.url] The __base__ URL used to `GET` template partials. The partial ID will be appended to the URL (e.g.
+   * `https://example.com/some/id.html` where `some/id.html` is the the partial ID). When calling {@link registerPartial} the `name` should
+   * _include_ the relative path on the server to the partial that will be captured.
+   * @param {Object} [servePartials.write] The configuration for writting/`POST` partial contents during writes. Uses `window.fetch` to upload
+   * content in browsers or the `https` module when running on the server
+   * @param {Object} [postPartials.write.url] The __base__ URL used to `POST` template partials. The partial ID will be appended to the URL (e.g.
+   * `https://example.com/some/id.html` where `some/id.html` is the the partial ID). When calling {@link registerPartial} the `name` should
+   * _include_ the relative path on the server to the partial that will be uploaded.
+   * @param {Boolean} [servePartials.rejectUnauthorized=true] A flag that indicates the client should reject unauthorized servers (__Node.js ONLY__)
    */
-  constructor(opts, formatFunc, fetchPartials = false, postPartials = false) {
+  constructor(opts, formatFunc, servePartials) {
     const max = 1e10, min = 0, opt = opts instanceof EngineOpts ? opts : new EngineOpts(opts), ns = Cachier.internal(this);
     ns.at.options = opt;
-    ns.at.cache = formatFunc instanceof Cachier ? formatFunc : new Cachier(ns.at.options, formatFunc, fetchPartials, postPartials);
+    ns.at.cache = formatFunc instanceof Cachier ? formatFunc : new Cachier(ns.at.options, formatFunc, true, servePartials);
     ns.at.isInit = false;
     ns.at.prts = {};
     ns.at.marker = Math.floor(Math.random() * (max - min + 1)) + min;
@@ -88,7 +98,7 @@ class Engine {
    */
   static async engineIndexedDB(opts, formatFunc, indexedDB) {
     opts = opts instanceof EngineOpts ? opts : new EngineOpts(opts);
-    const CachierDB = opts.useCommonJs ? require('./lib/cachier-db.js') : import('./lib/cachier-db.mjs');
+    const CachierDB = opts.useCommonJs ? require('./lib/cachier-db.js') : /* TODO : ESM use... import('./lib/cachier-db.mjs') */null;
     return new Engine(opts, new CachierDB(opts, indexedDB, formatFunc));
   }
 
@@ -102,8 +112,8 @@ class Engine {
    */
   static async engineFiles(opts, formatFunc) {
     const useCommonJs = (opts && opts.useCommonJs) || EngineOpts.defaultOptions.useCommonJs;
-    const CachierFiles = useCommonJs ? require('./lib/cachier-files.js') : await import('./lib/cachier-files.mjs');
-    const EngineFileOpts = useCommonJs ? require('./lib/engine-file-opts.js') : await import('./lib/engine-file-opts.mjs');
+    const CachierFiles = useCommonJs ? require('./lib/cachier-files.js') : /* TODO : ESM use... await import('./lib/cachier-files.mjs')*/null;
+    const EngineFileOpts = useCommonJs ? require('./lib/engine-file-opts.js') : /* TODO : ESM use... await import('./lib/engine-file-opts.mjs')*/null;
     opts = opts instanceof EngineFileOpts ? opts : new EngineFileOpts(opts);
     return new Engine(opts, new CachierFiles(opts, formatFunc));
   }
@@ -241,18 +251,6 @@ class Engine {
     const ns = Cachier.internal(this);
     ns.at.prts[name] = { tmpl: partial, name: name };
     ns.at.prts[name].ext = ns.at.options.defaultExtension || '';
-  }
-
-  /**
-   * Same as {@link Engine.registerPartial}, but also sets the partial function on a partial namespace
-   * @param {String} name The template name that uniquely identifies the template content
-   * @param {String} partial The partial template content to register
-   * @param {Boolean} initFn `true` to set/cache the template function
-   */
-  async registerAndSetPartial(name, partial) {
-    const ns = Cachier.internal(this);
-    this.registerPartial(name, partial);
-    return setFn(ns, this, name);
   }
 
   /**
