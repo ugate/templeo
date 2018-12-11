@@ -22,7 +22,7 @@ const Cachier = require('./lib/cachier');
  *  path: 'views',
  *  layoutPath: 'views/layout',
  *  layout: true,
- *  pathPartials: 'views/partials',
+ *  partialsPath: 'views/partials',
  *  helpersPath: 'views/helpers'
  * };
  * const htmlEngine = new Tmpl.Engine(vconf);
@@ -31,17 +31,16 @@ const Cachier = require('./lib/cachier');
  * const JsFrmt = require('js-beautify').js;
  * const Tmpl = require('templeo');
  * const vconf = {
- *  compileMode: 'sync',
+ *  compileMode: 'async',
  *  defaultExtension: 'html', // can be HTML, JSON, etc.
- *  isCached: true, // use with caution: when false, loades partial file(s) on every request!!!
  *  pathBase: process.cwd(),
  *  path: 'views',
  *  layoutPath: 'views/layout',
  *  layout: true,
- *  pathPartials: 'views/partials',
+ *  partialsPath: 'views/partials',
  *  helpersPath: 'views/helpers'
  * };
- * const htmlEngine = await Tmpl.filesEngine(vconf, JsFrmt);
+ * const htmlEngine = await Tmpl.Engine.filesEngine(vconf, JsFrmt);
  * // use the following instead if compiled templates don't need to be stored in files
  * //const htmlEngine = new Tmpl.Engine(vconf);
  * vconf.engines = {
@@ -51,7 +50,10 @@ const Cachier = require('./lib/cachier');
  * try {
  *  await server.register([{ register: require('vision'), options: vconf }]);
  *  server.views(vconf);
- *  server.app.htmlPartial = htmlEngine.genPartialFunc(); // optinal HTML partial processing access via app/server
+ *  // optionally set a partial function that can be accessed in the routes for
+ *  // instances where partials need to be generated, but not rendered to clients
+ *  server.app.htmlPartial = htmlEngine.genPartialFunc();
+ *  await server.start();
  * } catch (err) {
  *   throw err;
  * }
@@ -80,7 +82,7 @@ class Engine {
    * @param {Boolean} [servePartials.rejectUnauthorized=true] A flag that indicates the client should reject unauthorized servers (__Node.js ONLY__)
    */
   constructor(opts, formatFunc, servePartials) {
-    const max = 1e10, min = 0, opt = opts instanceof EngineOpts ? opts : new EngineOpts(opts), ns = Cachier.internal(this);
+    const max = 1e10, min = 0, opt = opts instanceof EngineOpts ? opts : new EngineOpts(opts), ns = internal(this);
     ns.at.options = opt;
     ns.at.cache = formatFunc instanceof Cachier ? formatFunc : new Cachier(ns.at.options, formatFunc, true, servePartials);
     ns.at.isInit = false;
@@ -96,7 +98,7 @@ class Engine {
    * data passing the formatting options from `opts.formatOptions`. Used when formatting compiled code.
    * @returns {Engine} A new {@link Engine} instance that will cache compiled templates in IndexedDB
    */
-  static async engineIndexedDB(opts, formatFunc, indexedDB) {
+  static async indexedDBEngine(opts, formatFunc, indexedDB) {
     opts = opts instanceof EngineOpts ? opts : new EngineOpts(opts);
     const CachierDB = opts.useCommonJs ? require('./lib/cachier-db.js') : /* TODO : ESM use... import('./lib/cachier-db.mjs') */null;
     return new Engine(opts, new CachierDB(opts, indexedDB, formatFunc));
@@ -110,7 +112,7 @@ class Engine {
    * data passing the formatting options from `opts.formatOptions`. Used when formatting compiled code.
    * @returns {Engine} A new {@link Engine} instance that will cache compiled templates in the file system
    */
-  static async engineFiles(opts, formatFunc) {
+  static async filesEngine(opts, formatFunc) {
     const useCommonJs = (opts && opts.useCommonJs) || EngineOpts.defaultOptions.useCommonJs;
     const CachierFiles = useCommonJs ? require('./lib/cachier-files.js') : /* TODO : ESM use... await import('./lib/cachier-files.mjs')*/null;
     const EngineFileOpts = useCommonJs ? require('./lib/engine-file-opts.js') : /* TODO : ESM use... await import('./lib/engine-file-opts.mjs')*/null;
@@ -206,7 +208,7 @@ class Engine {
    * @returns {function} The function(data) that returns a template result string based uopn the data object provided
    */
   async template(tmpl, options, def, tname) {
-    const ns = Cachier.internal(this), opts = options || ns.at.options;
+    const ns = internal(this), opts = options || ns.at.options;
     return Engine.templater(tmpl, opts, def, tname, ns.at.cache);
   }
 
@@ -214,21 +216,31 @@ class Engine {
    * Processes a template (basic)
    * @param {String} tmpl The raw template source
    * @param {Object} [opts] The options sent for compilation (omit to use the options set on the {@link Engine})
-   * @param {Function} [callback] Optional _callback_ style support for legacy purposes (e.g. 
-   * `compile(tmpl, opts, (error, func) => {})` or omit to run via `await compile(tmpl, opts)`)
+   * @param {Function} [callback] Optional _callback style_ support __for legacy APIs__:  
+   * `compile(tmpl, opts, (error, (ctx, opts, cb) => cb(error, results)) => {})` or omit to run via
+   * `await compile(tmpl, opts)`
    * @returns {function} The function(data) that returns a template result string based uopn the data object provided
    */
   async compile(tmpl, opts, callback) { // ensures partials are included in the compilation
-    const ns = Cachier.internal(this);
+    const ns = internal(this);
     opts = opts || ns.at.options;
     var fn, error;
     if (callback) {
+      if (ns.at.options.logger.info) {
+        ns.at.options.logger.info('Compiling template w/callback style conventions');
+      }
       try {
         fn = await compiler(ns, tmpl, opts);
       } catch (err) {
         error = err;
       }
-      callback(error, fn);
+      callback(error, async (ctx, opts, cb) => {
+        try {
+          cb(null, await fn(ctx, opts));
+        } catch (err) {
+          cb(err);
+        }
+      });
     } else fn = compiler(ns, tmpl, opts);
     return fn;
   }
@@ -238,7 +250,7 @@ class Engine {
    * @param {String} name The template name that uniquely identifies the template content
    */
   unregisterPartial(name) {
-    const ns = Cachier.internal(this);
+    const ns = internal(this);
     if (ns.at.prts[name]) delete ns.at.prts[name];
   }
 
@@ -248,7 +260,7 @@ class Engine {
    * @param {String} partial The partial template content to register
    */
   registerPartial(name, partial) {
-    const ns = Cachier.internal(this);
+    const ns = internal(this);
     ns.at.prts[name] = { tmpl: partial, name: name };
     ns.at.prts[name].ext = ns.at.options.defaultExtension || '';
   }
@@ -260,7 +272,7 @@ class Engine {
    * @returns {String} The compiled template
    */
   async processPartial(name, data) {
-    const ns = Cachier.internal(this);
+    const ns = internal(this);
     if (!ns.at.options.isCached) await refreshPartial(ns, this, name);
     // prevent "No partial found" errors
     return (data && ns.at.prts[name] && (typeof ns.at.prts[name].fn === 'function' || await setFn(ns, this, name)) && ns.at.prts[name].fn(data)) || '&nbsp;';
@@ -280,11 +292,11 @@ class Engine {
    * - - - `name` The template name
    * - - - `id` The template identifier
    * - - - `content` The template content
-   * - - `dirs` Present __only__ when {@link Engine.engineFiles} was used. Contains the directories/sub-directories that were created
-   * - `partialFunc` A reference safe async function to {@link Engine#processPartial}
+   * - - `dirs` Present __only__ when {@link Engine.filesEngine} was used. Contains the directories/sub-directories that were created
+   * - `partialFunc` A reference safe `async` function to {@link Engine.processPartial} that can be safely passed into other functions
    */
   async scan(registerPartials) {
-    const ns = Cachier.internal(this);
+    const ns = internal(this);
     const rptrl = registerPartials ? (name, data) => ns.this.registerPartial(name, data) : null;
     const urptrl = registerPartials ? (name) => ns.this.unregisterPartial(name) : null;
     return {
@@ -294,14 +306,30 @@ class Engine {
   }
 
   /**
+   * @returns {Function} A reference safe `async` function to {@link Engine.processPartial} that can be safely passed into other functions
+   */
+  genPartialFunc() {
+    const ns = internal(this);
+    return async (name, data) => ns.this.processPartial(name, data);
+  }
+
+  /**
    * Clears the underlying cache
    * @param {Boolean} [all=false] `true` to clear all unassociated cache instances when possible as well as any partials
    * that have been registered
    */
   async clearCache(all = false) {
-    const ns = Cachier.internal(this);
+    const ns = internal(this);
     if (all) ns.at.prts = {};
     return ns.at.cache.clear(all);
+  }
+
+  /**
+   * @returns {EngineOpts} The engine options
+   */
+  get options() {
+    const ns = internal(this);
+    return ns.at.options;
   }
 };
 
@@ -364,7 +392,7 @@ async function refreshPartial(ns, eng, name) {
  * @param {String} tmpl The template contents
  * @param {Object} data The object that contains the data used in the template
  * @param {String} name The template name that uniquely identifies the template content
- * @returns {function} The {@link Engine#template} function
+ * @returns {function} The {@link Engine.template} function
  */
 async function templFuncPartial(ns, eng, tmpl, data, name) { // generates a template function that accounts for nested partials
   const prtl = await rplPartial(ns, eng, tmpl, data, name);
@@ -455,3 +483,16 @@ function coded(code, c, tmpl, args, lnOpts, cond) {
 // TODO : ESM remove the following lines...
 exports.Engine = Engine;
 exports.JsonEngine = JsonEngine;
+
+// private mapping
+let map = new WeakMap();
+let internal = function(object) {
+  if (!map.has(object)) {
+    if (object.module && map.has(object.module)) object = object.module;
+    else map.set(object, {});
+  }
+  return {
+    at: map.get(object),
+    this: object
+  };
+};

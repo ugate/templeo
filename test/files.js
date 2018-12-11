@@ -16,7 +16,7 @@ lab.experiment(plan, () => {
 
   async function getFilesEngine(opts) {
     if (engine) await engine.clearCache(true); // clear out temp files
-    engine = await Engine.engineFiles(opts, JsFrmt);
+    engine = await Engine.filesEngine(opts, JsFrmt);
     return engine;
   }
 
@@ -37,7 +37,7 @@ lab.experiment(plan, () => {
 
   lab.test(`${plan}: HTML (cache w/watch)`, { timeout: TEST_TKO }, async flags => {
     const opts = baseOptions();
-    opts.pathScanSrcWatch = true;
+    opts.watchScannedSourcePaths = true;
     const test = await init(opts, true, await getFilesEngine(opts));
     await partialFrag(test);
     return engine.clearCache(true); // should clear the cache/watches 
@@ -45,7 +45,7 @@ lab.experiment(plan, () => {
 
   lab.test(`${plan}: HTML (cache w/options.partials)`, { timeout: TEST_TKO }, async flags => {
     const opts = baseOptions();
-    opts.partials = await getFiles(opts.pathPartials, true);
+    opts.partials = await getFiles(opts.partialsPath, true);
     return baseTest(opts, true, await getFilesEngine(opts));
   });
 });
@@ -54,8 +54,8 @@ function baseOptions() {
   return {
     pathBase: '.',
     path: 'test/views',
-    pathPartials: 'test/views/partials',
-    pathScanSrc: 'test/views/partials',
+    partialsPath: 'test/views/partials',
+    scanSourcePath: 'test/views/partials',
     logger: ENGINE_LOGGER
   };
 }
@@ -72,7 +72,7 @@ async function partialFrag(test, elId, name) {
   });
 
   // write frag (should be picked up and registered by the file watcher set via the scan)
-  test.frag.path = `${Path.join(test.opts.pathBase, test.opts.pathPartials, test.frag.name)}.html`;
+  test.frag.path = `${Path.join(test.opts.pathBase, test.opts.partialsPath, test.frag.name)}.html`;
   await Fs.promises.writeFile(test.frag.path, test.frag.html);
 
   try {
