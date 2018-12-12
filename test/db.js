@@ -1,51 +1,43 @@
 'use strict';
 
-const { expect, Lab, PLAN, TEST_TKO, ENGINE_LOGGER, Engine, getFiles, Level, baseTest, JsFrmt, Fs, Path, Os, rmrf } = require('./_main.js');
+const { expect, Lab, PLAN, TEST_TKO, LOGGER, Engine, getFiles, openIndexedDB, closeIndexedDB, baseTest, JsFrmt, Fs, Path, Os, rmrf } = require('./_main.js');
 const lab = exports.lab = Lab.script();
 // ESM uncomment the following lines...
-// TODO : import { expect, Lab, PLAN, TEST_TKO, ENGINE_LOGGER, Engine, getFiles, Level, baseTest, JsFrmt, Fs, Path, Os, rmrf } from './_main.mjs';
+// TODO : import { expect, Lab, PLAN, TEST_TKO, LOGGER, Engine, getFiles, openIndexedDB, closeIndexedDB, baseTest, JsFrmt, Fs, Path, Os, rmrf } from './_main.mjs';
 const plan = `${PLAN} IndexedDB`;
-const DB = {};
 
 // "node_modules/.bin/lab" test/db.js -vi 1
 
 lab.experiment(plan, async () => {
 
-  var db;
+  var db, engine;
 
   lab.before(async () => {
-    db = await getIndexedDB();
-    if (ENGINE_LOGGER && ENGINE_LOGGER.info) ENGINE_LOGGER.info(`Using LevelDB @ ${db.loc}`);
+    db = await openIndexedDB();
   });
 
   lab.after(async () => {
     if (!db) return;
-    if (ENGINE_LOGGER && ENGINE_LOGGER.info) ENGINE_LOGGER.info(`Closing/Removing LevelDB @ ${db.loc}`);
-    await db.indexedDB.close();
-    return rmrf(db.loc);
+    return closeIndexedDB(db, engine);
   });
 
   lab.test(`${plan}: HTML/LevelDB from options.partials`, { timeout: TEST_TKO }, async flags => {
     const opts = baseOptions();
-    opts.partials = await getFiles('test/views/partials', true);
-    return baseTest(opts, true, await Engine.indexedDBEngine(opts, JsFrmt, db.indexedDB));
+    opts.partials = await getFiles('test/views/partials');
+    engine = await Engine.indexedDBEngine(opts, JsFrmt, db.indexedDB);
+    return baseTest(opts, true, engine);
   });
 
   lab.test(`${plan}: HTML/LevelDB from partials in DB`, { timeout: TEST_TKO }, async flags => {
+    // partials should still be cached from previous test w/opts.partials
     const opts = baseOptions();
-    return baseTest(opts, true, await Engine.indexedDBEngine(opts, JsFrmt, db.indexedDB));
+    engine = await Engine.indexedDBEngine(opts, JsFrmt, db.indexedDB);
+    return baseTest(opts, true, engine);
   });
 });
 
 function baseOptions() {
   return {
-    logger: ENGINE_LOGGER
+    logger: LOGGER
   };
-}
-
-async function getIndexedDB(locPrefix = 'templeo-test-indexedDB-') {
-  if (DB[locPrefix]) return DB[locPrefix];
-  const loc = await Fs.promises.mkdtemp(Path.join(Os.tmpdir(), locPrefix));
-  DB[locPrefix] = { loc, indexedDB: Level(loc) };
-  return DB[locPrefix];
 }

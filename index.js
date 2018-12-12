@@ -27,36 +27,44 @@ const Cachier = require('./lib/cachier');
  * };
  * const htmlEngine = new Tmpl.Engine(vconf);
  * @example
- * // Node/Hapi example using vision:
+ * // Hapi.js example:
+ * const Hapi = require('hapi');
+ * const Vision = require('vision');
  * const JsFrmt = require('js-beautify').js;
  * const Tmpl = require('templeo');
- * const vconf = {
+ * const econf = {
+ *   pathBase: '.',
+ *   path: 'views',
+ *   partialsPath: 'views/partials',
+ *   defaultExtension: 'html' // can be HTML, JSON, etc.
+ * };
+ * const htmlEngine = await Tmpl.Engine.filesEngine(econf, JsFrmt);
+ * // use the following instead if compiled templates don't need to be stored in files
+ * // const htmlEngine = new Tmpl.Engine(econf, JsFrmt);
+ * const server = Hapi.Server({});
+ * await server.register(Vision);
+ * server.views({
  *  compileMode: 'async',
- *  defaultExtension: 'html', // can be HTML, JSON, etc.
- *  pathBase: process.cwd(),
- *  path: 'views',
+ *  relativeTo: econf.pathBase,
+ *  path: econf.path,
+ *  partialsPath: econf.partialsPath,
+ *  defaultExtension: econf.defaultExtension,
  *  layoutPath: 'views/layout',
  *  layout: true,
- *  partialsPath: 'views/partials',
- *  helpersPath: 'views/helpers'
- * };
- * const htmlEngine = await Tmpl.Engine.filesEngine(vconf, JsFrmt);
- * // use the following instead if compiled templates don't need to be stored in files
- * //const htmlEngine = new Tmpl.Engine(vconf);
- * vconf.engines = {
- *  html: htmlEngine,
- *  json: new Tmpl.JsonEngine()
- * };
- * try {
- *  await server.register([{ register: require('vision'), options: vconf }]);
- *  server.views(vconf);
- *  // optionally set a partial function that can be accessed in the routes for
- *  // instances where partials need to be generated, but not rendered to clients
- *  server.app.htmlPartial = htmlEngine.genPartialFunc();
- *  await server.start();
- * } catch (err) {
- *   throw err;
- * }
+ *  helpersPath: 'views/helpers',
+ *  engines: {
+ *    html: htmlEngine,
+ *    json: new Tmpl.JsonEngine()
+ *  }
+ * });
+ * // optionally set a partial function that can be accessed in the routes for
+ * // instances where partials need to be generated, but not rendered to clients
+ * server.app.htmlPartial = htmlEngine.genPartialFunc();
+ * await server.start();
+ * // it's a good practice to clear files after the server shuts down
+ * server.events.on('stop', async () => {
+ *  await htmlEngine.clearCache();
+ * });
  */
 class Engine {
 // TODO : ESM use... export class Engine {

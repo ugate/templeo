@@ -30,13 +30,14 @@ exports.JsonEngine = JsonEngine;
 exports.PLAN = 'Template Engine';
 exports.TASK_DELAY = 500;
 exports.TEST_TKO = 20000;
-exports.ENGINE_LOGGER = { info: console.info, warn: console.warn, error: console.error };//console;
-exports.LOGGER = null;//console.log;
+exports.LOGGER = { info: console.info, warn: console.warn, error: console.error };//console;
 exports.httpsServer = httpsServer;
 exports.rmrf = rmrf;
 exports.baseTest = baseTest;
 exports.getFile = getFile;
 exports.getFiles = getFiles;
+exports.openIndexedDB = openIndexedDB;
+exports.closeIndexedDB = closeIndexedDB;
 exports.getTemplateFiles = getTemplateFiles;
 exports.init = init;
 exports.expectDOM = expectDOM;
@@ -68,20 +69,22 @@ exports.expectDOM = expectDOM;
 // export const PLAN = 'Template Engine';
 // export const TASK_DELAY = 500;
 // export const TEST_TKO = 20000;
-// export const ENGINE_LOGGER = console.log;
-// export const LOGGER = console.log;
 
 const TEST_FILES = {};
+const DB = {};
 const Fsp = Fs.promises;
+const logger = exports.LOGGER || {};
 
 // TODO : ESM uncomment the following line...
-// export function httpsServer(baseFilePath, hostname = '127.0.0.1', port = 3000) {
-function httpsServer(baseFilePath, hostname = '127.0.0.1', port = 3000) {
+// export function httpsServer(baseFilePath, hostname, port) {
+function httpsServer(baseFilePath, hostname, port) {
   return new Promise((resolve, reject) => {
-    const url = `https://${hostname}:${port}/`, sec = selfSignedCert();
+    const sec = selfSignedCert();
+    var url;
     const server = https.createServer({ key: sec.key, cert: sec.cert }, async (req, res) => {
       const mthd = req.method.toUpperCase();
       try {
+        if (logger.info) logger.info(`HTTPS server received: ${url}${req.url}`);
         const prms = new URL(`${url}${req.url}`).searchParams, type = prms.get('type');
         const file = Path.join(baseFilePath, req.url);
         const contents = await Fsp.readFile(file);
@@ -96,7 +99,9 @@ function httpsServer(baseFilePath, hostname = '127.0.0.1', port = 3000) {
       }
     });
     server.listen(port, hostname, () => {
-      if (exports.LOGGER) exports.LOGGER(`Server running at ${url}`);
+      const addy = server.address();
+      url = `https://${addy.address === '::' || server.address === '0.0.0.0' ? '127.0.0.1' : addy.includes}:${addy.port}/`;
+      if (logger.info) logger.info(`Server running at ${url}`);
       resolve({ url, close: () => {
         return new Promise((resolve, reject) => {
           server.close(err => err ? reject(err) : resolve());
@@ -159,24 +164,49 @@ async function getFile(path, cache = true) {
   return cache ? TEST_FILES[path] = await Fs.promises.readFile(path) : Fs.promises.readFile(path);
 }
 // TODO : ESM uncomment the following line...
-// export async function getFiles(dir, rmBasePartial, cache = true) {
-async function getFiles(dir, rmBasePartial, cache = true) {
+// export async function getFiles(dir, readContent = true, rmBasePartial = true, cache = true) {
+async function getFiles(dir, readContent = true, rmBasePartial = true, cache = true) {
   const sdirs = await Fs.promises.readdir(dir);
-  var spth, stat, sfiles, files = [];
+  var spth, stat, sfiles, files = [], filed;
   for (let sdir of sdirs) {
     spth = Path.join(dir, sdir), stat = await Fs.promises.stat(spth);
     if (stat.isDirectory()) {
-      sfiles = await getFiles(spth, rmBasePartial, cache);
+      sfiles = await getFiles(spth, readContent, rmBasePartial, cache);
       files = sfiles && sfiles.length ? files.length ? files.concat(sfiles) : sfiles : files;
     } else if (stat.isFile()) {
-      files.push({
+      filed = {
         name: (rmBasePartial ? spth.replace(/[\/\\]?test[\/\\]views[\/\\]partials[\/\\]?/, '') : spth).replace(/\..+$/, '').replace(/\\+/g, '/'),
-        path: spth,
-        content: (await Fs.promises.readFile(spth)).toString()
-      });
+        path: spth
+      };
+      if (readContent) filed.content = (await Fs.promises.readFile(spth)).toString();
+      files.push(filed);
     }
   }
   return files;
+}
+
+// TODO : ESM uncomment the following line...
+// export async function openIndexedDB(locPrefix = 'templeo-test-indexedDB-') {
+async function openIndexedDB(locPrefix = 'templeo-test-indexedDB-') {
+  if (DB[locPrefix]) return DB[locPrefix];
+  const loc = await Fs.promises.mkdtemp(Path.join(Os.tmpdir(), locPrefix));
+  DB[locPrefix] = { locPrefix, loc, indexedDB: Level(loc) };
+  if (logger.info) logger.info(`Using LevelDB @ ${loc}`);
+  return DB[locPrefix];
+}
+
+// TODO : ESM uncomment the following line...
+// export async function openIndexedDB(db, engine) {
+async function closeIndexedDB(db, engine) {
+  if (engine) {
+    if (logger.debug) logger.debug(`Clearing cache for LevelDB @ ${db.loc}`);
+    await engine.clearCache(true);
+  }
+  if (logger.debug) logger.debug(`Cloasing LevelDB @ ${db.loc}`);
+  await db.indexedDB.close();
+  if (logger.info) logger.info(`Removing LevelDB @ ${db.loc}`);
+  if (DB[db.locPrefix]) delete DB[db.locPrefix];
+  return rmrf(db.loc);
 }
 
 // TODO : ESM uncomment the following line...

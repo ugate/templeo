@@ -1,10 +1,10 @@
 'use strict';
 
-const { Lab, PLAN, TEST_TKO, ENGINE_LOGGER, Engine, getFiles,  baseTest, init, expectDOM, JSDOM, Path, Fs, JsFrmt } = require('./_main.js');
+const { Lab, PLAN, TEST_TKO, LOGGER, Engine, getFiles,  baseTest, init, expectDOM, JSDOM, Path, Fs, JsFrmt } = require('./_main.js');
 const lab = exports.lab = Lab.script();
 const { expect } = require('code');
 // ESM uncomment the following lines...
-// TODO : import { Lab, PLAN, TEST_TKO, ENGINE_LOGGER, Engine, getFiles,  baseTest, init, expectDOM, JSDOM, Path, Fs, JsFrmt } from './_main.mjs';
+// TODO : import { Lab, PLAN, TEST_TKO, LOGGER, Engine, getFiles,  baseTest, init, expectDOM, JSDOM, Path, Fs, JsFrmt } from './_main.mjs';
 const plan = `${PLAN} Files`;
 const PARTIAL_DETECT_DELAY_MS = 100;
 
@@ -15,13 +15,13 @@ lab.experiment(plan, () => {
   var engine;
 
   async function getFilesEngine(opts) {
-    if (engine) await engine.clearCache(true); // clear out temp files
+    if (engine) await engine.clearCache(true); // cleanup temp files
     engine = await Engine.filesEngine(opts, JsFrmt);
     return engine;
   }
 
   lab.after(async () => {
-    return engine ? engine.clearCache(true) : null;
+    return engine ? engine.clearCache(true) : null; // cleanup temp files
   });
 
   lab.test(`${plan}: HTML (cache)`, { timeout: TEST_TKO }, async flags => {
@@ -56,7 +56,7 @@ function baseOptions() {
     path: 'test/views',
     partialsPath: 'test/views/partials',
     scanSourcePath: 'test/views/partials',
-    logger: ENGINE_LOGGER
+    logger: LOGGER
   };
 }
 
