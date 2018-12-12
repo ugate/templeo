@@ -4,7 +4,9 @@
   "description": "Micro template engine with cache and debugging support",
   "main": "index.js",
   "directories": {
-    "test": "test"
+    "test": "test",
+    "jsdocp": "jsdocp ./jsdocp/jsdoc.json",
+    "jsdocp-deploy": "jsdocp -D ./jsdocp/jsdoc.json"
   },
   "scripts": {
     "test": "lab -v -c --coverage-exclude lib -t 70",

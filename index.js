@@ -14,18 +14,7 @@ const Cachier = require('./lib/cachier');
  * @example
  * // Basic example in browser
  * const Tmpl = require('templeo');
- * const vconf = {
- *  compileMode: 'sync',
- *  defaultExtension: 'html', // can be HTML, JSON, etc.
- *  isCached: true, // use with caution: when false, loades partial file(s) on every request!!!
- *  pathBase: '/', // used to build template identifiers
- *  path: 'views',
- *  layoutPath: 'views/layout',
- *  layout: true,
- *  partialsPath: 'views/partials',
- *  helpersPath: 'views/helpers'
- * };
- * const htmlEngine = new Tmpl.Engine(vconf);
+ * const htmlEngine = new Tmpl.Engine();
  * @example
  * // Hapi.js example:
  * const Hapi = require('hapi');
@@ -102,9 +91,10 @@ class Engine {
    * An [IndexedDB]{@link https://developer.mozilla.org/en-US/docs/Web/API/IndexedDB_API} template cached {@link Engine}
    * @param {EngineOpts} [opts] The {@link EngineOpts}
    * @param {Function} [formatFunc] The `function(string, formatOptions)` that will return a formatted string when __writting__
-   * @param {Object} [indexedDB] The `IndexedDB` implementation that will be used for caching (defaults to `window.indexedDB`)
-   * data passing the formatting options from `opts.formatOptions`. Used when formatting compiled code.
-   * @returns {Engine} A new {@link Engine} instance that will cache compiled templates in IndexedDB
+   * data, passing the formatting options from `opts.formatOptions`. Used when formatting compiled code.
+   * @param {Object} [indexedDB] The `IndexedDB` implementation that will be used for caching (defaults to `window.indexedDB`).
+   * Can be either a `IndexedDB` compilant instance or a `LevelDB`/`level` instance.
+   * @returns {Engine} A new {@link Engine} instance with IndexedDB cache
    */
   static async indexedDBEngine(opts, formatFunc, indexedDB) {
     opts = opts instanceof EngineOpts ? opts : new EngineOpts(opts);
@@ -113,12 +103,12 @@ class Engine {
   }
 
   /**
-   * A [Node.js]{@link https://nodejs.org/api/fs.html} __only__ {@link Engine} to cache templates as files for improved
-   * debugging/caching
+   * A [Node.js]{@link https://nodejs.org/api/fs.html} __only__ {@link Engine} to cache compiled template code in the file system for improved
+   * debugging/caching capabilities
    * @param {EngineOpts} [opts] The {@link EngineFileOpts}
    * @param {Function} [formatFunc] The `function(string, formatOptions)` that will return a formatted string when __writting__
-   * data passing the formatting options from `opts.formatOptions`. Used when formatting compiled code.
-   * @returns {Engine} A new {@link Engine} instance that will cache compiled templates in the file system
+   * data, passing the formatting options from `opts.formatOptions`. Used when formatting compiled code.
+   * @returns {Engine} A new {@link Engine} instance with file system cache
    */
   static async filesEngine(opts, formatFunc) {
     const useCommonJs = (opts && opts.useCommonJs) || EngineOpts.defaultOptions.useCommonJs;
@@ -129,17 +119,18 @@ class Engine {
   }
 
   /**
-   * Processes a template
+   * Renders a template
    * @param {String} tmpl The raw template source
    * @param {EngineOpts} [options] The options that overrides the default engine options
    * @param {Object} [def] The object definition to be used in the template
    * @param {String} [def.filename] When the template name is omitted, an attempt will be made to extract a name from the `filename` using `options.filename`
    * regular expression
-   * @param {String} [tname] Name to be given to the template
-   * @param {Cachier} [cache] The {@link Cachier} instance that will handle the {@link Cachier.write} of the template content
+   * @param {String} [tname] Name to be given to the template (omit to use the one from `options.filename` or an auto generated name)
+   * @param {Cachier} [cache] The {@link Cachier} instance that will handle the {@link Cachier.write} of the compiled template code. Defaults to in-memory
+   * cache.
    * @returns {Function} The `function(data)` that returns a template result string based uopn the data object provided
    */
-  static async templater(tmpl, options, def, tname, cache) {
+  static async render(tmpl, options, def, tname, cache) {
     const c = options instanceof EngineOpts ? options : new EngineOpts(options);
     cache = cache instanceof Cachier ? cache : new Cachier(c);
     const tnm = tname || (def && def.filename && def.filename.match && def.filename.match(c.filename)[2]) || ('template_' + Cachier.guid(null, false));
@@ -208,7 +199,7 @@ class Engine {
 	}
 
   /**
-   * Processes a template via {@link Engine.templater}
+   * Processes a template via {@link Engine.render}
    * @param {String} tmpl The raw template source
    * @param {EngineOpts} [options] The options that overrides the default engine options
    * @param {Object} [def] The object definition to be used in the template
@@ -217,7 +208,7 @@ class Engine {
    */
   async template(tmpl, options, def, tname) {
     const ns = internal(this), opts = options || ns.at.options;
-    return Engine.templater(tmpl, opts, def, tname, ns.at.cache);
+    return Engine.render(tmpl, opts, def, tname, ns.at.cache);
   }
 
   /**
