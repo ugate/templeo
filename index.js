@@ -7,6 +7,8 @@ const Cachier = require('./lib/cachier');
 // TODO : import * as EngineOpts from './lib/engine-opts.mjs';
 // TODO : import * as JsonEngine from './lib/json-engine.mjs';
 // TODO : import * as Cachier from './lib/cachier.mjs';
+// TODO : export * as EngineOpts from EngineOpts;
+// TODO : export * as Cachier from Cachier;
 
 /**
  * Micro rendering template engine
@@ -62,7 +64,7 @@ class Engine {
    * Creates a template parsing engine
    * @param {EngineOpts} [opts] The {@link EngineOpts} to use
    * @param {Function} [formatFunc] The `function(string, formatOptions)` that will return a formatted string when __writting__
-   * data passing the formatting options from `opts.formatOptions`. Used when formatting compiled code.
+   * data, passing the formatting options from `opts.formatOptions`. Used when formatting compiled code.
    * @param {Object} [servePartials] The options to detemine if partial content will be loaded/read or uploaded/write to an `HTTPS` server (omit
    * to serve template partials locally)
    * none) 
@@ -79,12 +81,14 @@ class Engine {
    * @param {Boolean} [servePartials.rejectUnauthorized=true] A flag that indicates the client should reject unauthorized servers (__Node.js ONLY__)
    */
   constructor(opts, formatFunc, servePartials) {
-    const max = 1e10, min = 0, opt = opts instanceof EngineOpts ? opts : new EngineOpts(opts), ns = internal(this);
+    const opt = opts instanceof EngineOpts ? opts : new EngineOpts(opts), ns = internal(this);
     ns.at.options = opt;
     ns.at.cache = formatFunc instanceof Cachier ? formatFunc : new Cachier(ns.at.options, formatFunc, true, servePartials);
     ns.at.isInit = false;
     ns.at.prts = {};
-    ns.at.marker = Math.floor(Math.random() * (max - min + 1)) + min;
+    // Each partial replacement is flagged with the engine marker so that line/column detection can be performed
+    // const max = 1e10, min = 0;
+    // ns.at.marker = Math.floor(Math.random() * (max - min + 1)) + min;
   }
 
   /**
@@ -119,106 +123,13 @@ class Engine {
   }
 
   /**
-   * Renders a template
-   * @param {String} tmpl The raw template source
-   * @param {EngineOpts} [options] The options that overrides the default engine options
-   * @param {Object} [def] The object definition to be used in the template
-   * @param {String} [def.filename] When the template name is omitted, an attempt will be made to extract a name from the `filename` using `options.filename`
-   * regular expression
-   * @param {String} [tname] Name to be given to the template (omit to use the one from `options.filename` or an auto generated name)
-   * @param {Cachier} [cache] The {@link Cachier} instance that will handle the {@link Cachier.write} of the compiled template code. Defaults to in-memory
-   * cache.
-   * @returns {Function} The `function(data)` that returns a template result string based uopn the data object provided
-   */
-  static async render(tmpl, options, def, tname, cache) {
-    const c = options instanceof EngineOpts ? options : new EngineOpts(options);
-    cache = cache instanceof Cachier ? cache : new Cachier(c);
-    const tnm = tname || (def && def.filename && def.filename.match && def.filename.match(c.filename)[2]) || ('template_' + Cachier.guid(null, false));
-    const startend = {
-  		append: { start: "'+(", end: ")+'", startencode: "'+encodeHTML(" },
-  		split:  { start: "';out+=(", end: ");out+='", startencode: "';out+=encodeHTML(" }
-  	}, skip = /$^/, cse = c.append ? startend.append : startend.split, ostr = tmpl.replace(/'|\\/g, '\\$&');
-		var needhtmlencode, sid = 0, indv, lnOpts = { offset: 0 };
-    var str = "var out='" + ostr
-      .replace(c.include || skip, function rplInclude(match) {
-        if (c.logger.warn) c.logger.warn(`No partial registered for include ${match} in: ${ostr}`);
-        return '';
-      })
-			.replace(c.interpolate || skip, function rplInterpolate(m, code) {
-        return cse.start + coded(code, c, ostr, arguments, lnOpts, true) + cse.end;
-			})
-			.replace(c.encode || skip, function rplEncode(m, code) {
-				needhtmlencode = true;
-				return cse.startencode + coded(code, c, ostr, arguments, lnOpts, true) + cse.end;
-			})
-			.replace(c.conditional || skip, function rplConditional(m, elsecase, code) {
-				return elsecase ?
-					(code ? `';}else if(${coded(code, c, ostr, arguments, lnOpts, true)}){out+='` : "';}else{out+='") :
-					(code ? `';if(${coded(code, c, ostr, arguments, lnOpts, true)}){out+='` : "';}out+='");
-			})
-			.replace(c.iterate || skip, function rplIterate(m, iterate, vname, iname) {
-        if (!iterate) return "';} } out+='";
-        sid += 1;
-        indv = iname || 'i' + sid; // w/o duplicate iterator validation there is a potential for endless loop conditions
-        iterate = coded(`var arr${sid}=${iterate}`, c, ostr, arguments, lnOpts);
-        return `';${iterate};if(arr${sid}){var ${vname},${indv}=-1,l${sid}=arr${sid}.length-1;while(${indv}<l${sid}){${vname}=arr${sid}[${indv}+=1];out+='`;
-      })
-			.replace(c.iterateIn || skip, function rplIterateIn(m, iterate, vname, iname) {
-        if (!iterate) return "';} } out+='";
-        sid += 1;
-        indv = iname || 'i' + sid; // w/o duplicate iterator validation there is a potential for endless loop conditions
-        iterate = coded(`var arr${sid}=${iterate}`, c, ostr, arguments, lnOpts);
-        return `';${iterate};if(arr${sid}){var ${vname}=arr${sid};for(var ${indv} in ${vname}){out+='`;
-      })
-			.replace(c.evaluate || skip, function rplEvaluate(m, code) {
-				return "';" + coded(code, c, ostr, arguments, lnOpts) + "out+='";
-			}) + "';return out;"; // remove consecutive spaces
-    if (c.errorLine) {
-      str = `var lnCol={};try{${str}}catch(e){e.message+=' at template ${((tnm && '"' + tnm + '" ') || '')}line '+lnCol.ln+' column '+lnCol.col;throw e;}`;
-    }
-    if (c.strip) str = str.replace(/(?:^|\r|\n)\t* +| +\t*(?:\r|\n|$)/g, ' ').replace(/\r|\n|\t|\/\*[\s\S]*?\*\//g, '');
-    str = str.replace(/(\n|\t|\r)/g, '\\$1').replace(/(\s|;|\}|^|\{)out\+='';/g, '$1').replace(/\+''|(\s){2,}/g, '$1');
-    if (needhtmlencode) {
-		  str = (function encodeHTML(code) {
-        try {
-          const encMap = { '&': '&#38;', '<': '&#60;', '>': '&#62;', '"': '&#34;', "'": '&#39;', '/': '&#47;' };
-          return code ? code.toString().replace(((c.doNotSkipEncoded && /[&<>"'\/]/g) || /&(?!#?\w+;)|<|>|"|'|\//g), function(m) {return encMap[m] || m;}) : '';
-        } catch (e) {
-          e.message += ` While encoding HTML at: ${code}`;
-          throw e;
-        }
-      }).toString().replace('c.doNotSkipEncoded', c.doNotSkipEncoded) + str;
-		}
-		try {
-      const { func } = await cache.generateCode(tnm, str, cache.isWritable);
-      return func;
-		} catch (e) {
-      if (c.logger.error) c.logger.error(`Could not create a template function (ERROR: ${e.message}): ${str}`);
-			throw e;
-		}
-	}
-
-  /**
-   * Processes a template via {@link Engine.render}
-   * @param {String} tmpl The raw template source
-   * @param {EngineOpts} [options] The options that overrides the default engine options
-   * @param {Object} [def] The object definition to be used in the template
-   * @param {String} [tname] Name to be given to the template
-   * @returns {function} The function(data) that returns a template result string based uopn the data object provided
-   */
-  async template(tmpl, options, def, tname) {
-    const ns = internal(this), opts = options || ns.at.options;
-    return Engine.render(tmpl, opts, def, tname, ns.at.cache);
-  }
-
-  /**
-   * Processes a template (basic)
+   * Compiles a template and returns a function that renders the template results using the passed `context` object
    * @param {String} tmpl The raw template source
    * @param {Object} [opts] The options sent for compilation (omit to use the options set on the {@link Engine})
    * @param {Function} [callback] Optional _callback style_ support __for legacy APIs__:  
    * `compile(tmpl, opts, (error, (ctx, opts, cb) => cb(error, results)) => {})` or omit to run via
    * `await compile(tmpl, opts)`
-   * @returns {function} The function(data) that returns a template result string based uopn the data object provided
+   * @returns {function} The rendering `function(context)` that returns a template result string based upon the provided context
    */
   async compile(tmpl, opts, callback) { // ensures partials are included in the compilation
     const ns = internal(this);
@@ -229,7 +140,7 @@ class Engine {
         ns.at.options.logger.info('Compiling template w/callback style conventions');
       }
       try {
-        fn = await compiler(ns, tmpl, opts);
+        fn = await compile(ns, tmpl, opts);
       } catch (err) {
         error = err;
       }
@@ -240,7 +151,7 @@ class Engine {
           cb(err);
         }
       });
-    } else fn = compiler(ns, tmpl, opts);
+    } else fn = compile(ns, tmpl, opts);
     return fn;
   }
 
@@ -267,14 +178,14 @@ class Engine {
   /**
    * On-Demand compilation of a registered template
    * @param {String} name The name of the registered tempalte
-   * @param {Object} data The object that contains the data used in the template
-   * @returns {String} The compiled template
+   * @param {Object} context The object that contains contextual data used in the template
+   * @returns {String} The compiled template (will return `&nbsp;` when no partial is found to prevent potential errors when used in external plugins)
    */
-  async processPartial(name, data) {
+  async processPartial(name, context) {
     const ns = internal(this);
     if (!ns.at.options.isCached) await refreshPartial(ns, this, name);
     // prevent "No partial found" errors
-    return (data && ns.at.prts[name] && (typeof ns.at.prts[name].fn === 'function' || await setFn(ns, this, name)) && ns.at.prts[name].fn(data)) || '&nbsp;';
+    return (context && ns.at.prts[name] && (typeof ns.at.prts[name].fn === 'function' || await setFn(ns, this, name)) && ns.at.prts[name].fn(context)) || '&nbsp;';
   }
 
   /**
@@ -287,20 +198,20 @@ class Engine {
    * @returns {Object|undefined} An object that contains the scan results:
    * 
    * - `created` The metadata object that contains details about the scan
-   * - - `partials` The `partials` object that contains the fragments that have been registered
-   * - - - `name` The template name
-   * - - - `id` The template identifier
-   * - - - `content` The template content
-   * - - `dirs` Present __only__ when {@link Engine.filesEngine} was used. Contains the directories/sub-directories that were created
+   *  - `partials` The `partials` object that contains the fragments that have been registered
+   *    - `name` The template name
+   *    - `id` The template identifier
+   *    - `content` The template content
+   *  - `dirs` Present __only__ when {@link Engine.filesEngine} was used. Contains the directories/sub-directories that were created
    * - `partialFunc` A reference safe `async` function to {@link Engine.processPartial} that can be safely passed into other functions
    */
   async scan(registerPartials) {
     const ns = internal(this);
-    const rptrl = registerPartials ? (name, data) => ns.this.registerPartial(name, data) : null;
+    const rptrl = registerPartials ? (name, content) => ns.this.registerPartial(name, content) : null;
     const urptrl = registerPartials ? (name) => ns.this.unregisterPartial(name) : null;
     return {
       created: await ns.at.cache.scan(rptrl, urptrl),
-      partialFunc: async (name, data) => ns.this.processPartial(name, data)
+      partialFunc: ns.this.genPartialFunc()
     };
   }
 
@@ -309,12 +220,12 @@ class Engine {
    */
   genPartialFunc() {
     const ns = internal(this);
-    return async (name, data) => ns.this.processPartial(name, data);
+    return async (name, content) => ns.this.processPartial(name, content);
   }
 
   /**
    * Clears the underlying cache
-   * @param {Boolean} [all=false] `true` to clear all unassociated cache instances when possible as well as any partials
+   * @param {Boolean} [all=false] `true` to clear __ALL unassociated cache instances__ when possible as well as any partials
    * that have been registered
    */
   async clearCache(all = false) {
@@ -331,32 +242,6 @@ class Engine {
     return ns.at.options;
   }
 };
-
-/**
- * Compiles a template into code
- * @private
- * @param {Object} ns The namespace of the template engine
- * @param {String} tmpl The raw template source
- * @param {Object} [opts] The options sent for compilation
- * @returns {function} The function(data) that returns a template result string based uopn the data object provided
- */
-async function compiler(ns, tmpl, opts) {
-  // when caching some of the partials may reference other partials that were loaded after the parent partial that uses it
-  if (!ns.at.isInit && (ns.at.isInit = true)) {
-    const promises = new Array(Object.keys(ns.at.prts).length);
-    var idx = -1; // set functions in parallel
-    for (let name in ns.at.prts) promises[idx++] = await setFn(ns, ns.this, name);
-    for (let promise of promises) {
-      await promise;
-    }
-  }
-  const fn = await templFuncPartial(ns, ns.this, tmpl, opts);
-  if (fn && ns.at.options.logger.debug) ns.at.options.logger.debug(`Compiled ${fn.name}`);
-  return function processTemplate() {
-    arguments[0] = arguments[0] || {}; // template data
-    return fn.apply(this, arguments);
-  };
-}
 
 /**
  * Sets a template function on a partial namespace
@@ -388,37 +273,36 @@ async function refreshPartial(ns, eng, name) {
  * @private
  * @param {Object} ns The namespace of the template engine
  * @param {Engine} eng The template engine
- * @param {String} tmpl The template contents
- * @param {Object} data The object that contains the data used in the template
+ * @param {String} content The template content
+ * @param {Object} context The object that contains the contextual data used in the template
  * @param {String} name The template name that uniquely identifies the template content
  * @returns {function} The {@link Engine.template} function
  */
-async function templFuncPartial(ns, eng, tmpl, data, name) { // generates a template function that accounts for nested partials
-  const prtl = await rplPartial(ns, eng, tmpl, data, name);
-  return eng.template(prtl, null, data, name);
+async function templFuncPartial(ns, eng, content, context, name) { // generates a template function that accounts for nested partials
+  const prtl = await rplPartial(ns, eng, content, context, name);
+  return compileSegment(prtl, ns.at.options, context, name, ns.at.cache);
 }
 
 /**
- * Replaces any included partials that may be nested within other tempaltes with the raw template content. Each replacement is flagged with the engine
- * marker so that line/column detection can be performed
+ * Replaces any included partials that may be nested within other tempaltes with the raw template content
  * @private
  * @param {Object} ns The namespace of the template engine
  * @param {Engine} eng The template engine
- * @param {String} tmpl The template contents
- * @param {Object} data The object that contains the data used in the template
+ * @param {String} content The template content
+ * @param {Object} context The object that contains the contextual data used in the template
  * @param {String} name The template name that uniquely identifies the template content
  * @returns {String} The template with replaced raw partials
  */
-async function rplPartial(ns, eng, tmpl, data, name) {
-  const tmplx = await replace(tmpl, ns.at.options.include, async function partialRpl(match, pname) {
+async function rplPartial(ns, eng, content, context, name) {
+  const cntnt = await replace(content, ns.at.options.include, async function partialRpl(match, pname) {
     var nm = (pname && pname.trim().replace(/\./g, '/')) || '';
     if (ns.at.prts[nm]) {
       if (!ns.at.options.isCached) await refreshPartial(ns, eng, nm);
-      return await rplPartial(ns, eng, ns.at.prts[nm].tmpl, data, name); // any nested partials?
+      return await rplPartial(ns, eng, ns.at.prts[nm].tmpl, context, name); // any nested partials?
     }
     return match; // leave untouched so error will be thrown (if subsiquent calls cannot find partial)
   });
-  return !tmplx.length ? '&nbsp;' : tmplx; // nbsp prevents "No partial found" errors
+  return !cntnt.length ? '&nbsp;' : cntnt; // nbsp prevents "No partial found" errors
 }
 
 /**
@@ -479,8 +363,117 @@ function coded(code, c, tmpl, args, lnOpts, cond) {
   return strt + end;
 }
 
+/**
+ * Compiles a template and returns a redering function
+ * @private
+ * @param {Object} ns The namespace of the template engine
+ * @param {String} tmpl The raw template source
+ * @param {Object} [opts] The options sent for compilation
+ * @returns {function} The rendering `function(context)` that returns a template result string based upon the provided context
+ */
+async function compile(ns, tmpl, opts) {
+  // when caching some of the partials may reference other partials that were loaded after the parent partial that uses it
+  if (!ns.at.isInit && (ns.at.isInit = true)) {
+    const promises = new Array(Object.keys(ns.at.prts).length);
+    var idx = -1; // set functions in parallel
+    for (let name in ns.at.prts) promises[idx++] = await setFn(ns, ns.this, name);
+    for (let promise of promises) {
+      await promise;
+    }
+  }
+  const fn = await templFuncPartial(ns, ns.this, tmpl, opts);
+  if (fn && ns.at.options.logger.debug) ns.at.options.logger.debug(`Compiled ${fn.name}`);
+  return function processTemplate() {
+    arguments[0] = arguments[0] || {}; // template context
+    return fn.apply(this, arguments);
+  };
+}
+
+/**
+ * Compiles a templated segment and returns a redering function (__assumes partials are already transpiled- see {@link compile} for partial support__)
+ * @private
+ * @param {String} tmpl The raw template source
+ * @param {EngineOpts} [options] The options that overrides the default engine options
+ * @param {Object} [def] The object definition to be used in the template
+ * @param {String} [def.filename] When the template name is omitted, an attempt will be made to extract a name from the `filename` using `options.filename`
+ * regular expression
+ * @param {String} [tname] Name to be given to the template (omit to use the one from `options.filename` or an auto generated name)
+ * @param {Cachier} [cache] The {@link Cachier} instance that will handle the {@link Cachier.write} of the compiled template code. Defaults to in-memory
+ * cache.
+ * @returns {Function} The rendering `function(context)` that returns a template result string based upon the provided context
+ */
+async function compileSegment(tmpl, options, def, tname, cache) {
+  const c = options instanceof EngineOpts ? options : new EngineOpts(options);
+  cache = cache instanceof Cachier ? cache : new Cachier(c);
+  const tnm = tname || (def && def.filename && def.filename.match && def.filename.match(c.filename)[2]) || ('template_' + Cachier.guid(null, false));
+  const startend = {
+    append: { start: "'+(", end: ")+'", startencode: "'+encodeHTML(" },
+    split:  { start: "';out+=(", end: ");out+='", startencode: "';out+=encodeHTML(" }
+  }, skip = /$^/, cse = c.append ? startend.append : startend.split, ostr = tmpl.replace(/'|\\/g, '\\$&');
+  var needhtmlencode, sid = 0, indv, lnOpts = { offset: 0 };
+  var str = "var out='" + ostr
+    .replace(c.include || skip, function rplInclude(match) {
+      if (c.logger.warn) c.logger.warn(`No partial registered for include ${match} in: ${ostr}`);
+      return '';
+    })
+    .replace(c.interpolate || skip, function rplInterpolate(m, code) {
+      return cse.start + coded(code, c, ostr, arguments, lnOpts, true) + cse.end;
+    })
+    .replace(c.encode || skip, function rplEncode(m, code) {
+      needhtmlencode = true;
+      return cse.startencode + coded(code, c, ostr, arguments, lnOpts, true) + cse.end;
+    })
+    .replace(c.conditional || skip, function rplConditional(m, elsecase, code) {
+      return elsecase ?
+        (code ? `';}else if(${coded(code, c, ostr, arguments, lnOpts, true)}){out+='` : "';}else{out+='") :
+        (code ? `';if(${coded(code, c, ostr, arguments, lnOpts, true)}){out+='` : "';}out+='");
+    })
+    .replace(c.iterate || skip, function rplIterate(m, iterate, vname, iname) {
+      if (!iterate) return "';} } out+='";
+      sid += 1;
+      indv = iname || 'i' + sid; // w/o duplicate iterator validation there is a potential for endless loop conditions
+      iterate = coded(`var arr${sid}=${iterate}`, c, ostr, arguments, lnOpts);
+      return `';${iterate};if(arr${sid}){var ${vname},${indv}=-1,l${sid}=arr${sid}.length-1;while(${indv}<l${sid}){${vname}=arr${sid}[${indv}+=1];out+='`;
+    })
+    .replace(c.iterateIn || skip, function rplIterateIn(m, iterate, vname, iname) {
+      if (!iterate) return "';} } out+='";
+      sid += 1;
+      indv = iname || 'i' + sid; // w/o duplicate iterator validation there is a potential for endless loop conditions
+      iterate = coded(`var arr${sid}=${iterate}`, c, ostr, arguments, lnOpts);
+      return `';${iterate};if(arr${sid}){var ${vname}=arr${sid};for(var ${indv} in ${vname}){out+='`;
+    })
+    .replace(c.evaluate || skip, function rplEvaluate(m, code) {
+      return "';" + coded(code, c, ostr, arguments, lnOpts) + "out+='";
+    }) + "';return out;"; // remove consecutive spaces
+  if (c.errorLine) {
+    str = `var lnCol={};try{${str}}catch(e){e.message+=' at template ${((tnm && '"' + tnm + '" ') || '')}line '+lnCol.ln+' column '+lnCol.col;throw e;}`;
+  }
+  if (c.strip) str = str.replace(/(?:^|\r|\n)\t* +| +\t*(?:\r|\n|$)/g, ' ').replace(/\r|\n|\t|\/\*[\s\S]*?\*\//g, '');
+  str = str.replace(/(\n|\t|\r)/g, '\\$1').replace(/(\s|;|\}|^|\{)out\+='';/g, '$1').replace(/\+''|(\s){2,}/g, '$1');
+  if (needhtmlencode) {
+    str = (function encodeHTML(code) {
+      try {
+        const encMap = { '&': '&#38;', '<': '&#60;', '>': '&#62;', '"': '&#34;', "'": '&#39;', '/': '&#47;' };
+        return code ? code.toString().replace(((c.doNotSkipEncoded && /[&<>"'\/]/g) || /&(?!#?\w+;)|<|>|"|'|\//g), function(m) {return encMap[m] || m;}) : '';
+      } catch (e) {
+        e.message += ` While encoding HTML at: ${code}`;
+        throw e;
+      }
+    }).toString().replace('c.doNotSkipEncoded', c.doNotSkipEncoded) + str;
+  }
+  try {
+    const { func } = await cache.generateCode(tnm, str, cache.isWritable);
+    return func;
+  } catch (e) {
+    if (c.logger.error) c.logger.error(`Could not create a template function (ERROR: ${e.message}): ${str}`);
+    throw e;
+  }
+}
+
 // TODO : ESM remove the following lines...
 exports.Engine = Engine;
+exports.EngineOpts = EngineOpts;
+exports.Cachier = Cachier;
 exports.JsonEngine = JsonEngine;
 
 // private mapping
