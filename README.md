@@ -9,12 +9,14 @@
 </b>
 
 ### Micro Template Engine
-`templeo` is a __micro lib__ that combines most of the benefits of _logic-less_ template semantics with the flexibility of _logic-based_ template semantics. All language-specific conditionals, iterations, etc. that make _logic-based_ template semantics error-prone and difficult to read are replaced with intuitive expressions while retaining the ability to make use of properties, functions, etc. within a sandboxed environment. To install run `npm install templeo`. Runs in the browser or [Node.js](https://nodejs.org) with __zero__ external dependencies.
+> `templeo` is a __micro-sized template engine__ built for _**speed**_.
+
+`templeo` combines most of the benefits of _logic-less_ template semantics with the flexibility of _logic-based_ template semantics. All language-specific conditionals, iterations, etc. that make _logic-based_ template semantics error-prone and difficult to read are replaced with intuitive expressions while retaining the ability to make use of properties, functions, etc. within a sandboxed environment. To install run `npm install templeo`. Runs in the browser or [Node.js](https://nodejs.org) with __zero__ external dependencies.
 
 #### Features
 - __Full Contexual Accessibility__: No special/restricted syntax to use within expressions! Properties, functions, etc. are fully available within every template expression (e.g. `{{= it.myArray.sort().join()}}`).
 - __Includes__: _Partial_ template fragments can contain nested includes in order to maximize template reusability
-- __Debugging__: Compiled templates are accessible directly via the VM or through module imports/requires- allowing seemless debugging capabilities
+- __Debugging__: Compiled templates are accessible directly via the VM or through module imports/requires- allowing for seemless debugging capabilities
 - __Extensible__: `Engine` expressions are fully customizable and easy to extend. And with a decoupled caching mechanism, cache extensibility is a easy as overriding `read` and/or `write` operations. 
 - __Auto Loading/Uploading__: _Partials_/fragments can optionally be __loaded__ from (and even __uploaded__ to) an HTTPS server. Loading/uploading is performed by [window.fetch](https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API) when running in the browser or the [https module](https://nodejs.org/api/https.html) when running in `node`.
 - __Built-in Cache Support__:
@@ -29,7 +31,7 @@ For more details check out the tutorials and API docs!
 * [API Docs](https://ugate.github.io/templeo/module-templeo-Engine.html)
 
 #### Basic Examples
-The following examples illustrate __basic__ usage. For more advanced usage examples see the [example section](https://ugate.github.io/templeo/tutorial-3-example.html).
+The following examples illustrate __basic__ usage. For more advanced usage examples see the [example section](https://ugate.github.io/templeo/tutorial-3-examples.html).
 
 #### In-Memory <sub id="in-memory"></sub>
 ```js
@@ -74,4 +76,4 @@ console.log(rslt);
 // <html><body>Hello templeo!</body></html>
 ```
 
-#### [More examples >>](https://ugate.github.io/templeo/tutorial-3-example.html)
+#### [More examples >>](https://ugate.github.io/templeo/tutorial-3-examples.html)

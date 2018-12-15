@@ -342,15 +342,12 @@ async function replace(str, regex, replacer) {
  * @param {String} [tmpl] The original/unaltered template source that will be used to determine the line number of
  * the code execution
  * @param {Object} [args] The arguments that are passed into the function from the originating String.replace call
- * @param {object} [lnOpts] The line options
- * @param {Integer} [lnOpts.offset] The ongoing line number offset to account for prior replacements that may have
- * changed line/column positioning (set internally)
  * @param {Boolean} [cond] When `true` the line number variable and unescaped code will be formatted as if it was
  * being used within a conditional statement
  * `(lnCol={ln:123,CAL_LINE_NUMBER:CALC_COLUMN_NUMBER} && (SOME_UNESCAPED_CODE_HERE))`
  * @returns {String} The unescaped value
  */
-function coded(code, c, tmpl, args, lnOpts, cond) {
+function coded(code, c, tmpl, args, cond) {
   var strt = '', end = code.replace(/\\('|\\)/g, '$1');//.replace(/[\r\t\n]/g, ' ');
   // NOTE : Removed erroLine option since accuracy is oftentimes skewed
   if (tmpl && c && c.errorLine) {
@@ -409,42 +406,61 @@ async function compileSegment(tmpl, options, def, tname, cache) {
   const startend = {
     append: { start: "'+(", end: ")+'", startencode: "'+encodeHTML(" },
     split:  { start: "';out+=(", end: ");out+='", startencode: "';out+=encodeHTML(" }
-  }, skip = /$^/, cse = c.append ? startend.append : startend.split, ostr = tmpl.replace(/'|\\/g, '\\$&');
-  var needhtmlencode, sid = 0, indv, lnOpts = { offset: 0 };
-  var str = "var out='" + ostr
-    .replace(c.include || skip, function rplInclude(match) {
+  }, cse = c.append ? startend.append : startend.split, ostr = tmpl.replace(/'|\\/g, '\\$&'), varNs = coded(c.varNamespace);
+  var needhtmlencode, sid = 0, indv, str = ostr;
+  if (c.include) {
+    str = str.replace(c.include, function rplInclude(match) {
       if (c.logger.warn) c.logger.warn(`No partial registered for include ${match} in: ${ostr}`);
       return '';
-    })
-    .replace(c.interpolate || skip, function rplInterpolate(m, code) {
-      return cse.start + coded(code, c, ostr, arguments, lnOpts, true) + cse.end;
-    })
-    .replace(c.encode || skip, function rplEncode(m, code) {
+    });
+  }
+  if (c.comment) {
+    str = str.replace(c.comment, function rplComment() {
+      return '';
+    });
+  }
+  if (c.encode) {
+    str = str.replace(c.encode, function rplEncode(m, code) {
       needhtmlencode = true;
-      return cse.startencode + coded(code, c, ostr, arguments, lnOpts, true) + cse.end;
-    })
-    .replace(c.conditional || skip, function rplConditional(m, elsecase, code) {
+      return cse.startencode + coded(code, c, ostr, arguments, true) + cse.end;
+    });
+  }
+  if (c.interpolate) {
+    str = str.replace(c.interpolate, function rplInterpolate(m, code) {
+      return cse.start + coded(code, c, ostr, arguments, true) + cse.end;
+    });
+  }
+  if (c.conditional) {
+    str = str.replace(c.conditional, function rplConditional(m, elsecase, code) {
       return elsecase ?
-        (code ? `';}else if(${coded(code, c, ostr, arguments, lnOpts, true)}){out+='` : "';}else{out+='") :
-        (code ? `';if(${coded(code, c, ostr, arguments, lnOpts, true)}){out+='` : "';}out+='");
-    })
-    .replace(c.iterate || skip, function rplIterate(m, iterate, vname, iname) {
+        (code ? `';}else if(${coded(code, c, ostr, arguments, true)}){out+='` : "';}else{out+='") :
+        (code ? `';if(${coded(code, c, ostr, arguments, true)}){out+='` : "';}out+='");
+    });
+  }
+  if (c.iterate) {
+    str = str.replace(c.iterate, function rplIterate(m, iterate, vname, iname) {
       if (!iterate) return "';} } out+='";
       sid += 1;
       indv = iname || 'i' + sid; // w/o duplicate iterator validation there is a potential for endless loop conditions
-      iterate = coded(`var arr${sid}=${iterate}`, c, ostr, arguments, lnOpts);
+      iterate = coded(`var arr${sid}=${iterate}`, c, ostr, arguments);
       return `';${iterate};if(arr${sid}){var ${vname},${indv}=-1,l${sid}=arr${sid}.length-1;while(${indv}<l${sid}){${vname}=arr${sid}[${indv}+=1];out+='`;
-    })
-    .replace(c.iterateIn || skip, function rplIterateIn(m, iterate, vname, iname) {
+    });
+  }
+  if (c.iterateIn) {
+    str = str.replace(c.iterateIn, function rplIterateIn(m, iterate, vname, iname) {
       if (!iterate) return "';} } out+='";
       sid += 1;
       indv = iname || 'i' + sid; // w/o duplicate iterator validation there is a potential for endless loop conditions
-      iterate = coded(`var arr${sid}=${iterate}`, c, ostr, arguments, lnOpts);
+      iterate = coded(`var arr${sid}=${iterate}`, c, ostr, arguments);
       return `';${iterate};if(arr${sid}){var ${vname}=arr${sid};for(var ${indv} in ${vname}){out+='`;
-    })
-    .replace(c.evaluate || skip, function rplEvaluate(m, code) {
-      return "';" + coded(code, c, ostr, arguments, lnOpts) + "out+='";
-    }) + "';return out;"; // remove consecutive spaces
+    });
+  }
+  if (c.assign) {
+    str = str.replace(c.assign, function rplAssign(m, name, value) {
+      return `';${varNs}[${coded(name, c, ostr, arguments)}]=${value ? coded(value, c, ostr, arguments) : 'undefined'};out+='`;
+    });
+  }
+  str = `var out='const ${varNs}={};${str}';return out;`;
   if (c.errorLine) {
     str = `var lnCol={};try{${str}}catch(e){e.message+=' at template ${((tnm && '"' + tnm + '" ') || '')}line '+lnCol.ln+' column '+lnCol.col;throw e;}`;
   }

@@ -20,32 +20,6 @@ lab.experiment(plan, () => {
     return baseTest(opts, true, engine);
   });
 
-  lab.test(`${plan}: HTML - Options Fill`, { timeout: TEST_TKO }, async flags => {
-    const opts = {
-      useCommonJs: true,
-      defaultExtension: 'html',
-      isCached: true,
-      formatOptions: {},
-      encoding: 'utf8',
-      partials: await getFiles('test/views/partials'),
-      evaluate: /\{\{([\s\S]+?(\}?)+)\}\}/g,
-      interpolate: /\{\{=([\s\S]+?)\}\}/g,
-      encode: /\{\{!([\s\S]+?)\}\}/g,
-      conditional: /\{\{\?(\?)?\s*([\s\S]*?)\s*\}\}/g,
-      iterate: /\{\{~\s*(?:\}\}|([\s\S]+?)\s*\:\s*([\w$]+)\s*(?:\:\s*([\w$]+))?\s*\}\})/g,
-      iterateIn: /\{\{\*\s*(?:\}\}|([\s\S]+?)\s*\:\s*([\w$]+)\s*(?:\:\s*([\w$]+))?\s*\}\})/g,
-      include: /\{\{#\s*([\s\S]+?)\}\}/g,
-      filename: /^(.*[\\\/]|^)([^\.]*)(.*)$/,
-      varname: 'it',
-      strip:  false,
-      append: false,
-      doNotSkipEncoded: true,
-      errorLine: true,
-      logger: LOGGER
-    };
-    return baseTest(opts, true, new Engine(opts, JsFrmt));
-  });
-
   lab.test(`${plan}: HTML - w/options.partials`, { timeout: TEST_TKO }, async flags => {
     const opts = baseOptions();
     opts.partials = await getFiles('test/views/partials');

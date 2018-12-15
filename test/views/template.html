@@ -17,6 +17,7 @@
 </head>
 <body data-message="{{=it.message || ''}}">
   <select id="state">
+    {{! This is a comment. The following uses for...in syntax }}
     {{* it.globals.states :state:abbr}}
     {{? abbr === 'FL' && state[abbr] === 'Florida'}}
     <option id="stateSelect{{= abbr}}" value="{{= abbr}}" selected>{{= state[abbr]}}</option>

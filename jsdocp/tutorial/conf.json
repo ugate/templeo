@@ -1,8 +1,11 @@
 {
   "1-engine": {
-    "title": "Template Engine"
+    "title": "Compiling and Rendering"
   },
-  "2-engine": {
-    "title": "Template Engine"
+  "2-cache": {
+    "title": "Cache"
+  },
+  "3-examples": {
+    "title": "Examples"
   }
 }

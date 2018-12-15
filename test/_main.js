@@ -30,7 +30,7 @@ exports.JsonEngine = JsonEngine;
 exports.PLAN = 'Template Engine';
 exports.TASK_DELAY = 500;
 exports.TEST_TKO = 20000;
-exports.LOGGER = { info: console.info, warn: console.warn, error: console.error };//console;
+exports.LOGGER = null;//{ info: console.info, warn: console.warn, error: console.error };//console;
 exports.httpsServer = httpsServer;
 exports.rmrf = rmrf;
 exports.baseTest = baseTest;
@@ -152,8 +152,8 @@ async function baseTest(opts, scan, engine) {
   test.fn = await test.engine.compile(test.html);
   expect(test.fn).to.be.function();
   const rslt = test.fn(test.data);
+  if (logger.debug) logger.debug(rslt);//logger.debug(JsFrmt(rslt, opts.formatOptions));
   expectDOM(rslt, test.data);
-  //console.log(rslt);
   return test;
 }
 
@@ -224,6 +224,9 @@ async function init(opts, scan, engine) {
 function expectDOM(html, data) {
   const dom = new JSDOM(html);
   var el;
+
+  // comment block should be removed
+  expect(html.includes('This is a comment')).to.be.false();
 
   // array iteration test
   for (let i = 0, arr = data.metadata; i < arr.length; i++) {
