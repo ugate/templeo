@@ -406,7 +406,7 @@ async function compileSegment(tmpl, options, def, tname, cache) {
   const startend = {
     append: { start: "'+(", end: ")+'", startencode: "'+encodeHTML(" },
     split:  { start: "';out+=(", end: ");out+='", startencode: "';out+=encodeHTML(" }
-  }, cse = c.append ? startend.append : startend.split, ostr = tmpl.replace(/'|\\/g, '\\$&'), varNs = coded(c.varNamespace);
+  }, cse = c.append ? startend.append : startend.split, ostr = tmpl.replace(/'|\\/g, '\\$&');
   var needhtmlencode, sid = 0, indv, str = ostr;
   if (c.include) {
     str = str.replace(c.include, function rplInclude(match) {
@@ -456,11 +456,12 @@ async function compileSegment(tmpl, options, def, tname, cache) {
     });
   }
   if (c.assign) {
-    str = str.replace(c.assign, function rplAssign(m, name, value) {
-      return `';${varNs}[${coded(name, c, ostr, arguments)}]=${value ? coded(value, c, ostr, arguments) : 'undefined'};out+='`;
+    str = str.replace(c.assign, function rplAssign(m, name, oper, value) {
+      if (!oper) return `${cse.start}_assigns['${coded(name, c, ostr, arguments, true)}']${cse.end}`;
+      return `';_assigns['${coded(name, c, ostr, arguments, true)}']${oper ? `=${coded(value, c, ostr, arguments)}` : ''};out+='`;
     });
   }
-  str = `var out='const ${varNs}={};${str}';return out;`;
+  str = `const _assigns={};var out='${str}';return out;`;
   if (c.errorLine) {
     str = `var lnCol={};try{${str}}catch(e){e.message+=' at template ${((tnm && '"' + tnm + '" ') || '')}line '+lnCol.ln+' column '+lnCol.col;throw e;}`;
   }

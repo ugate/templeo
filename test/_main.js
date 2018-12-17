@@ -30,7 +30,7 @@ exports.JsonEngine = JsonEngine;
 exports.PLAN = 'Template Engine';
 exports.TASK_DELAY = 500;
 exports.TEST_TKO = 20000;
-exports.LOGGER = null;//{ info: console.info, warn: console.warn, error: console.error };//console;
+exports.LOGGER = /*null;//{ info: console.info, warn: console.warn, error: console.error };//*/console;
 exports.httpsServer = httpsServer;
 exports.rmrf = rmrf;
 exports.baseTest = baseTest;
@@ -227,6 +227,11 @@ function expectDOM(html, data) {
 
   // comment block should be removed
   expect(html.includes('This is a comment')).to.be.false();
+
+  // assign test
+  const assigned = dom.window.document.getElementById('ABC');
+  expect(assigned, 'Assign Expression').to.not.be.null();
+  expect(assigned.value, 'Assign Expression Value').to.equal('ABC');
 
   // array iteration test
   for (let i = 0, arr = data.metadata; i < arr.length; i++) {
