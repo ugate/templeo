@@ -1,14 +1,14 @@
 'use strict';
 
-const { expect, Lab, PLAN, TEST_TKO, LOGGER, Engine, getFiles, baseTest, JsonEngine, httpsServer, JsFrmt } = require('./_main.js');
-const lab = exports.lab = Lab.script();
+const { expect, Lab, PLAN, TEST_TKO, LOGGER, Engine, getFiles, baseTest, JsonEngine, httpsServer, JsFrmt, getTemplateFiles } = require('./_main.js');
+//const lab = exports.lab = Lab.script();
 // ESM uncomment the following lines...
 // TODO : import { expect, Lab, PLAN, TEST_TKO, LOGGER, Engine, getFiles, baseTest, JsonEngine, httpsServer, JsFrmt } from './_main.mjs';
 const plan = `${PLAN} Default`;
 
 // "node_modules/.bin/lab" test/default.js -vi 1
 
-lab.experiment(plan, () => {
+/*lab.experiment(plan, () => {
 
   lab.test(`${plan}: HTML - Manual Partial Registration)`, { timeout: TEST_TKO }, async flags => {
     const opts = baseOptions();
@@ -34,7 +34,14 @@ lab.experiment(plan, () => {
     await baseTest(opts, true, new Engine(opts, JsFrmt, sopts));
     await svr.close();
   });
-});
+});*/
+(async () => {
+  const opts = baseOptions(), files = await getTemplateFiles();
+  const engine = new Engine(opts, JsFrmt);
+  const fn = await engine.compile(files.html);
+  console.log(fn.toString());
+  console.log(fn(files.data));
+})();
 
 function baseOptions() {
   return {

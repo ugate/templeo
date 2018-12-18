@@ -403,6 +403,33 @@ async function compileSegment(tmpl, options, def, tname, cache) {
   const c = options instanceof EngineOpts ? options : new EngineOpts(options);
   cache = cache instanceof Cachier ? cache : new Cachier(c);
   const tnm = tname || (def && def.filename && def.filename.match && def.filename.match(c.filename)[2]) || ('template_' + Cachier.guid(null, false));
+  try {
+    const str = `${repeat.toString()} return \`${tmpl}\`;`;
+    const { func } = await cache.generateCode(tnm, str, cache.isWritable);
+    return func;
+  } catch (e) {
+    if (c.logger.error) c.logger.error(`Could not create a template function (ERROR: ${e.message}): ${str}`);
+    throw e;
+  }
+}
+
+/**
+ * Compiles a templated segment and returns a redering function (__assumes partials are already transpiled- see {@link compile} for partial support__)
+ * @private
+ * @param {String} tmpl The raw template source
+ * @param {EngineOpts} [options] The options that overrides the default engine options
+ * @param {Object} [def] The object definition to be used in the template
+ * @param {String} [def.filename] When the template name is omitted, an attempt will be made to extract a name from the `filename` using `options.filename`
+ * regular expression
+ * @param {String} [tname] Name to be given to the template (omit to use the one from `options.filename` or an auto generated name)
+ * @param {Cachier} [cache] The {@link Cachier} instance that will handle the {@link Cachier.write} of the compiled template code. Defaults to in-memory
+ * cache.
+ * @returns {Function} The rendering `function(context)` that returns a template result string based upon the provided context
+ */
+async function compileSegment_OLD(tmpl, options, def, tname, cache) {
+  const c = options instanceof EngineOpts ? options : new EngineOpts(options);
+  cache = cache instanceof Cachier ? cache : new Cachier(c);
+  const tnm = tname || (def && def.filename && def.filename.match && def.filename.match(c.filename)[2]) || ('template_' + Cachier.guid(null, false));
   const startend = {
     append: { start: "'+(", end: ")+'", startencode: "'+encodeHTML(" },
     split:  { start: "';out+=(", end: ");out+='", startencode: "';out+=encodeHTML(" }
@@ -440,6 +467,7 @@ async function compileSegment(tmpl, options, def, tname, cache) {
   if (c.iterate) {
     str = str.replace(c.iterate, function rplIterate(m, iterate, vname, iname) {
       if (!iterate) return "';} } out+='";
+      console.log(arguments)
       sid += 1;
       indv = iname || 'i' + sid; // w/o duplicate iterator validation there is a potential for endless loop conditions
       iterate = coded(`var arr${sid}=${iterate}`, c, ostr, arguments);
@@ -492,6 +520,20 @@ exports.Engine = Engine;
 exports.EngineOpts = EngineOpts;
 exports.Cachier = Cachier;
 exports.JsonEngine = JsonEngine;
+
+function repeat(itr, fni) {
+  var rtn = '', idx = -1;
+  if (Array.isArray(itr)) {
+    for (let itm of itr) {
+      rtn += fni(itm, idx++);
+    }
+  } else {
+    for (let key in itr) {
+      rtn += fni(key, itr[key], idx++);
+    }
+  }
+  return rtn;
+}
 
 // private mapping
 let map = new WeakMap();
