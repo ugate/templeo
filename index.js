@@ -3,12 +3,20 @@
 const EngineOpts = require('./lib/engine-opts');
 const JsonEngine = require('./lib/json-engine');
 const Cachier = require('./lib/cachier');
+const Director = require('./lib/director');
+// TODO : ESM remove the following lines...
+exports.EngineOpts = EngineOpts;
+exports.Cachier = Cachier;
+exports.JsonEngine = JsonEngine;
+exports.Director = Director;
 // TODO : ESM uncomment the following lines...
 // TODO : import * as EngineOpts from './lib/engine-opts.mjs';
 // TODO : import * as JsonEngine from './lib/json-engine.mjs';
 // TODO : import * as Cachier from './lib/cachier.mjs';
+// TODO : import * as Director from './lib/director.mjs';
 // TODO : export * as EngineOpts from EngineOpts;
 // TODO : export * as Cachier from Cachier;
+// TODO : export * as Director from Director;
 
 /**
  * Micro rendering template engine
@@ -57,7 +65,7 @@ const Cachier = require('./lib/cachier');
  *  await htmlEngine.clearCache();
  * });
  */
-class Engine {
+exports.Engine = class Engine {
 // TODO : ESM use... export class Engine {
 
   /**
@@ -335,32 +343,6 @@ async function replace(str, regex, replacer) {
 }
 
 /**
- * Unescapes a code segment and tracks line/column numbers when enabled
- * @private
- * @param {String} code The code that will be escaped
- * @param {Object} [c] The template options
- * @param {String} [tmpl] The original/unaltered template source that will be used to determine the line number of
- * the code execution
- * @param {Object} [args] The arguments that are passed into the function from the originating String.replace call
- * @param {Boolean} [cond] When `true` the line number variable and unescaped code will be formatted as if it was
- * being used within a conditional statement
- * `(lnCol={ln:123,CAL_LINE_NUMBER:CALC_COLUMN_NUMBER} && (SOME_UNESCAPED_CODE_HERE))`
- * @returns {String} The unescaped value
- */
-function coded(code, c, tmpl, args, cond) {
-  var strt = '', end = code.replace(/\\('|\\)/g, '$1');//.replace(/[\r\t\n]/g, ' ');
-  // NOTE : Removed erroLine option since accuracy is oftentimes skewed
-  if (tmpl && c && c.errorLine) {
-    var offset = args[args.length - 2]; // replace offset
-    if (offset !== '' && !isNaN(offset) && (offset = parseInt(offset)) >= 0) {
-      strt = tmpl.substring(0, offset).split(c.errorLine);
-      strt = ((cond && '(') || '') + 'lnCol={ln:' + strt.length + ',col:' + (strt[strt.length - 1].length + 1) + '}' + ((cond && (end += ')') && ') && (') || ';');
-    }
-  }
-  return strt + end;
-}
-
-/**
  * Compiles a template and returns a redering function
  * @private
  * @param {Object} ns The namespace of the template engine
@@ -400,139 +382,27 @@ async function compile(ns, tmpl, opts) {
  * @returns {Function} The rendering `function(context)` that returns a template result string based upon the provided context
  */
 async function compileSegment(tmpl, options, def, tname, cache) {
-  const c = options instanceof EngineOpts ? options : new EngineOpts(options);
-  cache = cache instanceof Cachier ? cache : new Cachier(c);
-  const tnm = tname || (def && def.filename && def.filename.match && def.filename.match(c.filename)[2]) || ('template_' + Cachier.guid(null, false));
+  const opts = options instanceof EngineOpts ? options : new EngineOpts(options);
+  cache = cache instanceof Cachier ? cache : new Cachier(opts);
+  const tnm = tname || (def && def.filename && def.filename.match && def.filename.match(opts.filename)[2]) || ('template_' + Cachier.guid(null, false));
   try {
-    const str = `${repeat.toString()} return \`${tmpl}\`;`;
-    const { func } = await cache.generateCode(tnm, str, cache.isWritable);
-    return func;
-  } catch (e) {
-    if (c.logger.error) c.logger.error(`Could not create a template function (ERROR: ${e.message}): ${str}`);
-    throw e;
-  }
-}
-
-/**
- * Compiles a templated segment and returns a redering function (__assumes partials are already transpiled- see {@link compile} for partial support__)
- * @private
- * @param {String} tmpl The raw template source
- * @param {EngineOpts} [options] The options that overrides the default engine options
- * @param {Object} [def] The object definition to be used in the template
- * @param {String} [def.filename] When the template name is omitted, an attempt will be made to extract a name from the `filename` using `options.filename`
- * regular expression
- * @param {String} [tname] Name to be given to the template (omit to use the one from `options.filename` or an auto generated name)
- * @param {Cachier} [cache] The {@link Cachier} instance that will handle the {@link Cachier.write} of the compiled template code. Defaults to in-memory
- * cache.
- * @returns {Function} The rendering `function(context)` that returns a template result string based upon the provided context
- */
-async function compileSegment_OLD(tmpl, options, def, tname, cache) {
-  const c = options instanceof EngineOpts ? options : new EngineOpts(options);
-  cache = cache instanceof Cachier ? cache : new Cachier(c);
-  const tnm = tname || (def && def.filename && def.filename.match && def.filename.match(c.filename)[2]) || ('template_' + Cachier.guid(null, false));
-  const startend = {
-    append: { start: "'+(", end: ")+'", startencode: "'+encodeHTML(" },
-    split:  { start: "';out+=(", end: ");out+='", startencode: "';out+=encodeHTML(" }
-  }, cse = c.append ? startend.append : startend.split, ostr = tmpl.replace(/'|\\/g, '\\$&');
-  var needhtmlencode, sid = 0, indv, str = ostr;
-  if (c.include) {
-    str = str.replace(c.include, function rplInclude(match) {
-      if (c.logger.warn) c.logger.warn(`No partial registered for include ${match} in: ${ostr}`);
-      return '';
-    });
-  }
-  if (c.comment) {
-    str = str.replace(c.comment, function rplComment() {
-      return '';
-    });
-  }
-  if (c.encode) {
-    str = str.replace(c.encode, function rplEncode(m, code) {
-      needhtmlencode = true;
-      return cse.startencode + coded(code, c, ostr, arguments, true) + cse.end;
-    });
-  }
-  if (c.interpolate) {
-    str = str.replace(c.interpolate, function rplInterpolate(m, code) {
-      return cse.start + coded(code, c, ostr, arguments, true) + cse.end;
-    });
-  }
-  if (c.conditional) {
-    str = str.replace(c.conditional, function rplConditional(m, elsecase, code) {
-      return elsecase ?
-        (code ? `';}else if(${coded(code, c, ostr, arguments, true)}){out+='` : "';}else{out+='") :
-        (code ? `';if(${coded(code, c, ostr, arguments, true)}){out+='` : "';}out+='");
-    });
-  }
-  if (c.iterate) {
-    str = str.replace(c.iterate, function rplIterate(m, iterate, vname, iname) {
-      if (!iterate) return "';} } out+='";
-      console.log(arguments)
-      sid += 1;
-      indv = iname || 'i' + sid; // w/o duplicate iterator validation there is a potential for endless loop conditions
-      iterate = coded(`var arr${sid}=${iterate}`, c, ostr, arguments);
-      return `';${iterate};if(arr${sid}){var ${vname},${indv}=-1,l${sid}=arr${sid}.length-1;while(${indv}<l${sid}){${vname}=arr${sid}[${indv}+=1];out+='`;
-    });
-  }
-  if (c.iterateIn) {
-    str = str.replace(c.iterateIn, function rplIterateIn(m, iterate, vname, iname) {
-      if (!iterate) return "';} } out+='";
-      sid += 1;
-      indv = iname || 'i' + sid; // w/o duplicate iterator validation there is a potential for endless loop conditions
-      iterate = coded(`var arr${sid}=${iterate}`, c, ostr, arguments);
-      return `';${iterate};if(arr${sid}){var ${vname}=arr${sid};for(var ${indv} in ${vname}){out+='`;
-    });
-  }
-  if (c.assign) {
-    str = str.replace(c.assign, function rplAssign(m, name, oper, value) {
-      if (!oper) return `${cse.start}_assigns['${coded(name, c, ostr, arguments, true)}']${cse.end}`;
-      return `';_assigns['${coded(name, c, ostr, arguments, true)}']${oper ? `=${coded(value, c, ostr, arguments)}` : ''};out+='`;
-    });
-  }
-  str = `const _assigns={};var out='${str}';return out;`;
-  if (c.errorLine) {
-    str = `var lnCol={};try{${str}}catch(e){e.message+=' at template ${((tnm && '"' + tnm + '" ') || '')}line '+lnCol.ln+' column '+lnCol.col;throw e;}`;
-  }
-  if (c.strip) str = str.replace(/(?:^|\r|\n)\t* +| +\t*(?:\r|\n|$)/g, ' ').replace(/\r|\n|\t|\/\*[\s\S]*?\*\//g, '');
-  str = str.replace(/(\n|\t|\r)/g, '\\$1').replace(/(\s|;|\}|^|\{)out\+='';/g, '$1').replace(/\+''|(\s){2,}/g, '$1');
-  if (needhtmlencode) {
-    str = (function encodeHTML(code) {
-      try {
-        const encMap = { '&': '&#38;', '<': '&#60;', '>': '&#62;', '"': '&#34;', "'": '&#39;', '/': '&#47;' };
-        return code ? code.toString().replace(((c.doNotSkipEncoded && /[&<>"'\/]/g) || /&(?!#?\w+;)|<|>|"|'|\//g), function(m) {return encMap[m] || m;}) : '';
-      } catch (e) {
-        e.message += ` While encoding HTML at: ${code}`;
-        throw e;
+    var drvs = '';
+    if (opts.directives) {
+      var di = -1;
+      for (let drv of opts.directives) {
+        di++;
+        if (typeof drv !== 'function') throw new Error(`Directive option at index ${di} must be a named function, not ${drv}`);
+        else if (!drv.name) throw new Error(`Directive option at index ${di} must be a named function`);
+        drvs += `${drv.toString()}`;
       }
-    }).toString().replace('c.doNotSkipEncoded', c.doNotSkipEncoded) + str;
-  }
-  try {
+    }
+    const str = `${Director.toString()};${drvs} return \`${tmpl}\`;`;
     const { func } = await cache.generateCode(tnm, str, cache.isWritable);
     return func;
   } catch (e) {
-    if (c.logger.error) c.logger.error(`Could not create a template function (ERROR: ${e.message}): ${str}`);
+    if (opts.logger.error) opts.logger.error(`Could not create a template function (ERROR: ${e.message}): ${str}`);
     throw e;
   }
-}
-
-// TODO : ESM remove the following lines...
-exports.Engine = Engine;
-exports.EngineOpts = EngineOpts;
-exports.Cachier = Cachier;
-exports.JsonEngine = JsonEngine;
-
-function repeat(itr, fni) {
-  var rtn = '', idx = -1;
-  if (Array.isArray(itr)) {
-    for (let itm of itr) {
-      rtn += fni(itm, idx++);
-    }
-  } else {
-    for (let key in itr) {
-      rtn += fni(key, itr[key], idx++);
-    }
-  }
-  return rtn;
 }
 
 // private mapping
