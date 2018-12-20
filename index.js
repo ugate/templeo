@@ -288,7 +288,9 @@ async function refreshPartial(ns, eng, name) {
  */
 async function templFuncPartial(ns, eng, content, context, name) { // generates a template function that accounts for nested partials
   const prtl = await rplPartial(ns, eng, content, context, name);
-  return compileSegment(prtl, ns.at.options, context, name, ns.at.cache);
+  const fn = compileSegment(prtl, ns.at.options, context, name, ns.at.cache);
+  if (fn && ns.at.options.logger.debug) ns.at.options.logger.debug(`Compiled ${fn.name}`);
+  return fn;
 }
 
 /**
@@ -360,12 +362,7 @@ async function compile(ns, tmpl, opts) {
       await promise;
     }
   }
-  const fn = await templFuncPartial(ns, ns.this, tmpl, opts);
-  if (fn && ns.at.options.logger.debug) ns.at.options.logger.debug(`Compiled ${fn.name}`);
-  return function processTemplate() {
-    arguments[0] = arguments[0] || {}; // template context
-    return fn.apply(this, arguments);
-  };
+  return templFuncPartial(ns, ns.this, tmpl, opts);
 }
 
 /**
@@ -396,7 +393,8 @@ async function compileSegment(tmpl, options, def, tname, cache) {
         drvs += `${drv.toString()}`;
       }
     }
-    const str = `${Director.toString()};${drvs} return \`${tmpl}\`;`;
+    // the context object is contained in a separate code block in order to isolate it from the directives
+    const str = `${Director.toString()};${drvs}; { const ${opts.varName} = arguments[0]; return \`${tmpl}\`; }`;
     const { func } = await cache.generateCode(tnm, str, cache.isWritable);
     return func;
   } catch (e) {

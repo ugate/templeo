@@ -39,7 +39,6 @@ const plan = `${PLAN} Default`;
   const opts = baseOptions(), files = await getTemplateFiles();
   const engine = new Engine(opts, JsFrmt);
   const fn = await engine.compile(files.html);
-  console.log(fn.toString());
   console.log(fn(files.data));
 })();
 
