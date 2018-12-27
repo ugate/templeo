@@ -148,7 +148,7 @@ exports.Engine = class Engine {
         ns.at.options.logger.info('Compiling template w/callback style conventions');
       }
       try {
-        fn = await compile(ns, tmpl, opts);
+        fn = await compile(ns, ns.this, tmpl, opts);
       } catch (err) {
         error = err;
       }
@@ -159,7 +159,7 @@ exports.Engine = class Engine {
           cb(err);
         }
       });
-    } else fn = compile(ns, tmpl, opts);
+    } else fn = compile(ns, ns.this, tmpl, opts);
     return fn;
   }
 
@@ -260,7 +260,7 @@ exports.Engine = class Engine {
  * @returns {function} The set template function
  */
 async function setFn(ns, eng, name) {
-  if (ns.at.prts[name].tmpl) return ns.at.prts[name].fn = await templFuncPartial(ns, eng, ns.at.prts[name].tmpl, null, name);
+  if (ns.at.prts[name].tmpl) return ns.at.prts[name].fn = await compile(ns, eng, ns.at.prts[name].tmpl, null, name);
 }
 
 /**
@@ -286,11 +286,9 @@ async function refreshPartial(ns, eng, name) {
  * @param {String} name The template name that uniquely identifies the template content
  * @returns {function} The {@link Engine.template} function
  */
-async function templFuncPartial(ns, eng, content, context, name) { // generates a template function that accounts for nested partials
+async function compile(ns, eng, content, context, name) { // generates a template function that accounts for nested partials
   const prtl = await rplPartial(ns, eng, content, context, name);
-  const fn = compileSegment(prtl, ns.at.options, context, name, ns.at.cache);
-  if (fn && ns.at.options.logger.debug) ns.at.options.logger.debug(`Compiled ${fn.name}`);
-  return fn;
+  return compileToFunc(ns, prtl, ns.at.options, context, name, ns.at.cache);
 }
 
 /**
@@ -344,30 +342,48 @@ async function replace(str, regex, replacer) {
   return str;
 }
 
-/**
- * Compiles a template and returns a redering function
- * @private
- * @param {Object} ns The namespace of the template engine
- * @param {String} tmpl The raw template source
- * @param {Object} [opts] The options sent for compilation
- * @returns {function} The rendering `function(context)` that returns a template result string based upon the provided context
- */
-async function compile(ns, tmpl, opts) {
-  // when caching some of the partials may reference other partials that were loaded after the parent partial that uses it
-  if (!ns.at.isInit && (ns.at.isInit = true)) {
-    const promises = new Array(Object.keys(ns.at.prts).length);
-    var idx = -1; // set functions in parallel
-    for (let name in ns.at.prts) promises[idx++] = await setFn(ns, ns.this, name);
-    for (let promise of promises) {
-      await promise;
+function codedDirectives(directives) {
+  const directors = Director.directives;
+  const rtn = { names: '', code: '' };
+  for (let drv of directors) {
+    rtn.code += `${drv.code.toString()}`;
+    rtn.names += (rtn.names ? ',' : '') + drv.name;
+  }
+  if (directives) {
+    var di = -1;
+    for (let drv of directives) {
+      di++;
+      if (typeof drv !== 'function') throw new Error(`Directive option at index ${di} must be a named function, not ${drv}`);
+      else if (!drv.name) throw new Error(`Directive option at index ${di} must be a named function`);
+      rtn.code += `${drv.toString()}`;
+      rtn.names += `,${drv.name}`;
     }
   }
-  return templFuncPartial(ns, ns.this, tmpl, opts);
+  rtn.names = `[${rtn.names}]`;
+  return rtn;
+}
+
+/**
+ * Generates a locally sandboxed environment compilation for template rendering
+ * @private
+ * @param {String} code The compilation that will be coded/appened to the compilation sequence
+ * @param {(String|Object)} includes Either the coded includes string or the includes JSON
+ * @param {String} varName The name given to the context that will be coded
+ * @param {Function[]} directives Any additional directive functions
+ * @returns {String} A coded representation to be used by a template engine
+ */
+function coded(code, includes, varName, directives) {
+  const inclsx = `const includes=${JSON.stringify(includes)};`, varx = `const varName='${varName}';`;
+  const dirsx = `const directives=${JSON.stringify(directives)};`, codedx = `const coded=${coded.toString()};`;
+  // the context object is contained in a separate code block in order to isolate it from the directives
+  const incl = `var include;{${inclsx}${varx}${dirsx}${codedx}include=${include.toString()};}`;
+  return `${directives.code};{const ${varName}=arguments[0];${incl}${code}}`;
 }
 
 /**
  * Compiles a templated segment and returns a redering function (__assumes partials are already transpiled- see {@link compile} for partial support__)
  * @private
+ * @param {Object} ns The namespace of the template engine
  * @param {String} tmpl The raw template source
  * @param {EngineOpts} [options] The options that overrides the default engine options
  * @param {Object} [def] The object definition to be used in the template
@@ -378,29 +394,52 @@ async function compile(ns, tmpl, opts) {
  * cache.
  * @returns {Function} The rendering `function(context)` that returns a template result string based upon the provided context
  */
-async function compileSegment(tmpl, options, def, tname, cache) {
+async function compileToFunc(ns, tmpl, options, def, tname, cache) {
   const opts = options instanceof EngineOpts ? options : new EngineOpts(options);
   cache = cache instanceof Cachier ? cache : new Cachier(opts);
   const tnm = tname || (def && def.filename && def.filename.match && def.filename.match(opts.filename)[2]) || ('template_' + Cachier.guid(null, false));
+  var str = '';
   try {
-    var drvs = '';
-    if (opts.directives) {
-      var di = -1;
-      for (let drv of opts.directives) {
-        di++;
-        if (typeof drv !== 'function') throw new Error(`Directive option at index ${di} must be a named function, not ${drv}`);
-        else if (!drv.name) throw new Error(`Directive option at index ${di} must be a named function`);
-        drvs += `${drv.toString()}`;
-      }
-    }
-    // the context object is contained in a separate code block in order to isolate it from the directives
-    const str = `${Director.toString()};${drvs}; { const ${opts.varName} = arguments[0]; return \`${tmpl}\`; }`;
+    str = coded(`return \`${tmpl}\``, ns.at.prts, opts.varName, codedDirectives(opts.directives));
     const { func } = await cache.generateCode(tnm, str, cache.isWritable);
+    if (func && ns.at.options.logger.debug) ns.at.options.logger.debug(`Compiled ${func.name}`);
     return func;
   } catch (e) {
-    if (opts.logger.error) opts.logger.error(`Could not create a template function (ERROR: ${e.message}): ${str}`);
+    if (opts.logger.error) opts.logger.error(`Could not compile template ${tnm} (ERROR: ${e.message}): ${str || tmpl}`);
     throw e;
   }
+}
+
+/**
+ * Template literal tag that will include partials. __Assumes an `includes` object that contains the partials by property name,
+ * `varName` and `directives` (from {@link Director.directives}) are within scope__.
+ * @private
+ * @param {String[]} strs The string passed into template literal tag
+ * @param  {String[]} exps The expressions passed into template literal tag
+ */
+function include(strs, ...exps) {
+  var rtn = '';
+  for (let str of strs) {
+    if (includes[str] && includes[str].tmpl) {
+      try {
+        rtn += (new Function(coded(`return \`${includes[str].tmpl}\``, includes, varName, directives)))();
+      } catch (err) {
+        err.message += ` CAUSE: Unable to include template @ ${str} (string)`;
+        throw err;
+      }
+    }
+  }
+  for (let exp of exps) {
+    if (includes[exp] && includes[exp].tmpl) {
+      try {
+        rtn += (new Function(coded(`return \`${includes[exp].tmpl}\``, includes, varName, directives)))();
+      } catch (err) {
+        err.message += ` CAUSE: Unable to include template @ ${exp} (expression)`;
+        throw err;
+      }
+    }
+  }
+  return rtn;
 }
 
 // private mapping

@@ -38,6 +38,8 @@ const plan = `${PLAN} Default`;
 (async () => {
   const opts = baseOptions(), files = await getTemplateFiles();
   const engine = new Engine(opts, JsFrmt);
+  engine.registerPartial('styles_selectors_swatch', '<div id="partial1">One${ include`styles_selectors_swatch_2` }</div>');
+  engine.registerPartial('styles_selectors_swatch_2', '<div id="partial2">Two</div>');
   const fn = await engine.compile(files.html);
   console.log(fn(files.data));
 })();
