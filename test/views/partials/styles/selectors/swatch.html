@@ -1,19 +1,11 @@
-<div id="{{ testVar }}Swatch">{{ testVar }}Swatch</div>
-{{ testVarObj = { a: 'A', b: 'B', c: 'C' }}}
-<div id="{{ testVar }}Swatch">{{ testVar }}Swatch</div>
-{{? 123 === {}}}
-<p>{{= { key: 'Test interpolate trailing brackets', value: {}}}}</p>
-{{?}}
-{{~ {length: 1 }}}
-<p>Iterate w/trailing brackets</p>
-{{~}}
 <select id="swatch">
-  {{~ it.swatch :sw:si}}
-  {{? sw === '#ff5722'}}
-  <option id="swatchSelectColor{{= si}}" value="{{= sw}}" selected>{{= sw}}</option>
-  {{??}}
-  <option id="swatchSelectColor{{= si}}" value="{{= sw}}">{{= sw}}</option>
-  {{?}}
-  {{~}}
+  ${ repeat(it.swatch, (sw, si) => `
+    ${ sw === '#ff5722' ? `
+        <option id="swatchSelectColor${ si }" value="${ sw }" selected>${ sw }</option>
+      ` : `
+        <option id="swatchSelectColor${ si }" value="${ sw }">${ sw }</option>
+      `
+    }
+  `)}
 </select>
-{{#swatch}}
+${ include`swatch` }

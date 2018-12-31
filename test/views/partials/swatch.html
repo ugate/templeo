@@ -1,10 +1,11 @@
 <input list="swatchDatalist" id="swatchInput" />
 <datalist id="swatchDatalist">
-  {{~ it.swatch :sw:si}}
-  {{? sw === '#ff5722'}}
-  <option id="swatchDatalistColor{{= si}}" value="{{= sw}}" selected>{{= sw}}</option>
-  {{??}}
-  <option id="swatchDatalistColor{{= si}}" value="{{= sw}}">{{= sw}}</option>
-  {{?}}
-  {{~}}
+  ${ repeat(it.swatch, (sw, si) => `
+    ${ sw === '#ff5722' ? `
+        <option id="swatchDatalistColor${ si }" value="${ sw }" selected>${ sw }</option>
+      ` : `
+        <option id="swatchDatalistColor${ si }" value="${ sw }">${ sw }</option>
+      `
+    }
+  `)}
 </datalist>

@@ -2,45 +2,52 @@
 <html lang="en">
 <head>
   <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1" />
-  <meta name="Description" content="{{= it.desc || 'test'}}" />
+  <meta name="Description" content="${ it.desc || 'test' }" />
   <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
-  {{~ it.metadata :m}}
-  <meta name="{{=m.name}}" content="{{=m.content}}" />
-  {{~}}
-  {{~ it.linkdata :l}}
-  <link rel="{{=l.rel}}" {{?l.sizes}}sizes="{{=l.sizes}}"{{?}} href="{{=l.href}}{{=it.pkg && it.pkg.version && l.version !== 0 ? '?' + (l.version || it.pkg.version) : ''}}" />
-  {{~}}
-  <title>{{=it.title || it.label}}</title>
-  {{~ it.css :c}}
-  <link href="{{=c.src}}{{=it.pkg && it.pkg.version && c.version !== 0 ? '?' + (c.version || it.pkg.version) : ''}}" type="text/css" rel="stylesheet" media="screen,projection" />
-  {{~}}
+  ${ repeat(it.metadata, (m, i) => `
+    <meta name="${ m.name }" content="${ m.content }" />
+  `)}
+  ${ repeat(it.linkdata, (l, i) => `
+    ${ l.sizes ? `
+      <link rel="${ l.rel }" sizes="${ l.sizes}" />
+      ` : `
+      <link rel="${ l.rel }" href="${ l.href }${ it.pkg && it.pkg.version && l.version !== 0 ? '?' + (l.version || it.pkg.version) : ''}" />
+      `
+    }
+  `)}
+  <title>${ it.title || it.label || 'No Title' }</title>
+  ${ repeat(it.css, (c) => `
+    <link href="${ c.src }${ it.pkg && it.pkg.version && c.version !== 0 ? '?' + (c.version || it.pkg.version) : '' }" type="text/css" rel="stylesheet" media="screen,projection" />
+  `)}
 </head>
 {{ testVar = 'ABC' }}
 <div id="{{ testVar }}">{{ testVar }}</div>
-<body data-message="{{=it.message || ''}}">
+<body data-message="${ it.message || '' }">
   <select id="state">
-    {{! This is a comment. The following uses for...in syntax }}
-    {{* it.globals.states :state:abbr}}
-    {{? abbr === 'FL' && state[abbr] === 'Florida'}}
-    <option id="stateSelect{{= abbr}}" value="{{= abbr}}" selected>{{= state[abbr]}}</option>
-    {{??}}
-    <option id="stateSelect{{= abbr}}" value="{{= abbr}}">{{= state[abbr]}}</option>
-    {{?}}
-    {{*}}
+    ${ comment` This is a comment. The following uses for...in syntax` }
+    ${ repeat(it.globals.states, (abbr, state) => `
+      ${ abbr === 'FL' && state === 'Florida' ? `
+          <option id="stateSelect${ abbr }" value="${ abbr }" selected>${ state }</option>
+        ` : `
+          <option id="stateSelect${ abbr }" value="${ abbr }">${ state }</option>
+        `
+      }
+    `)}
   </select>
-  {{#styles.selectors.swatch}}
+  ${ include`styles/selectors/swatch` }
   <script id="someJson" type="application/json">
     {
       "zero": 0
-      {{? it.json}}
-      "one": {{=it.json.one || ''}},
-      "two": {{=it.json.two || ''}},
-      "three": {{=it.json.three || ''}},
-      {{?}}
+      ${ it.json ? `
+        "one": ${ it.json.one },
+        "two": ${ it.json.two },
+        "three": ${ it.json.three || '' },
+        ` : ``
+      }
     }
   </script>
-  {{~ it.js :c}}
-  <script src="{{=c.src}}{{=it.pkg && it.pkg.version && c.version !== 0 ? '?' + (c.version || it.pkg.version) : ''}}"></script>
-  {{~}}
+  ${ repeat(it.js, (c) => `
+    <script src="${ c.src }${ it.pkg && it.pkg.version && c.version !== 0 ? '?' + (c.version || it.pkg.version) : '' }"></script>
+  `)}
 </body>
 </html>

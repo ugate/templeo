@@ -30,7 +30,7 @@ exports.JsonEngine = JsonEngine;
 exports.PLAN = 'Template Engine';
 exports.TASK_DELAY = 500;
 exports.TEST_TKO = 20000;
-exports.LOGGER = null;//{ info: console.info, warn: console.warn, error: console.error };//console;
+exports.LOGGER = /*null;//{ info: console.info, warn: console.warn, error: console.error };//*/console;
 exports.httpsServer = httpsServer;
 exports.rmrf = rmrf;
 exports.baseTest = baseTest;
@@ -115,7 +115,7 @@ function httpsServer(baseFilePath, hostname, port) {
 // export async function getTemplateFiles(cache = true) {
 async function getTemplateFiles(cache = true) {
   const rtn = {
-    tpmlPth: './test/views/tmpl.html',
+    tpmlPth: './test/views/template.html',
     dtaPth: './test/data/it.json'
   };
 
@@ -228,14 +228,6 @@ function expectDOM(html, data) {
   // comment block should be removed
   expect(html.includes('This is a comment')).to.be.false();
 
-  // assign test
-  const assignee = 'ABC', assigned = dom.window.document.getElementById(assignee);
-  expect(assigned, 'Assign Expression').to.not.be.null();
-  expect(assigned.innerHTML, 'Assign Expression innerHTML').to.equal(assignee);
-  const assigneeSwatch = 'ABCSwatch', assignedSwatch = dom.window.document.getElementById(assigneeSwatch);
-  expect(assignedSwatch, 'Assign Expression Include').to.not.be.null();
-  expect(assignedSwatch.innerHTML, 'Assign Expression Include innerHTML').to.equal(assigneeSwatch);
-
   // array iteration test
   for (let i = 0, arr = data.metadata; i < arr.length; i++) {
     el = dom.window.document.querySelector(`[name="${arr[i].name}"][content="${arr[i].content}"]`) || {};
@@ -244,7 +236,7 @@ function expectDOM(html, data) {
   }
 
   // object property iteration test
-  var el, hasSel, idx = -1;
+  var el, hasSel;
   for (let state in data.globals.states) {
     el = dom.window.document.querySelector(`option[id="stateSelect${state}"]`) || {};
     expect(el.value).to.equal(state);

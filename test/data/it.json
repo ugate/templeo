@@ -1,4 +1,5 @@
 {
+  "title": "Test Title",
   "css": [
     { "src": "/a/b/c.css", "version": 0 },
     { "src": "/d/e/f.css", "version": 0 },
