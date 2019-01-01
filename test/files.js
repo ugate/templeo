@@ -65,10 +65,10 @@ async function partialFrag(test, elId, name) {
   test.frag.html = `<div id="${test.frag.elementId}"></div>`;
   /* jSDOM escapes templeo template syntax causing errors
   const udom = new JSDOM(test.html);
-  udom.window.document.body.append(`{{#${test.frag.name}}}`);
+  udom.window.document.body.append(`\${ include\`${test.frag.name}\` }`);
   frag.html = udom.serialize();*/
   test.html = test.html.replace(/(<\s*body[^>]*>)([\s\S]*?)(<\s*\/\s*body>)/ig, (mtch, open, content, close) => {
-    return `${open}${content}{{#${test.frag.name}}}${close}`;
+    return `${open}${content}\${ include\`${test.frag.name}\` }${close}`;
   });
 
   // write frag (should be picked up and registered by the file watcher set via the scan)

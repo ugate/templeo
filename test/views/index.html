@@ -1,7 +1,5 @@
 <div id="index">
-  <h2>{{=it.pageName}}</h2>
-  {{ testVar = 'ABC' }}
-  <div id="{{ testVar }}">{{ testVar }}</div>
-  {{! This is a comment. The following uses for...in syntax }}
-  {{#styles.selectors.swatch}}
+  <h2>${ it.title }</h2>
+  ${ comment`This is a comment. The following uses for...in syntax` }
+  ${ include`styles/selectors/swatch` }
 </div>

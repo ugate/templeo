@@ -20,8 +20,6 @@
     <link href="${ c.src }${ it.pkg && it.pkg.version && c.version !== 0 ? '?' + (c.version || it.pkg.version) : '' }" type="text/css" rel="stylesheet" media="screen,projection" />
   `)}
 </head>
-{{ testVar = 'ABC' }}
-<div id="{{ testVar }}">{{ testVar }}</div>
 <body data-message="${ it.message || '' }">
   <select id="state">
     ${ comment` This is a comment. The following uses for...in syntax` }

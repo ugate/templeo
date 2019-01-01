@@ -259,21 +259,6 @@ exports.Engine = class Engine {
 };
 
 /**
- * Refreshes template partial content by reading the contents of the partial file
- * @private
- * @param {Object} ns The namespace of the template engine
- * @param {Engine} eng The template engine
- * @param {String} name The template name where the function will be set
- * @returns {String} The partial content
- */
-async function refreshPartial(ns, eng, name) {
-  var partial = (await ns.at.cache.getPartial(name, !ns.at.prts[name])).content;
-  partial = eng.registerPartial(name, partial.toString(ns.at.options.encoding), true);
-  if (ns.at.options.logger.info) ns.at.options.logger.info(`Refreshed template partial "${name}"`);
-  return partial;
-}
-
-/**
  * Generats a template function for a partial
  * @private
  * @param {Object} ns The namespace of the template engine
@@ -284,8 +269,23 @@ async function refreshPartial(ns, eng, name) {
  * @returns {function} The {@link Engine.template} function
  */
 async function compile(ns, eng, content, context, name) { // generates a template function that accounts for nested partials
-  if (!ns.at.options.isCached) await refreshPartials(ns, eng, content, context, name);
+  if (!ns.at.options.isCached) await refreshPartials(ns, eng, content, name);
   return compileToFunc(ns, content, ns.at.options, context, name, ns.at.cache);
+}
+
+/**
+ * Refreshes template partial content by reading the contents of the partial file
+ * @private
+ * @param {Object} ns The namespace of the template engine
+ * @param {Engine} eng The template engine
+ * @param {String} name The template name where the function will be set
+ * @returns {String} The partial content
+ */
+async function refreshPartial(ns, eng, name) {
+  var partial = await ns.at.cache.getPartial(name, true);
+  partial = eng.registerPartial(name, partial.content.toString(ns.at.options.encoding), true);
+  if (ns.at.options.logger.info) ns.at.options.logger.info(`Refreshed template partial "${name}"`);
+  return partial;
 }
 
 /**
@@ -294,15 +294,24 @@ async function compile(ns, eng, content, context, name) { // generates a templat
  * @param {Object} ns The namespace of the template engine
  * @param {Engine} eng The template engine
  * @param {String} content The template content
- * @param {String} name The template name that uniquely identifies the template content
+ * @param {String[]} [names] A set of names to exclude from the refresh
  */
-async function refreshPartials(ns, eng, content, name) {
+async function refreshPartials(ns, eng, content, names) {
   if (!content) return;
-  const mtchs = /include`([\s\S]+?)(?<!\\)`/g.match(content);
-  if (mtchs) {
-    for (let mtch of mtchs) {
-      await refreshPartial(ns, eng, mtch);
-      return refreshPartials(ns, eng, ns.at.prts[mtch].tmpl, name); // any nested partials?
+  names = names || [];
+  // TODO : Shouldn't need to resort to regular expressions for refreshing partial registration
+  // - doesn't impact template parsing, but could be improved nonetheless
+  const rx = /include`([\s\S]+?)(?<!\\)`/mg;
+  var mtch, parts = [];
+  while ((mtch = rx.exec(content)) !== null && mtch[1]) {
+    if (names.includes(mtch[1])) continue; // already refreshed
+    parts.push({ name: mtch[1], promise: refreshPartial(ns, eng, mtch[1]) });
+    names.push(mtch[1]);
+  }
+  for (let part of parts) {
+    await part.promise;
+    if (ns.at.prts[part.name] && ns.at.prts[part.name].tmpl) {
+      await refreshPartials(ns, eng, ns.at.prts[part.name].tmpl, names); // any nested partials?
     }
   }
 }
