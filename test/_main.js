@@ -5,6 +5,12 @@
 // generate jsdoc:
 // npm run gen-docs
 
+const TEST_FILES = {};
+const DB = {};
+//const logger = {};
+const logger = { info: console.info, warn: console.warn, error: console.error };
+//const logger = console;
+
 const Forge = require('node-forge');
 const https = require('https');
 exports.https = https;
@@ -30,7 +36,7 @@ exports.JsonEngine = JsonEngine;
 exports.PLAN = 'Template Engine';
 exports.TASK_DELAY = 500;
 exports.TEST_TKO = 20000;
-exports.LOGGER = null;//{ info: console.info, warn: console.warn, error: console.error };*/console;
+exports.LOGGER = logger;
 exports.httpsServer = httpsServer;
 exports.rmrf = rmrf;
 exports.baseTest = baseTest;
@@ -69,11 +75,9 @@ exports.expectDOM = expectDOM;
 // export const PLAN = 'Template Engine';
 // export const TASK_DELAY = 500;
 // export const TEST_TKO = 20000;
+// export const LOGGER = logger;
 
-const TEST_FILES = {};
-const DB = {};
 const Fsp = Fs.promises;
-const logger = exports.LOGGER || {};
 
 // TODO : ESM uncomment the following line...
 // export function httpsServer(baseFilePath, hostname, port) {
@@ -92,7 +96,7 @@ function httpsServer(baseFilePath, hostname, port) {
         res.setHeader('Content-Type', type || 'text/html');
         res.end(contents);
       } catch (err) {
-        console.error(err);
+        if (logger.error) logger.error(err);
         res.statusCode = 500;
         res.setHeader('Content-Type', 'text/html');
         res.end(`Failed to ${mthd} for: ${req.url}`);
@@ -146,14 +150,14 @@ async function rmrf(path) {
 }
 
 // TODO : ESM uncomment the following line...
-// export async function baseTest(opts, scan, engine) {
-async function baseTest(opts, scan, engine) {
-  const test = await init(opts, scan, engine);
+// export async function baseTest(compileOpts, scan, engine, renderOpts) {
+async function baseTest(compileOpts, scan, engine, renderOpts) {
+  const test = await init(compileOpts, scan, engine);
   test.fn = await test.engine.compile(test.html);
   expect(test.fn).to.be.function();
-  const rslt = test.fn(test.data);
-  if (logger.debug) logger.debug(rslt);//logger.debug(JsFrmt(rslt, opts.formatOptions));
-  expectDOM(rslt, test.data);
+  test.result = await test.fn(test.data, renderOpts);
+  if (logger.debug) logger.debug(test.result);//logger.debug(JsFrmt(test.result, compileOpts.formatOptions));
+  expectDOM(test.result, test.data);
   return test;
 }
 
@@ -213,7 +217,7 @@ async function closeIndexedDB(db, engine) {
 // export async function init(opts, scan, engine) {
 async function init(opts, scan, engine) {
   const rtn = await getTemplateFiles();
-  rtn.engine = engine || new Engine(opts, JsFrmt);
+  rtn.engine = engine || new Engine(opts, JsFrmt, null, logger);
   rtn.scanned = scan ? await rtn.engine.scan(true) : null;
   rtn.opts = opts;
   return rtn;
@@ -257,7 +261,7 @@ function expectDOM(html, data) {
   const swatchDatalist = dom.window.document.getElementById('swatchDatalist');
   expect(swatchDatalist).to.be.object();
 
-  //console.log(fn, rslt);
+  //if (logger.debug) logger.debug(fn, rslt);
   return dom;
 }
 

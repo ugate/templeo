@@ -1,22 +1,20 @@
 'use strict';
 
-const EngineOpts = require('./lib/engine-opts');
+const TemplateOpts = require('./lib/template-options');
 const JsonEngine = require('./lib/json-engine');
 const Cachier = require('./lib/cachier');
-const Director = require('./lib/director');
+const Sandbox = require('./lib/sandbox');
 // TODO : ESM remove the following lines...
-exports.EngineOpts = EngineOpts;
+exports.TemplateOpts = TemplateOpts;
 exports.Cachier = Cachier;
 exports.JsonEngine = JsonEngine;
-exports.Director = Director;
 // TODO : ESM uncomment the following lines...
-// TODO : import * as EngineOpts from './lib/engine-opts.mjs';
+// TODO : import * as TemplateOpts from './lib/template-options.mjs';
 // TODO : import * as JsonEngine from './lib/json-engine.mjs';
 // TODO : import * as Cachier from './lib/cachier.mjs';
-// TODO : import * as Director from './lib/director.mjs';
-// TODO : export * as EngineOpts from EngineOpts;
+// TODO : import * as Sandbox from './lib/sandbox.mjs';
+// TODO : export * as TemplateOpts from TemplateOpts;
 // TODO : export * as Cachier from Cachier;
-// TODO : export * as Director from Director;
 
 /**
  * Micro rendering template engine
@@ -70,9 +68,9 @@ exports.Engine = class Engine {
 
   /**
    * Creates a template parsing engine
-   * @param {EngineOpts} [opts] The {@link EngineOpts} to use
-   * @param {Function} [formatFunc] The `function(string, formatOptions)` that will return a formatted string when __writting__
-   * data, passing the formatting options from `opts.formatOptions`. Used when formatting compiled code.
+   * @param {TemplateOpts} [opts] The {@link TemplateOpts} to use
+   * @param {Function} [formatFunc] The `function(string, formatOptions)` that will return a formatted string for a specified code block,
+   * passing the formatting options from `opts.formatOptions` (e.g. minification and/or beautifying)
    * @param {Object} [servePartials] The options to detemine if partial content will be loaded/read or uploaded/write to an `HTTPS` server (omit
    * to serve template partials locally)
    * none) 
@@ -87,11 +85,18 @@ exports.Engine = class Engine {
    * `https://example.com/some/id.html` where `some/id.html` is the the partial ID). When calling {@link registerPartial} the `name` should
    * _include_ the relative path on the server to the partial that will be uploaded.
    * @param {Boolean} [servePartials.rejectUnauthorized=true] A flag that indicates the client should reject unauthorized servers (__Node.js ONLY__)
+   * @param {Object} [logger] The logger for handling logging output
+   * @param {Function} [logger.debug] A function that will accept __debug__ level logging messages (i.e. `debug('some message to log')`)
+   * @param {Function} [logger.info] A function that will accept __info__ level logging messages (i.e. `info('some message to log')`)
+   * @param {Function} [logger.warn] A function that will accept __warning__ level logging messages (i.e. `warn('some message to log')`)
+   * @param {Function} [logger.error] A function that will accept __error__ level logging messages (i.e. `error('some message to log')`)
    */
-  constructor(opts, formatFunc, servePartials) {
-    const opt = opts instanceof EngineOpts ? opts : new EngineOpts(opts), ns = internal(this);
+  constructor(opts, formatFunc, servePartials, logger) {
+    const opt = opts instanceof TemplateOpts ? opts : new TemplateOpts(opts), ns = internal(this), hasCachier = formatFunc instanceof Cachier;
     ns.at.options = opt;
-    ns.at.cache = formatFunc instanceof Cachier ? formatFunc : new Cachier(ns.at.options, formatFunc, true, servePartials);
+    ns.at.logger = logger || {};
+    ns.at.cache = hasCachier ? formatFunc : new Cachier(ns.at.options, formatFunc, true, servePartials, ns.at.logger);
+    ns.at.formatFunc = !hasCachier && formatFunc;
     ns.at.isInit = false;
     ns.at.prts = {};
     ns.at.prtlFuncs = {};
@@ -99,33 +104,33 @@ exports.Engine = class Engine {
 
   /**
    * An [IndexedDB]{@link https://developer.mozilla.org/en-US/docs/Web/API/IndexedDB_API} template cached {@link Engine}
-   * @param {EngineOpts} [opts] The {@link EngineOpts}
+   * @param {TemplateOpts} [opts] The {@link TemplateOpts}
    * @param {Function} [formatFunc] The `function(string, formatOptions)` that will return a formatted string when __writting__
    * data, passing the formatting options from `opts.formatOptions`. Used when formatting compiled code.
    * @param {Object} [indexedDB] The `IndexedDB` implementation that will be used for caching (defaults to `window.indexedDB`).
    * Can be either a `IndexedDB` compilant instance or a `LevelDB`/`level` instance.
    * @returns {Engine} A new {@link Engine} instance with IndexedDB cache
    */
-  static async indexedDBEngine(opts, formatFunc, indexedDB) {
-    opts = opts instanceof EngineOpts ? opts : new EngineOpts(opts);
+  static async indexedDBEngine(opts, formatFunc, indexedDB, logger) {
+    opts = opts instanceof TemplateOpts ? opts : new TemplateOpts(opts);
     const CachierDB = opts.useCommonJs ? require('./lib/cachier-db.js') : /* TODO : ESM use... import('./lib/cachier-db.mjs') */null;
-    return new Engine(opts, new CachierDB(opts, indexedDB, formatFunc));
+    return new Engine(opts, new CachierDB(opts, indexedDB, formatFunc, logger), null, logger);
   }
 
   /**
    * A [Node.js]{@link https://nodejs.org/api/fs.html} __only__ {@link Engine} to cache compiled template code in the file system for improved
    * debugging/caching capabilities
-   * @param {EngineOpts} [opts] The {@link EngineFileOpts}
+   * @param {TemplateOpts} [opts] The {@link TemplateFileOpts}
    * @param {Function} [formatFunc] The `function(string, formatOptions)` that will return a formatted string when __writting__
    * data, passing the formatting options from `opts.formatOptions`. Used when formatting compiled code.
    * @returns {Engine} A new {@link Engine} instance with file system cache
    */
-  static async filesEngine(opts, formatFunc) {
-    const useCommonJs = (opts && opts.useCommonJs) || EngineOpts.defaultOptions.useCommonJs;
+  static async filesEngine(opts, formatFunc, logger) {
+    const useCommonJs = (opts && opts.useCommonJs) || TemplateOpts.defaultCompileOptions.useCommonJs;
     const CachierFiles = useCommonJs ? require('./lib/cachier-files.js') : /* TODO : ESM use... await import('./lib/cachier-files.mjs')*/null;
-    const EngineFileOpts = useCommonJs ? require('./lib/engine-file-opts.js') : /* TODO : ESM use... await import('./lib/engine-file-opts.mjs')*/null;
-    opts = opts instanceof EngineFileOpts ? opts : new EngineFileOpts(opts);
-    return new Engine(opts, new CachierFiles(opts, formatFunc));
+    const TemplateFileOpts = useCommonJs ? require('./lib/template-file-options.js') : /* TODO : ESM use... await import('./lib/template-file-options.mjs')*/null;
+    opts = opts instanceof TemplateFileOpts ? opts : new TemplateFileOpts(opts);
+    return new Engine(opts, new CachierFiles(opts, formatFunc, logger), null, logger);
   }
 
   /**
@@ -139,11 +144,11 @@ exports.Engine = class Engine {
    */
   async compile(tmpl, opts, callback) { // ensures partials are included in the compilation
     const ns = internal(this);
-    opts = opts || ns.at.options;
+    opts = opts || {};
     var fn, error;
     if (callback) {
-      if (ns.at.options.logger.info) {
-        ns.at.options.logger.info('Compiling template w/callback style conventions');
+      if (ns.at.logger.info) {
+        ns.at.logger.info('Compiling template w/callback style conventions');
       }
       try {
         fn = await compile(ns, ns.this, tmpl, opts);
@@ -174,14 +179,31 @@ exports.Engine = class Engine {
   /**
    * Registers and caches a partial template
    * @param {String} name The template name that uniquely identifies the template content
-   * @param {String} partial The partial template content to register
+   * @param {String} content The partial template content to register
    * @returns {String} The partial content
    */
-  registerPartial(name, partial) {
+  registerPartial(name, content) {
     const ns = internal(this);
-    ns.at.prts[name] = { tmpl: partial, name: name };
+    ns.at.prts[name] = { tmpl: content, name: name };
     ns.at.prts[name].ext = ns.at.options.defaultExtension || '';
     return ns.at.prts[name].tmpl;
+  }
+
+  /**
+   * Registers and caches partial templates
+   * @param {Object[]} partials The partials to register
+   * @param {String} partials[].name The template name that uniquely identifies the template content
+   * @param {String} partials[].content The partial template content to register
+   */
+  registerPartials(partials) {
+    const ns = internal(this);
+    let idx = -1;
+    for (let prtl of partials) {
+      idx++;
+      if (!prtl.hasOwnProperty('name')) throw new Error(`Partial "name" missing at index ${idx} for ${JSON.stringify(prtl)}`);
+      if (!prtl.hasOwnProperty('content')) throw new Error(`Partial "content" missing at index ${idx} for ${JSON.stringify(prtl)}`);
+      ns.this.registerPartial(prtl.name, prtl.content);
+    }
   }
 
   /**
@@ -197,7 +219,7 @@ exports.Engine = class Engine {
       const prtl = await refreshPartial(ns, ns.this, name);
       if (prtl) ns.at.prtlFuncs[name] = await compile(ns, eng, prtl, null, name);
     }
-    return (ns.at.prts[name] && ns.at.prts[name].tmpl && ns.at.prtlFuncs[name] && ns.at.prtlFuncs[name](context)) || ns.at.options.defaultPartialContent;
+    return (ns.at.prts[name] && ns.at.prts[name].tmpl && ns.at.prtlFuncs[name] && (await ns.at.prtlFuncs[name](context))) || '';
   }
 
   /**
@@ -250,28 +272,13 @@ exports.Engine = class Engine {
   }
 
   /**
-   * @returns {EngineOpts} The engine options
+   * @returns {TemplateOpts} The engine options
    */
   get options() {
     const ns = internal(this);
     return ns.at.options;
   }
 };
-
-/**
- * Generats a template function for a partial
- * @private
- * @param {Object} ns The namespace of the template engine
- * @param {Engine} eng The template engine
- * @param {String} content The template content
- * @param {Object} context The object that contains the contextual data used in the template
- * @param {String} name The template name that uniquely identifies the template content
- * @returns {function} The {@link Engine.template} function
- */
-async function compile(ns, eng, content, context, name) { // generates a template function that accounts for nested partials
-  if (!ns.at.options.isCached) await refreshPartials(ns, eng, content, name);
-  return compileToFunc(ns, content, ns.at.options, context, name, ns.at.cache);
-}
 
 /**
  * Refreshes template partial content by reading the contents of the partial file
@@ -284,7 +291,7 @@ async function compile(ns, eng, content, context, name) { // generates a templat
 async function refreshPartial(ns, eng, name) {
   var partial = await ns.at.cache.getPartial(name, true);
   partial = eng.registerPartial(name, partial.content.toString(ns.at.options.encoding), true);
-  if (ns.at.options.logger.info) ns.at.options.logger.info(`Refreshed template partial "${name}"`);
+  if (ns.at.logger.info) ns.at.logger.info(`Refreshed template partial "${name}"`);
   return partial;
 }
 
@@ -317,52 +324,18 @@ async function refreshPartials(ns, eng, content, names) {
 }
 
 /**
- * Manufactures directives/functions that will be available to template lierals during rendering
+ * Generats a template function for a partial
  * @private
- * @param {Function[]} [directives] A set of functions that will be available to templates during the rendering
- * phase
- * @returns {Object} The `{ names:String, code:String }` where `names` is a string representation of the directive
- * names (in array format) and `code` represents the commulative coded functions
+ * @param {Object} ns The namespace of the template engine
+ * @param {Engine} eng The template engine
+ * @param {String} content The template content
+ * @param {Object} def The object that contains the compilation definitions used in the template
+ * @param {String} name The template name that uniquely identifies the template content
+ * @returns {function} The {@link Engine.template} function
  */
-function codedDirectives(directives) {
-  const directors = Director.directives;
-  const rtn = { names: '', code: '' };
-  for (let drv of directors) {
-    rtn.code += `${drv.code.toString()}`;
-    rtn.names += (rtn.names ? ',' : '') + drv.name;
-  }
-  if (directives) {
-    var di = -1;
-    for (let drv of directives) {
-      di++;
-      if (typeof drv !== 'function') throw new Error(`Directive option at index ${di} must be a named function, not ${drv}`);
-      else if (!drv.name) throw new Error(`Directive option at index ${di} must be a named function`);
-      rtn.code += `${drv.toString()}`;
-      rtn.names += `,${drv.name}`;
-    }
-  }
-  rtn.names = `[${rtn.names}]`;
-  return rtn;
-}
-
-/**
- * Generates a locally sandboxed environment compilation for template rendering
- * @private
- * @param {String} code The compilation that will be coded/appened to the compilation sequence
- * @param {(String|Object)} includes Either the coded includes string or the includes JSON
- * @param {String} varName The name given to the context that will be coded
- * @param {Object} directives Directives from {@link codedDirectives}
- * @returns {String} A coded representation to be used by a template engine
- */
-function coded(code, includes, varName, directives) {
-  const inclsx = `const includes=${JSON.stringify(includes)};`, varx = `const varName='${varName}';`;
-  const dirsx = `const directives=${JSON.stringify(directives)};`, codedx = `const coded=${coded.toString()};`;
-  // privately scoped parameters are isolated in a separate code block to restrict access to the include
-  // function only
-  const incl = `var include;{${inclsx}${varx}${dirsx}${codedx}include=${include.toString()};}`;
-  // the context object is contained in a separate code block in order to isolate it from access within
-  // directives
-  return `${directives.code};{const ${varName}=arguments[0],context=${varName};${incl}${code}}`;
+async function compile(ns, eng, content, def, name) { // generates a template function that accounts for nested partials
+  if (!ns.at.options.isCached) await refreshPartials(ns, eng, content, name);
+  return compileToFunc(ns, content, ns.at.options, def, name, ns.at.cache);
 }
 
 /**
@@ -370,7 +343,7 @@ function coded(code, includes, varName, directives) {
  * @private
  * @param {Object} ns The namespace of the template engine
  * @param {String} tmpl The raw template source
- * @param {EngineOpts} [options] The options that overrides the default engine options
+ * @param {TemplateOpts} [options] The options that overrides the default engine options
  * @param {Object} [def] The object definition to be used in the template
  * @param {String} [def.filename] When the template name is omitted, an attempt will be made to extract a name from the `filename` using `options.filename`
  * regular expression
@@ -380,54 +353,22 @@ function coded(code, includes, varName, directives) {
  * @returns {Function} The rendering `function(context)` that returns a template result string based upon the provided context
  */
 async function compileToFunc(ns, tmpl, options, def, tname, cache) {
-  const opts = options instanceof EngineOpts ? options : new EngineOpts(options);
+  const opts = options instanceof TemplateOpts ? options : new TemplateOpts(options);
+  if (!def) def = opts; // use definitions from the options when none are supplied
   cache = cache instanceof Cachier ? cache : new Cachier(opts);
   const tnm = tname || (def && def.filename && def.filename.match && def.filename.match(opts.filename)[2]) || ('template_' + Cachier.guid(null, false));
   var code = '';
   try {
-    code = coded(`return \`${tmpl}\``, ns.at.prts, opts.varName, codedDirectives(opts.directives));
+    code = Sandbox.create(tmpl, ns.at.prts, ns.at.options);
+    if (ns.at.logger.debug) ns.at.logger.debug(`Created sandbox for: ${code}`);
+    //try {throw new Error(`Test`);} catch (err) {console.dir(err);}
     const { func } = await cache.generateCode(tnm, code, cache.isWritable);
-    if (func && ns.at.options.logger.debug) ns.at.options.logger.debug(`Compiled ${func.name}`);
+    if (func && ns.at.logger.info) ns.at.logger.info(`Compiled ${func.name}`);
     return func;
   } catch (e) {
-    if (opts.logger.error) opts.logger.error(`Could not compile template ${tnm} (ERROR: ${e.message}): ${code || tmpl}`);
+    if (ns.at.logger.error) ns.at.logger.error(`Could not compile template ${tnm} (ERROR: ${e.message}): ${code || tmpl}`);
     throw e;
   }
-}
-
-/**
- * Template literal tag that will include partials. __Assumes an `includes` object that contains the partials by property name,
- * `varName`, `context` (object passed into the rendering function) and `directives` (from {@link Director.directives}) are
- * within scope__.
- * @private
- * @param {String[]} strs The string passed into template literal tag
- * @param  {String[]} exps The expressions passed into template literal tag
- */
-function include(strs, ...exps) {
-  var rtn = '';
-  for (let str of strs) {
-    if (includes[str] && includes[str].tmpl) {
-      try {
-        // eval is preferred over new Function here since include should already sanboxed and access to closures is required
-        rtn += eval(`\`${includes[str].tmpl}\``);//(new Function(coded(`return \`${includes[str].tmpl}\``, includes, varName, directives)))(context);
-      } catch (err) {
-        err.message += ` CAUSE: Unable to include template @ ${str} (string)`;
-        throw err;
-      }
-    } else throw new Error(`Cannot find included template @ ${str} (string)`);
-  }
-  for (let exp of exps) {
-    if (includes[exp] && includes[exp].tmpl) {
-      try {
-        // eval is preferred over new Function here since include should already sanboxed and access to closures is required
-        rtn += eval(`\`${includes[exp].tmpl}\``);//(new Function(coded(`return \`${includes[exp].tmpl}\``, includes, varName, directives)))(context);
-      } catch (err) {
-        err.message += ` CAUSE: Unable to include template @ ${exp} (expression)`;
-        throw err;
-      }
-    } else throw new Error(`Cannot find included template @ ${exp} (expression)`);
-  }
-  return rtn;
 }
 
 // private mapping

@@ -9,15 +9,15 @@
 </b>
 
 ### Micro Template Engine
-> `templeo` is a __micro-sized template engine__ built for _**speed**_.
+> `templeo` is a __zero dependency__ template engine that uses built-in JavaScript [Template Literals](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Template_literals) syntax.
 
-`templeo` combines most of the benefits of _logic-less_ template semantics with the flexibility of _logic-based_ template semantics. All language-specific conditionals, iterations, etc. that make _logic-based_ template semantics error-prone and difficult to read are replaced with intuitive expressions while retaining the ability to make use of properties, functions, etc. within a sandboxed environment. To install run `npm install templeo`. Runs in the browser or [Node.js](https://nodejs.org) with __zero__ external dependencies.
+`templeo` combines the benefits of [Template Literals](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Template_literals) semantics with the flexibility of running __client-side, server-side or even serverless__. All language-specific conditionals, iterations, etc. that make _logic-based_ template semantics error-prone and difficult to read are replaced with intuitive expressions while retaining the ability to make use of properties, functions, etc. within a sandboxed environment. To install run `npm install templeo`. Runs in the browser or [Node.js](https://nodejs.org) with __zero__ external dependencies.
 
 #### Features
-- __Full Contexual Accessibility__: No special/restricted syntax to use within expressions! Properties, functions, etc. are fully available within every template expression (e.g. `{{= it.myArray.sort().join()}}`).
-- __Includes__: _Partial_ template fragments can contain nested includes in order to maximize template reusability
+- __No special Syntax__: No special syntax required! Everything is baked into JavaScript itself! Properties, functions, etc. are fully available within every template expression (e.g. `{{= it.myArray.sort().join()}}`).
+- __Includes__: _Partial_ template fragments can contain _nested_ includes in order to maximize template reusability
 - __Debugging__: Compiled templates are accessible directly via the VM or through module imports/requires- allowing for seemless debugging capabilities
-- __Extensible__: `Engine` expressions are fully customizable and easy to extend. And with a decoupled caching mechanism, cache extensibility is a easy as overriding `read` and/or `write` operations. 
+- __Extensible__: Directives can easily be added to add any stand-alone [Tag Function](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Template_literals#Tagged_templates) and are fully customizable and easy to extend. And with a decoupled caching mechanism, cache extensibility is a easy as overriding `read` and/or `write` operations. 
 - __Auto Loading/Uploading__: _Partials_/fragments can optionally be __loaded__ from (and even __uploaded__ to) an HTTPS server. Loading/uploading is performed by [window.fetch](https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API) when running in the browser or the [https module](https://nodejs.org/api/https.html) when running in `node`.
 - __Built-in Cache Support__:
   - [In-Memory](#in-memory) - The default cache that resides in-memory for the duration of the process lifespan

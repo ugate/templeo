@@ -26,7 +26,7 @@ lab.experiment(plan, () => {
 
   lab.test(`${plan}: Default Engine`, { timeout: TEST_TKO }, async () => {
     const opts = baseOptions();
-    const engine = new Engine(opts, JsFrmt);
+    const engine = new Engine(opts, JsFrmt, null, logger);
     return reqAndValidate(engine, opts);
   });
 
@@ -34,21 +34,21 @@ lab.experiment(plan, () => {
     const opts = baseOptions();
     const basePath = opts.partialsPath, svr = await httpsServer(basePath);
     const sopts = { read: { url: svr.url }, write: { url: svr.url }, rejectUnauthorized: false };
-    const engine = new Engine(opts, JsFrmt, sopts);
+    const engine = new Engine(opts, JsFrmt, sopts, logger);
     return reqAndValidate(engine, opts);
   });
 
   lab.test(`${plan}: LevelDB Engine`, { timeout: TEST_TKO }, async () => {
     const opts = baseOptions();
     const db = await openIndexedDB();
-    const engine = await Engine.indexedDBEngine(opts, JsFrmt, db.indexedDB);
+    const engine = await Engine.indexedDBEngine(opts, JsFrmt, db.indexedDB, logger);
     await reqAndValidate(engine, opts);
     return closeIndexedDB(db, engine);
   });
 
   lab.test(`${plan}: Files Engine`, { timeout: TEST_TKO }, async () => {
     const opts = baseOptions();
-    const engine = await Engine.filesEngine(opts, JsFrmt);
+    const engine = await Engine.filesEngine(opts, JsFrmt, logger);
     await reqAndValidate(engine, opts);
     return engine.clearCache(true);
   });
@@ -59,8 +59,7 @@ function baseOptions() {
     pathBase: '.',
     path: 'test/views',
     partialsPath: 'test/views/partials',
-    scanSourcePath: 'test/views/partials',
-    logger: LOGGER
+    scanSourcePath: 'test/views/partials'
   };
 }
 
@@ -88,6 +87,11 @@ async function startServer(engine, opts, context) {
       return h.view('index', context);
     }
   });
+  server.events.on('log', (event, tags) => {
+    if (tags.error) {
+      console.log(`Server error: ${event.error ? event.error.message : 'unknown'}`);
+    } else console.dir({ tags, event });
+  });
   server.app.htmlPartial = engine.genPartialFunc();
   await server.start();
   if (logger.debug) logger.debug(`Hapi.js server running @ ${server.info.uri}`);
@@ -105,11 +109,12 @@ async function reqAndValidate(engine, opts) {
   server = await startServer(engine, opts, tmpl.data);
 
   const html = await clientRequest(server.info.uri);
+  logger.info(html)
   if (logger.debug) logger.debug(html);
   expectDOM(html, tmpl.data);
 }
 
-function clientRequest(url, logger) {
+function clientRequest(url) {
   return new Promise(async (resolve, reject) => {
     const req = Http.request(url, { method: 'GET' }, res => {
       var data = '';

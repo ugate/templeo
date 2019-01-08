@@ -16,7 +16,7 @@ lab.experiment(plan, () => {
 
   async function getFilesEngine(opts) {
     if (engine) await engine.clearCache(true); // cleanup temp files
-    engine = await Engine.filesEngine(opts, JsFrmt);
+    engine = await Engine.filesEngine(opts, JsFrmt, LOGGER);
     return engine;
   }
 
@@ -43,7 +43,7 @@ lab.experiment(plan, () => {
     return engine.clearCache(true); // should clear the cache/watches 
   });
 
-  lab.test(`${plan}: HTML (cache w/options.partials)`, { timeout: TEST_TKO }, async flags => {
+  lab.test(`${plan}: HTML (cache w/registerPartials)`, { timeout: TEST_TKO }, async flags => {
     const opts = baseOptions();
     opts.partials = await getFiles(opts.partialsPath, true);
     return baseTest(opts, true, await getFilesEngine(opts));
@@ -55,8 +55,7 @@ function baseOptions() {
     pathBase: '.',
     path: 'test/views',
     partialsPath: 'test/views/partials',
-    scanSourcePath: 'test/views/partials',
-    logger: LOGGER
+    scanSourcePath: 'test/views/partials'
   };
 }
 
@@ -80,7 +79,7 @@ async function partialFrag(test, elId, name) {
     // compile the updated HTML
     const fn = await test.engine.compile(test.html);
     // check the result and make sure the test partial was detected 
-    const rslt = fn(test.data), dom = new JSDOM(rslt);
+    const rslt = await fn(test.data), dom = new JSDOM(rslt);
     const prtl = dom.window.document.getElementById(test.frag.elementId);
     expect(prtl).not.null();
     expectDOM(rslt, test.data);

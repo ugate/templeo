@@ -21,23 +21,25 @@ lab.experiment(plan, async () => {
     return closeIndexedDB(db, engine);
   });
 
-  lab.test(`${plan}: HTML/LevelDB from options.partials`, { timeout: TEST_TKO }, async flags => {
+  lab.test(`${plan}: HTML/LevelDB from registerPartials`, { timeout: TEST_TKO }, async flags => {
     const opts = baseOptions();
-    opts.partials = await getFiles('test/views/partials');
-    engine = await Engine.indexedDBEngine(opts, JsFrmt, db.indexedDB);
-    return baseTest(opts, true, engine);
+    engine = await Engine.indexedDBEngine(opts.compile, JsFrmt, db.indexedDB, LOGGER);
+    const partials = await getFiles('test/views/partials');
+    engine.registerPartials(partials);
+    return baseTest(opts.compile, true, engine, opts.render);
   });
 
   lab.test(`${plan}: HTML/LevelDB from partials in DB`, { timeout: TEST_TKO }, async flags => {
     // partials should still be cached from previous test w/opts.partials
     const opts = baseOptions();
-    engine = await Engine.indexedDBEngine(opts, JsFrmt, db.indexedDB);
-    return baseTest(opts, true, engine);
+    engine = await Engine.indexedDBEngine(opts.compile, JsFrmt, db.indexedDB, LOGGER);
+    return baseTest(opts.compile, true, engine, opts.render);
   });
 });
 
 function baseOptions() {
   return {
-    logger: LOGGER
+    compile: {},
+    render: {}
   };
 }
