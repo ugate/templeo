@@ -30,7 +30,7 @@ const { JSDOM } = require('jsdom');
 exports.JSDOM = JSDOM;
 const Level = require('level');
 exports.Level = Level;
-const { Engine, JsonEngine } = require('../index.js');
+const { Engine, JsonEngine } = require('../../index.js');
 exports.Engine = Engine;
 exports.JsonEngine = JsonEngine;
 exports.PLAN = 'Template Engine';
@@ -46,6 +46,7 @@ exports.openIndexedDB = openIndexedDB;
 exports.closeIndexedDB = closeIndexedDB;
 exports.getTemplateFiles = getTemplateFiles;
 exports.init = init;
+exports.wait = wait;
 exports.expectDOM = expectDOM;
 // TODO : ESM uncomment the following lines...
 // TODO : import * as Forge from 'node-forge';
@@ -80,7 +81,7 @@ exports.expectDOM = expectDOM;
 const Fsp = Fs.promises;
 
 // TODO : ESM uncomment the following line...
-// export function httpsServer(baseFilePath, hostname, port) {
+// export
 function httpsServer(baseFilePath, hostname, port) {
   return new Promise((resolve, reject) => {
     const sec = selfSignedCert();
@@ -116,7 +117,7 @@ function httpsServer(baseFilePath, hostname, port) {
 }
 
 // TODO : ESM uncomment the following line...
-// export async function getTemplateFiles(cache = true) {
+// export
 async function getTemplateFiles(cache = true) {
   const rtn = {
     tpmlPth: './test/views/template.html',
@@ -130,7 +131,7 @@ async function getTemplateFiles(cache = true) {
 }
 
 // TODO : ESM uncomment the following line...
-// export async function rmrf(path) {
+// export
 async function rmrf(path) {
   var stats, subx;
   try {
@@ -150,7 +151,7 @@ async function rmrf(path) {
 }
 
 // TODO : ESM uncomment the following line...
-// export async function baseTest(compileOpts, scan, engine, renderOpts) {
+// export
 async function baseTest(compileOpts, scan, engine, renderOpts) {
   const test = await init(compileOpts, scan, engine);
   test.fn = await test.engine.compile(test.html);
@@ -162,13 +163,14 @@ async function baseTest(compileOpts, scan, engine, renderOpts) {
 }
 
 // TODO : ESM uncomment the following line...
-// export async function getFile(path, cache = true) {
+// export
 async function getFile(path, cache = true) {
   if (cache && TEST_FILES[path]) return TEST_FILES[path];
   return cache ? TEST_FILES[path] = await Fs.promises.readFile(path) : Fs.promises.readFile(path);
 }
+
 // TODO : ESM uncomment the following line...
-// export async function getFiles(dir, readContent = true, rmBasePartial = true, cache = true) {
+// export
 async function getFiles(dir, readContent = true, rmBasePartial = true, cache = true) {
   const sdirs = await Fs.promises.readdir(dir);
   var spth, stat, sfiles, files = [], filed;
@@ -190,7 +192,7 @@ async function getFiles(dir, readContent = true, rmBasePartial = true, cache = t
 }
 
 // TODO : ESM uncomment the following line...
-// export async function openIndexedDB(locPrefix = 'templeo-test-indexedDB-') {
+// export
 async function openIndexedDB(locPrefix = 'templeo-test-indexedDB-') {
   if (DB[locPrefix]) return DB[locPrefix];
   const loc = await Fs.promises.mkdtemp(Path.join(Os.tmpdir(), locPrefix));
@@ -200,7 +202,7 @@ async function openIndexedDB(locPrefix = 'templeo-test-indexedDB-') {
 }
 
 // TODO : ESM uncomment the following line...
-// export async function openIndexedDB(db, engine) {
+// export
 async function closeIndexedDB(db, engine) {
   if (engine) {
     if (logger.debug) logger.debug(`Clearing cache for LevelDB @ ${db.loc}`);
@@ -214,7 +216,7 @@ async function closeIndexedDB(db, engine) {
 }
 
 // TODO : ESM uncomment the following line...
-// export async function init(opts, scan, engine) {
+// export
 async function init(opts, scan, engine) {
   const rtn = await getTemplateFiles();
   rtn.engine = engine || new Engine(opts, JsFrmt, null, logger);
@@ -224,7 +226,18 @@ async function init(opts, scan, engine) {
 }
 
 // TODO : ESM uncomment the following line...
-// export function expectDOM(html, data) {
+// export
+function wait(delay, val, rejectIt) {
+  return new Promise((resolve, reject) => {
+    setTimeout(() => {
+      if (rejectIt) reject(val instanceof Error ? val : new Error(val));
+      else resolve(val);
+    }, delay);
+  });
+}
+
+// TODO : ESM uncomment the following line...
+// export
 function expectDOM(html, data) {
   const dom = new JSDOM(html);
   var el;

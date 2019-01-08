@@ -356,13 +356,13 @@ async function compileToFunc(ns, tmpl, options, def, tname, cache) {
   const opts = options instanceof TemplateOpts ? options : new TemplateOpts(options);
   if (!def) def = opts; // use definitions from the options when none are supplied
   cache = cache instanceof Cachier ? cache : new Cachier(opts);
-  const tnm = tname || (def && def.filename && def.filename.match && def.filename.match(opts.filename)[2]) || ('template_' + Cachier.guid(null, false));
+  const tnm = tname || (def && def.filename && def.filename.match && def.filename.match(opts.filename)[2]) || ('template_' + Sandbox.guid(null, false));
   var code = '';
   try {
-    code = Sandbox.create(tmpl, ns.at.prts, ns.at.options);
-    if (ns.at.logger.debug) ns.at.logger.debug(`Created sandbox for: ${code}`);
-    //try {throw new Error(`Test`);} catch (err) {console.dir(err);}
-    const { func } = await cache.generateCode(tnm, code, cache.isWritable);
+    const func = Sandbox.renderer(tnm, tmpl, ns.at.prts, ns.at.options);
+    if (ns.at.logger.debug) ns.at.logger.debug(`Created sandbox for: ${Sandbox.serialzeFunction(func)}`);
+    //try {throw new Error(`Test`);} catch (err) {logger.error(err);}
+    if (cache.isWritable) await cache.write(tnm, func);
     if (func && ns.at.logger.info) ns.at.logger.info(`Compiled ${func.name}`);
     return func;
   } catch (e) {
