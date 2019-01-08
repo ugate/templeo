@@ -135,14 +135,14 @@ exports.Engine = class Engine {
 
   /**
    * Compiles a template and returns a function that renders the template results using the passed `context` object
-   * @param {String} tmpl The raw template source
+   * @param {String} content The raw template content
    * @param {Object} [opts] The options sent for compilation (omit to use the options set on the {@link Engine})
    * @param {Function} [callback] Optional _callback style_ support __for legacy APIs__:  
-   * `compile(tmpl, opts, (error, (ctx, opts, cb) => cb(error, results)) => {})` or omit to run via
-   * `await compile(tmpl, opts)`
+   * `compile(content, opts, (error, (ctx, opts, cb) => cb(error, results)) => {})` or omit to run via
+   * `await compile(content, opts)`
    * @returns {function} The rendering `function(context)` that returns a template result string based upon the provided context
    */
-  async compile(tmpl, opts, callback) { // ensures partials are included in the compilation
+  async compile(content, opts, callback) { // ensures partials are included in the compilation
     const ns = internal(this);
     opts = opts || {};
     var fn, error;
@@ -151,7 +151,7 @@ exports.Engine = class Engine {
         ns.at.logger.info('Compiling template w/callback style conventions');
       }
       try {
-        fn = await compile(ns, ns.this, tmpl, opts);
+        fn = await compile(ns, ns.this, content, opts);
       } catch (err) {
         error = err;
       }
@@ -162,7 +162,7 @@ exports.Engine = class Engine {
           cb(err);
         }
       });
-    } else fn = compile(ns, ns.this, tmpl, opts);
+    } else fn = compile(ns, ns.this, content, opts);
     return fn;
   }
 
@@ -184,9 +184,9 @@ exports.Engine = class Engine {
    */
   registerPartial(name, content) {
     const ns = internal(this);
-    ns.at.prts[name] = { tmpl: content, name: name };
+    ns.at.prts[name] = { name, content };
     ns.at.prts[name].ext = ns.at.options.defaultExtension || '';
-    return ns.at.prts[name].tmpl;
+    return ns.at.prts[name].content;
   }
 
   /**
@@ -219,7 +219,7 @@ exports.Engine = class Engine {
       const prtl = await refreshPartial(ns, ns.this, name);
       if (prtl) ns.at.prtlFuncs[name] = await compile(ns, eng, prtl, null, name);
     }
-    return (ns.at.prts[name] && ns.at.prts[name].tmpl && ns.at.prtlFuncs[name] && (await ns.at.prtlFuncs[name](context))) || '';
+    return (ns.at.prts[name] && ns.at.prts[name].content && ns.at.prtlFuncs[name] && (await ns.at.prtlFuncs[name](context))) || '';
   }
 
   /**
@@ -317,8 +317,8 @@ async function refreshPartials(ns, eng, content, names) {
   }
   for (let part of parts) {
     await part.promise;
-    if (ns.at.prts[part.name] && ns.at.prts[part.name].tmpl) {
-      await refreshPartials(ns, eng, ns.at.prts[part.name].tmpl, names); // any nested partials?
+    if (ns.at.prts[part.name] && ns.at.prts[part.name].content) {
+      await refreshPartials(ns, eng, ns.at.prts[part.name].content, names); // any nested partials?
     }
   }
 }
@@ -342,7 +342,7 @@ async function compile(ns, eng, content, def, name) { // generates a template fu
  * Compiles a templated segment and returns a redering function (__assumes partials are already transpiled- see {@link compile} for partial support__)
  * @private
  * @param {Object} ns The namespace of the template engine
- * @param {String} tmpl The raw template source
+ * @param {String} content The raw template content
  * @param {TemplateOpts} [options] The options that overrides the default engine options
  * @param {Object} [def] The object definition to be used in the template
  * @param {String} [def.filename] When the template name is omitted, an attempt will be made to extract a name from the `filename` using `options.filename`
@@ -352,21 +352,21 @@ async function compile(ns, eng, content, def, name) { // generates a template fu
  * cache.
  * @returns {Function} The rendering `function(context)` that returns a template result string based upon the provided context
  */
-async function compileToFunc(ns, tmpl, options, def, tname, cache) {
+async function compileToFunc(ns, content, options, def, tname, cache) {
   const opts = options instanceof TemplateOpts ? options : new TemplateOpts(options);
   if (!def) def = opts; // use definitions from the options when none are supplied
   cache = cache instanceof Cachier ? cache : new Cachier(opts);
   const tnm = tname || (def && def.filename && def.filename.match && def.filename.match(opts.filename)[2]) || ('template_' + Sandbox.guid(null, false));
-  var code = '';
+  var func;
   try {
-    const func = Sandbox.renderer(tnm, tmpl, ns.at.prts, ns.at.options);
+    func = Sandbox.renderer(tnm, content, ns.at.prts, ns.at.options);
     if (ns.at.logger.debug) ns.at.logger.debug(`Created sandbox for: ${Sandbox.serialzeFunction(func)}`);
     //try {throw new Error(`Test`);} catch (err) {logger.error(err);}
     if (cache.isWritable) await cache.write(tnm, func);
     if (func && ns.at.logger.info) ns.at.logger.info(`Compiled ${func.name}`);
     return func;
   } catch (e) {
-    if (ns.at.logger.error) ns.at.logger.error(`Could not compile template ${tnm} (ERROR: ${e.message}): ${code || tmpl}`);
+    if (ns.at.logger.error) ns.at.logger.error(`Could not compile template ${tnm} (ERROR: ${e.message}): ${(func && func.toString()) || content}`);
     throw e;
   }
 }
