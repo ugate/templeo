@@ -20,7 +20,7 @@ var server;
 // Use the following when debugging:
 // node --inspect-brk test/code/hapi-vision.js
 // ... and uncomment the following line:
-(async () => { await testDefaultEngine(true); await stopServer(); })();
+//(async () => { await testDefaultEngine(true); await stopServer(); })();
 
 // TODO : ESM uncomment the following line...
 // export
@@ -119,7 +119,7 @@ async function startServer(engine, opts, context) {
   server.route({
     method: 'GET',
     path: '/',
-    handler: function(req, h) {
+    handler: function hapiViewTestHandler(req, h) {
       if (LOGGER.debug) LOGGER.debug(`Hapi.js request received @ ${req.path}`);
       return h.view('index', context);
     }
@@ -142,7 +142,6 @@ async function reqAndValidate(engine, opts) {
   server = await startServer(engine, opts, tmpl.data);
 
   const html = await clientRequest(server.info.uri);
-  //LOGGER.info(html)
   if (LOGGER.debug) LOGGER.debug(html);
   expectDOM(html, tmpl.data);
 }

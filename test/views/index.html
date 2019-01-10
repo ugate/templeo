@@ -2,5 +2,4 @@
   <h2>${ it.title }</h2>
   ${ comment`This is a comment. The following uses for...in syntax` }
   ${ await include`styles/selectors/swatch` }
-  ${ await (async () => { return new Promise((res,rej)=>{ setTimeout(()=>res('HELLO'), 5000); }); } )() }
 </div>

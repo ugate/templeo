@@ -359,7 +359,7 @@ async function compileToFunc(ns, content, options, def, tname, cache) {
   const tnm = tname || (def && def.filename && def.filename.match && def.filename.match(opts.filename)[2]) || ('template_' + Sandbox.guid(null, false));
   var func;
   try {
-    func = Sandbox.renderer(tnm, content, ns.at.prts, ns.at.options);
+    func = Sandbox.renderer(tnm, content, ns.at.prts, ns.at.prtlFuncs, ns.at.options);
     if (ns.at.logger.debug) ns.at.logger.debug(`Created sandbox for: ${Sandbox.serialzeFunction(func)}`);
     //try {throw new Error(`Test`);} catch (err) {logger.error(err);}
     if (cache.isWritable) await cache.write(tnm, func);

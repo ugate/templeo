@@ -7,8 +7,8 @@
 
 const TEST_FILES = {};
 const DB = {};
-//const logger = {};
-const logger = { info: console.info, warn: console.warn, error: console.error };
+const logger = {};
+//const logger = { info: console.info, warn: console.warn, error: console.error };
 //const logger = console;
 
 const Forge = require('node-forge');

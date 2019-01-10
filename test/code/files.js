@@ -1,13 +1,13 @@
 'use strict';
 
-const { expect, LOGGER, Engine, getFiles,  baseTest, init, expectDOM, JSDOM, Path, Fs, JsFrmt } = require('./_main');
+const { expect, LOGGER, Engine, getFiles,  baseTest, init, expectDOM, JSDOM, Path, Fs, JsFrmt, wait } = require('./_main');
 exports.close = close;
 exports.testHtmlCache = testHtmlCache;
 exports.testHtmlNoCache = testHtmlNoCache;
 exports.testHtmlCacheWithWatch = testHtmlCacheWithWatch;
 exports.testHtmlCacheWithRegisterPartials = testHtmlCacheWithRegisterPartials;
 // ESM uncomment the following lines...
-// TODO : import { expect, LOGGER, Engine, getFiles,  baseTest, init, expectDOM, JSDOM, Path, Fs, JsFrmt } from './_main.mjs';
+// TODO : import { expect, LOGGER, Engine, getFiles,  baseTest, init, expectDOM, JSDOM, Path, Fs, JsFrmt, wait } from './_main.mjs';
 
 const PARTIAL_DETECT_DELAY_MS = 100;
 var engine;
@@ -79,7 +79,7 @@ async function partialFrag(test, elId, name) {
   udom.window.document.body.append(`\${ include\`${test.frag.name}\` }`);
   frag.html = udom.serialize();*/
   test.html = test.html.replace(/(<\s*body[^>]*>)([\s\S]*?)(<\s*\/\s*body>)/ig, (mtch, open, content, close) => {
-    return `${open}${content}\${ include\`${test.frag.name}\` }${close}`;
+    return `${open}${content}\${ await include\`${test.frag.name}\` }${close}`;
   });
 
   // write frag (should be picked up and registered by the file watcher set via the scan)
