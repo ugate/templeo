@@ -16,6 +16,8 @@ exports.JsonEngine = JsonEngine;
 // TODO : export * as TemplateOpts from TemplateOpts;
 // TODO : export * as Cachier from Cachier;
 
+//const includeMatch = /include`([\s\S]+?)(?<!\\)`/mg;
+
 /**
  * Micro rendering template engine
  * @module templeo
@@ -126,7 +128,7 @@ exports.Engine = class Engine {
    * @returns {Engine} A new {@link Engine} instance with file system cache
    */
   static async filesEngine(opts, formatFunc, logger) {
-    const useCommonJs = (opts && opts.useCommonJs) || TemplateOpts.defaultCompileOptions.useCommonJs;
+    const useCommonJs = (opts && opts.useCommonJs) || TemplateOpts.defaults.useCommonJs;
     const CachierFiles = useCommonJs ? require('./lib/cachier-files.js') : /* TODO : ESM use... await import('./lib/cachier-files.mjs')*/null;
     const TemplateFileOpts = useCommonJs ? require('./lib/template-file-options.js') : /* TODO : ESM use... await import('./lib/template-file-options.mjs')*/null;
     opts = opts instanceof TemplateFileOpts ? opts : new TemplateFileOpts(opts);
@@ -151,7 +153,7 @@ exports.Engine = class Engine {
         ns.at.logger.info('Compiling template w/callback style conventions');
       }
       try {
-        fn = await compile(ns, ns.this, content, opts);
+        fn = await compile(ns, content, ns.at.options, opts, null, ns.at.cache);
       } catch (err) {
         error = err;
       }
@@ -162,7 +164,7 @@ exports.Engine = class Engine {
           cb(err);
         }
       });
-    } else fn = compile(ns, ns.this, content, opts);
+    } else fn = compile(ns, content, ns.at.options, opts, null, ns.at.cache);
     return fn;
   }
 
@@ -170,10 +172,9 @@ exports.Engine = class Engine {
    * Unregisters a partial template from cache
    * @param {String} name The template name that uniquely identifies the template content
    */
-  unregisterPartial(name) {
+  unregister(name) {
     const ns = internal(this);
-    if (ns.at.prts[name]) delete ns.at.prts[name];
-    if (ns.at.prtlFuncs[name]) delete ns.at.prtlFuncs[name];
+    return ns.at.cache.unregister(name);
   }
 
   /**
@@ -184,26 +185,35 @@ exports.Engine = class Engine {
    */
   registerPartial(name, content) {
     const ns = internal(this);
-    ns.at.prts[name] = { name, content };
-    ns.at.prts[name].ext = ns.at.options.defaultExtension || '';
-    return ns.at.prts[name].content;
+    return ns.at.cache.registerPartial(name, content);
   }
 
   /**
-   * Registers and caches partial templates
-   * @param {Object[]} partials The partials to register
+   * Registers and caches partial compile-time partial templates
+   * @async
+   * @param {Object[]} [partials] The partials to register
    * @param {String} partials[].name The template name that uniquely identifies the template content
    * @param {String} partials[].content The partial template content to register
+   * @param {Boolean} [read=true] When `true`, an attempt will be made to also _read_ any partials using option parameters
+   * @returns {Object} An object that contains the registration results:
+   * 
+   * - `partials` The `partials` object that contains the fragments that have been registered
+   *   - `name` The template name that uniquely identifies the template content
+   *   - `content` The template content
+   *   - `fromRead` A flag that indicates that the 
+   * - `dirs` Present __only__ when {@link Engine.filesEngine} was used. Contains the directories/sub-directories that were created
    */
-  registerPartials(partials) {
+  registerPartials(partials, read) {
     const ns = internal(this);
-    let idx = -1;
-    for (let prtl of partials) {
-      idx++;
-      if (!prtl.hasOwnProperty('name')) throw new Error(`Partial "name" missing at index ${idx} for ${JSON.stringify(prtl)}`);
-      if (!prtl.hasOwnProperty('content')) throw new Error(`Partial "content" missing at index ${idx} for ${JSON.stringify(prtl)}`);
-      ns.this.registerPartial(prtl.name, prtl.content);
-    }
+    return ns.at.cache.registerPartials(partials, read);
+  }
+
+  /**
+   * @returns {Function} A reference safe `async` function to {@link Engine.renderPartial} that can be safely passed into other functions
+   */
+  renderPartialGenerate() {
+    const ns = internal(this);
+    return async (name, content) => ns.this.renderPartial(name, content);
   }
 
   /**
@@ -212,62 +222,20 @@ exports.Engine = class Engine {
    * @param {Object} [context={}] The object that contains contextual data used in the template
    * @returns {String} The compiled template
    */
-  async processPartial(name, context) {
+  async renderPartial(name, context, renderOptions) {
     const ns = internal(this);
-    context = context || {};
-    if (!ns.at.options.isCached || !ns.at.prtlFuncs[name]) {
-      const prtl = await refreshPartial(ns, ns.this, name);
-      if (prtl) ns.at.prtlFuncs[name] = await compile(ns, eng, prtl, null, name);
-    }
-    return (ns.at.prts[name] && ns.at.prts[name].content && ns.at.prtlFuncs[name] && (await ns.at.prtlFuncs[name](context))) || '';
-  }
-
-  /**
-   * Scans the {@link Cachier} for templates/partials and generates a reference safe function for on-demand compilation of a registered templates
-   * @param {Boolean} [registerPartials] `true` __and when supported__, indicates that the {@link Cachier} implementation should attempt to
-   * {@link Engine.registerPartial} for any partials found during {@link Cachier.scan}. __NOTE: If the {@link Engine} is being used as pulgin, there
-   * typically isn't a need to register partials during initialization since {@link Engine.registerPartial} is normally part of the plugin contract and
-   * will be handled automatically/internally, negating the need to explicitly do it during the scan. Doing so may duplicate the partial registration
-   * procedures.__
-   * @returns {Object|undefined} An object that contains the scan results:
-   * 
-   * - `created` The metadata object that contains details about the scan
-   *  - `partials` The `partials` object that contains the fragments that have been registered
-   *    - `name` The template name
-   *    - `id` The template identifier
-   *    - `content` The template content
-   *  - `dirs` Present __only__ when {@link Engine.filesEngine} was used. Contains the directories/sub-directories that were created
-   * - `partialFunc` A reference safe `async` function to {@link Engine.processPartial} that can be safely passed into other functions
-   */
-  async scan(registerPartials) {
-    const ns = internal(this);
-    const rptrl = registerPartials ? (name, content) => ns.this.registerPartial(name, content) : null;
-    const urptrl = registerPartials ? (name) => ns.this.unregisterPartial(name) : null;
-    return {
-      created: await ns.at.cache.scan(rptrl, urptrl),
-      partialFunc: ns.this.genPartialFunc()
-    };
-  }
-
-  /**
-   * @returns {Function} A reference safe `async` function to {@link Engine.processPartial} that can be safely passed into other functions
-   */
-  genPartialFunc() {
-    const ns = internal(this);
-    return async (name, content) => ns.this.processPartial(name, content);
+    const func = await ns.at.cache.compile(name);
+    return func(context, renderOptions);
   }
 
   /**
    * Clears the underlying cache
+   * @async
    * @param {Boolean} [all=false] `true` to clear __ALL unassociated cache instances__ when possible as well as any partials
    * that have been registered
    */
-  async clearCache(all = false) {
+  clearCache(all = false) {
     const ns = internal(this);
-    if (all) {
-      ns.at.prts = {};
-      ns.at.prtlFuncs = {};
-    }
     return ns.at.cache.clear(all);
   }
 
@@ -279,64 +247,6 @@ exports.Engine = class Engine {
     return ns.at.options;
   }
 };
-
-/**
- * Refreshes template partial content by reading the contents of the partial file
- * @private
- * @param {Object} ns The namespace of the template engine
- * @param {Engine} eng The template engine
- * @param {String} name The template name where the function will be set
- * @returns {String} The partial content
- */
-async function refreshPartial(ns, eng, name) {
-  var partial = await ns.at.cache.getPartial(name, true);
-  partial = eng.registerPartial(name, partial.content.toString(ns.at.options.encoding), true);
-  if (ns.at.logger.info) ns.at.logger.info(`Refreshed template partial "${name}"`);
-  return partial;
-}
-
-/**
- * Replaces any included partials that may be nested within other tempaltes with the raw template content
- * @private
- * @param {Object} ns The namespace of the template engine
- * @param {Engine} eng The template engine
- * @param {String} content The template content
- * @param {String[]} [names] A set of names to exclude from the refresh
- */
-async function refreshPartials(ns, eng, content, names) {
-  if (!content) return;
-  names = names || [];
-  // TODO : Shouldn't need to resort to regular expressions for refreshing partial registration
-  // - doesn't impact template parsing, but could be improved nonetheless
-  const rx = /include`([\s\S]+?)(?<!\\)`/mg;
-  var mtch, parts = [];
-  while ((mtch = rx.exec(content)) !== null && mtch[1]) {
-    if (names.includes(mtch[1])) continue; // already refreshed
-    parts.push({ name: mtch[1], promise: refreshPartial(ns, eng, mtch[1]) });
-    names.push(mtch[1]);
-  }
-  for (let part of parts) {
-    await part.promise;
-    if (ns.at.prts[part.name] && ns.at.prts[part.name].content) {
-      await refreshPartials(ns, eng, ns.at.prts[part.name].content, names); // any nested partials?
-    }
-  }
-}
-
-/**
- * Generats a template function for a partial
- * @private
- * @param {Object} ns The namespace of the template engine
- * @param {Engine} eng The template engine
- * @param {String} content The template content
- * @param {Object} def The object that contains the compilation definitions used in the template
- * @param {String} name The template name that uniquely identifies the template content
- * @returns {function} The {@link Engine.template} function
- */
-async function compile(ns, eng, content, def, name) { // generates a template function that accounts for nested partials
-  if (!ns.at.options.isCached) await refreshPartials(ns, eng, content, name);
-  return compileToFunc(ns, content, ns.at.options, def, name, ns.at.cache);
-}
 
 /**
  * Compiles a templated segment and returns a redering function (__assumes partials are already transpiled- see {@link compile} for partial support__)
@@ -352,21 +262,15 @@ async function compile(ns, eng, content, def, name) { // generates a template fu
  * cache.
  * @returns {Function} The rendering `function(context)` that returns a template result string based upon the provided context
  */
-async function compileToFunc(ns, content, options, def, tname, cache) {
+async function compile(ns, content, options, def, tname, cache) {
   const opts = options instanceof TemplateOpts ? options : new TemplateOpts(options);
   if (!def) def = opts; // use definitions from the options when none are supplied
   cache = cache instanceof Cachier ? cache : new Cachier(opts);
   const tnm = tname || (def && def.filename && def.filename.match && def.filename.match(opts.filename)[2]) || ('template_' + Sandbox.guid(null, false));
-  var func;
   try {
-    func = Sandbox.renderer(tnm, content, ns.at.prts, ns.at.prtlFuncs, ns.at.options);
-    if (ns.at.logger.debug) ns.at.logger.debug(`Created sandbox for: ${Sandbox.serialzeFunction(func)}`);
-    //try {throw new Error(`Test`);} catch (err) {logger.error(err);}
-    if (cache.isWritable) await cache.write(tnm, func);
-    if (func && ns.at.logger.info) ns.at.logger.info(`Compiled ${func.name}`);
-    return func;
+    return await cache.compile(tnm, content); // await in order to catch errors
   } catch (e) {
-    if (ns.at.logger.error) ns.at.logger.error(`Could not compile template ${tnm} (ERROR: ${e.message}): ${(func && func.toString()) || content}`);
+    if (ns.at.logger.error) ns.at.logger.error(`Could not compile template ${tnm} (ERROR: ${e.message}): ${content}`);
     throw e;
   }
 }

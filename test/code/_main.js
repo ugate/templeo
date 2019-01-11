@@ -152,8 +152,9 @@ async function rmrf(path) {
 
 // TODO : ESM uncomment the following line...
 // export
-async function baseTest(compileOpts, scan, engine, renderOpts) {
-  const test = await init(compileOpts, scan, engine);
+async function baseTest(compileOpts, engine, partials, readPartials, renderOpts) {
+  const test = await init(compileOpts, engine);
+  test.registerPartialsResult = partials || readPartials ? await test.engine.registerPartials(partials, readPartials) : null;
   test.fn = await test.engine.compile(test.html);
   expect(test.fn).to.be.function();
   test.result = await test.fn(test.data, renderOpts);
@@ -217,10 +218,9 @@ async function closeIndexedDB(db, engine) {
 
 // TODO : ESM uncomment the following line...
 // export
-async function init(opts, scan, engine) {
+async function init(opts, engine) {
   const rtn = await getTemplateFiles();
   rtn.engine = engine || new Engine(opts, JsFrmt, null, logger);
-  rtn.scanned = scan ? await rtn.engine.scan(true) : null;
   rtn.opts = opts;
   return rtn;
 }
