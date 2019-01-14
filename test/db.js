@@ -15,15 +15,10 @@ const plan = `${PLAN} IndexedDB`;
 
 lab.experiment(plan, async () => {
 
-  lab.before(Tester.open);
-  lab.after(Tester.close);
+  lab.before(Tester.before);
+  lab.after(Tester.after);
 
-  lab.test(`${plan}: HTML/LevelDB from registerPartials`, { timeout: TEST_TKO }, async flags => {
-    return Tester.levelDbFromRegisterPartials();
-  });
-
-  lab.test(`${plan}: HTML/LevelDB from partials in DB`, { timeout: TEST_TKO }, async flags => {
-    // partials should still be cached from previous test w/registerPartials
-    return Tester.levelDbFromRegisterPartials();
-  });
+  lab.test(`${plan}: HTML/LevelDB from registerPartials`, { timeout: TEST_TKO }, Tester.levelDbFromRegisterPartials);
+  // partials should still be cached from previous test w/registerPartials
+  lab.test(`${plan}: HTML/LevelDB from partials in DB`, { timeout: TEST_TKO }, Tester.levelDbFromRegisterPartials);
 });

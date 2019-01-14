@@ -15,8 +15,8 @@ const plan = `${PLAN} Hapi.js + vision`;
 
 lab.experiment(plan, () => {
 
-  lab.beforeEach(Tester.stopServer);
-  lab.afterEach(Tester.stopServer);
+  lab.beforeEach(Tester.beforeEach);
+  lab.afterEach(Tester.afterEach);
 
   lab.test(`${plan}: Default Engine`, { timeout: TEST_TKO }, Tester.defaultEngine);
   lab.test(`${plan}: Default Engine - Partials Fetch From HTTPS Server`, { timeout: TEST_TKO }, Tester.defaultEnginePartialFetchHttpServer);

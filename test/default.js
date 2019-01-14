@@ -16,5 +16,6 @@ const plan = `${PLAN} Default`;
 lab.experiment(plan, () => {
 
   lab.test(`${plan}: HTML - registerPartials`, { timeout: TEST_TKO }, Tester.htmlRegisterPartials);
+  lab.test(`${plan}: HTML - Partials Names Content Fetch From HTTPS Server`, { timeout: TEST_TKO }, Tester.htmlWithPartialNamesFetchHttpServer);
   lab.test(`${plan}: HTML - Partials Fetch From HTTPS Server`, { timeout: TEST_TKO }, Tester.htmlPartialsFetchHttpServer);
 });

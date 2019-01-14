@@ -193,8 +193,8 @@ exports.Engine = class Engine {
    * @async
    * @param {Object[]} [partials] The partials to register
    * @param {String} partials[].name The template name that uniquely identifies the template content
-   * @param {String} partials[].content The partial template content to register
-   * @param {Boolean} [read=true] When `true`, an attempt will be made to also _read_ any partials using option parameters
+   * @param {String} [partials[].content] The partial template content to register (omit when `read === true` to read content from cache)
+   * @param {Boolean} [read=true] When `true`, an attempt will be made to also _read_ any partials that do not have a `content` property
    * @returns {Object} An object that contains the registration results:
    * 
    * - `partials` The `partials` object that contains the fragments that have been registered

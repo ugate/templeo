@@ -1,50 +1,59 @@
 'use strict';
 
-const { expect, LOGGER, Engine, getFiles,  baseTest, init, expectDOM, JSDOM, Path, Fs, JsFrmt, wait } = require('./_main');
+const { expect, LOGGER, Engine, JSDOM, Path, Fs, JsFrmt, Main } = require('./_main');
 // ESM uncomment the following lines...
-// TODO : import { expect, LOGGER, Engine, getFiles,  baseTest, init, expectDOM, JSDOM, Path, Fs, JsFrmt, wait } from './_main.mjs';
+// TODO : import { expect, LOGGER, Engine, JSDOM, Path, Fs, JsFrmt, Main } from './_main.mjs';
 
 const PARTIAL_DETECT_DELAY_MS = 100;
 var engine;
 
+// DEBUGGING:
+// Use the following:
+// node --inspect-brk test/code/files.js
+// ...or with optional test function name appended to the end:
+// node --inspect-brk test/code/files.js htmlNoCache
+
 // TODO : ESM uncomment the following line...
 // export
-module.exports = class Tester {
+class Tester {
 
-  // Use the following when debugging:
-  // node --inspect-brk test/code/files.js
-  // ... and uncomment the following line:
-  //(async () => { await Test.testHtmlCache(); return close(); })();
-
-  static async close() {
+  static async after() {
     return engine ? engine.clearCache(true) : null; // cleanup temp files
   }
 
-  static async testHtmlCache() {
+  static async htmlCache() {
     const opts = baseOptions();
-    return baseTest(opts, await getFilesEngine(opts), null, true);
+    return Main.baseTest(opts, await getFilesEngine(opts), null, true);
   }
 
-  static async testHtmlNoCache() {
+  static async htmlNoCache() {
     const opts = baseOptions();
     opts.isCached = false;
-    return baseTest(opts, await getFilesEngine(opts), null, true);
+    return Main.baseTest(opts, await getFilesEngine(opts), null, true);
   }
 
-  static async testHtmlCacheWithWatch() {
+  static async htmlCacheWithWatch() {
     const opts = baseOptions();
     opts.watchRegistrationSourcePaths = true;
-    const test = await init(opts, await getFilesEngine(opts));
+    const test = await Main.init(opts, await getFilesEngine(opts));
     await test.engine.registerPartials(null, true);
     await partialFrag(test);
     return engine.clearCache(true); // should clear the cache/watches
   }
 
-  static async testHtmlCacheWithRegisterPartials() {
+  static async htmlCacheWithRegisterPartials() {
     const opts = baseOptions();
-    const partials = await getFiles(opts.partialsPath, true);
-    return baseTest(opts, await getFilesEngine(opts), partials, true);
+    const partials = await Main.getFiles(opts.partialsPath, true);
+    return Main.baseTest(opts, await getFilesEngine(opts), partials, true);
   }
+}
+
+// TODO : ESM remove the following line...
+module.exports = Tester;
+
+// when not ran in a test runner execute static Tester functions (excluding what's passed into Main.run) 
+if (!Main.usingTestRunner()) {
+  (async () => await Main.run(Tester))();
 }
 
 function baseOptions() {
@@ -78,14 +87,14 @@ async function partialFrag(test, elId, name) {
   await Fs.promises.writeFile(test.frag.path, test.frag.html);
 
   try {
-    await wait(PARTIAL_DETECT_DELAY_MS); // give the watch some time to detect the changes
+    await Main.wait(PARTIAL_DETECT_DELAY_MS); // give the watch some time to detect the changes
     // compile the updated HTML
     const fn = await test.engine.compile(test.html);
     // check the result and make sure the test partial was detected 
     const rslt = await fn(test.data), dom = new JSDOM(rslt);
     const prtl = dom.window.document.getElementById(test.frag.elementId);
     expect(prtl).not.null();
-    expectDOM(rslt, test.data);
+    Main.expectDOM(rslt, test.data);
   } finally {
     await Fs.promises.unlink(test.frag.path); // remove test fragment
   }

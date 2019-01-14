@@ -15,7 +15,7 @@ const plan = `${PLAN} Files`;
 
 lab.experiment(plan, () => {
 
-  lab.after(Tester.close); // cleanup temp files
+  lab.after(Tester.after); // cleanup temp files
 
   lab.test(`${plan}: HTML (cache)`, { timeout: TEST_TKO }, Tester.htmlCache);
   lab.test(`${plan}: HTML (no-cache)`, { timeout: TEST_TKO }, Tester.htmlNoCache);

@@ -1,84 +1,70 @@
 'use strict';
 
-const { LOGGER, Engine, httpsServer, getTemplateFiles, openIndexedDB, closeIndexedDB, JsFrmt, expectDOM } = require('./_main.js');
+const { LOGGER, Engine, JsFrmt, Main } = require('./_main.js');
 const Hapi = require('hapi');
 const Vision = require('vision');
 const Http = require('http');
 // ESM uncomment the following lines...
-// TODO : import { LOGGER, Engine, httpsServer, getTemplateFiles, openIndexedDB, closeIndexedDB, JsFrmt, expectDOM } from './_main.mjs';
+// TODO : import { LOGGER, Engine, JsFrmt, Main } from './_main.mjs';
 // TODO : import * as Hapi from 'hapi';
 // TODO : import * as Vision from 'vision';
 // TODO : import * as Http from 'http';
 
 var server;
 
+// Use the following when debugging:
+// node --inspect-brk test/code/hapi-vision.js
+// ...or with optional test function name appended to the end:
+// node --inspect-brk test/code/files.js defaultEngine
+
 // TODO : ESM uncomment the following line...
 // export
-module.exports = class Tester {
+class Tester {
 
-  // Use the following when debugging:
-  // node --inspect-brk test/code/hapi-vision.js
-  // ... and uncomment the following line:
-  //(async () => { await Tester.testDefaultEngine(true); await stopServer(); })();
-
-  static async stopServer() {
-    if (!server) return;
-    await server.stop({ timeout: 3000 });
-    if (LOGGER.debug) LOGGER.debug(`Hapi.js server stopped @ ${server.info.uri}`);
+  static async beforeEach() {
+    return stopServer();
   }
 
-  static async testDefaultEngine(shutdown) {
+  static async afterEach() {
+    return stopServer();
+  }
+
+  static async defaultEngine() {
     const opts = baseOptions();
     const engine = new Engine(opts, JsFrmt, null, LOGGER);
-    const promise = reqAndValidate(engine, opts);
-
-    if (shutdown) {
-      await promise;
-      return stopServer();
-    }
-    return promise;
+    return reqAndValidate(engine, opts);
   }
 
-  static async testDefaultEnginePartialFetchHttpServer(shutdown) {
+  static async defaultEnginePartialFetchHttpServer() {
     const opts = baseOptions();
-    const basePath = opts.partialsPath, svr = await httpsServer(basePath);
+    const basePath = opts.partialsPath, svr = await Main.httpsServer(basePath);
     const sopts = { read: { url: svr.url }, write: { url: svr.url }, rejectUnauthorized: false };
     const engine = new Engine(opts, JsFrmt, sopts, LOGGER);
-    const promise = reqAndValidate(engine, opts);
-
-    if (shutdown) {
-      await promise;
-      return stopServer();
-    }
-    return promise;
+    return reqAndValidate(engine, opts);
   }
 
-  static async testLevelDbEngine(shutdown) {
+  static async levelDbEngine() {
     const opts = baseOptions();
-    const db = await openIndexedDB();
+    const db = await Main.openIndexedDB();
     const engine = await Engine.indexedDBEngine(opts, JsFrmt, db.indexedDB, LOGGER);
     await reqAndValidate(engine, opts);
-    const promise = closeIndexedDB(db, engine);
-
-    if (shutdown) {
-      await promise;
-      return stopServer();
-    }
-    return promise;
+    return Main.closeIndexedDB(db, engine);
   }
 
-  static async testFilesEngine(shutdown) {
+  static async filesEngine() {
     const opts = baseOptions();
     const engine = await Engine.filesEngine(opts, JsFrmt, LOGGER);
     await reqAndValidate(engine, opts);
-    const promise = engine.clearCache(true);
-
-    if (shutdown) {
-      await promise;
-      return stopServer();
-    }
-    return promise;
+    return engine.clearCache(true);
   }
+}
+
+// TODO : ESM remove the following line...
+module.exports = Tester;
+
+// when not ran in a test runner execute static Tester functions (excluding what's passed into Main.run) 
+if (!Main.usingTestRunner()) {
+  (async () => await Main.run(Tester))();
 }
 
 function baseOptions() {
@@ -88,6 +74,12 @@ function baseOptions() {
     partialsPath: 'test/views/partials',
     sourcePath: 'test/views/partials'
   };
+}
+
+async function stopServer() {
+  if (!server) return;
+  await server.stop({ timeout: 3000 });
+  if (LOGGER.debug) LOGGER.debug(`Hapi.js server stopped @ ${server.info.uri}`);
 }
 
 async function startServer(engine, opts, context, renderOverrideOpts) {
@@ -128,12 +120,12 @@ async function startServer(engine, opts, context, renderOverrideOpts) {
 }
 
 async function reqAndValidate(engine, opts) {
-  const tmpl = await getTemplateFiles();
+  const tmpl = await Main.getTemplateFiles();
   server = await startServer(engine, opts, tmpl.data);
 
   const html = await clientRequest(server.info.uri);
   if (LOGGER.debug) LOGGER.debug(html);
-  expectDOM(html, tmpl.data);
+  Main.expectDOM(html, tmpl.data);
 }
 
 function clientRequest(url) {
