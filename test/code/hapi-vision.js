@@ -31,30 +31,30 @@ class Tester {
 
   static async defaultEngine() {
     const opts = baseOptions();
-    const engine = new Engine(opts, JsFrmt, null, LOGGER);
-    return reqAndValidate(engine, opts);
+    const engine = new Engine(opts.compile, JsFrmt, LOGGER);
+    return reqAndValidate(engine, opts.compile);
   }
 
   static async defaultEnginePartialFetchHttpServer() {
     const opts = baseOptions();
-    const basePath = opts.partialsPath, svr = await Main.httpsServer(basePath);
-    const sopts = { read: { url: svr.url }, write: { url: svr.url }, rejectUnauthorized: false };
-    const engine = new Engine(opts, JsFrmt, sopts, LOGGER);
-    return reqAndValidate(engine, opts);
+    const filesPathBase = opts.compile.partialsPath, svr = await Main.httpsServer(filesPathBase);
+    opts.render.pathBase = svr.url; // partials will be served from this URL
+    const engine = new Engine(opts.compile, JsFrmt, LOGGER);
+    return reqAndValidate(engine, opts.compile, opts.render);
   }
 
   static async levelDbEngine() {
     const opts = baseOptions();
     const db = await Main.openIndexedDB();
-    const engine = await Engine.indexedDBEngine(opts, JsFrmt, db.indexedDB, LOGGER);
-    await reqAndValidate(engine, opts);
+    const engine = await Engine.indexedDBEngine(opts.compile, JsFrmt, db.indexedDB, LOGGER);
+    await reqAndValidate(engine, opts.compile);
     return Main.closeIndexedDB(db, engine);
   }
 
   static async filesEngine() {
     const opts = baseOptions();
-    const engine = await Engine.filesEngine(opts, JsFrmt, LOGGER);
-    await reqAndValidate(engine, opts);
+    const engine = await Engine.filesEngine(opts.compile, JsFrmt, LOGGER);
+    await reqAndValidate(engine, opts.compile);
     return engine.clearCache(true);
   }
 }
@@ -69,10 +69,15 @@ if (!Main.usingTestRunner()) {
 
 function baseOptions() {
   return {
-    pathBase: '.',
-    path: 'test/views',
-    partialsPath: 'test/views/partials',
-    sourcePath: 'test/views/partials'
+    compile: {
+      pathBase: '.',
+      path: 'test/views',
+      partialsPath: 'test/views/partials',
+      sourcePath: 'test/views/partials'
+    },
+    render: {
+      rejectUnauthorized: false
+    }
   };
 }
 
@@ -82,7 +87,7 @@ async function stopServer() {
   if (LOGGER.debug) LOGGER.debug(`Hapi.js server stopped @ ${server.info.uri}`);
 }
 
-async function startServer(engine, opts, context, renderOverrideOpts) {
+async function startServer(engine, opts, context, renderOpts) {
   if (LOGGER.debug) LOGGER.debug(`Starting Hapi.js server...`);
 
   const sopts = LOGGER.debug ? { debug: { request: ['error'] } } : {};
@@ -103,7 +108,7 @@ async function startServer(engine, opts, context, renderOverrideOpts) {
     path: '/',
     handler: function hapiViewTestHandler(req, h) {
       if (LOGGER.info) LOGGER.info(`Hapi.js request received @ ${req.path}`);
-      return h.view('index', context, renderOverrideOpts);
+      return h.view('index', context, renderOpts);
     }
   });
   server.events.on('log', (event, tags) => {
@@ -113,15 +118,15 @@ async function startServer(engine, opts, context, renderOverrideOpts) {
       LOGGER.info(`Hapi server ${JSON.stringify(tags)} for event: ${JSON.stringify(event)}`);
     }
   });
-  server.app.htmlPartial = engine.genPartialFunc();
+  server.app.htmlPartial = engine.renderPartialGenerate();
   await server.start();
   if (LOGGER.debug) LOGGER.debug(`Hapi.js server running @ ${server.info.uri}`);
   return server;
 }
 
-async function reqAndValidate(engine, opts) {
+async function reqAndValidate(engine, compileOpts, renderOpts) {
   const tmpl = await Main.getTemplateFiles();
-  server = await startServer(engine, opts, tmpl.data);
+  server = await startServer(engine, compileOpts, tmpl.data, renderOpts);
 
   const html = await clientRequest(server.info.uri);
   if (LOGGER.debug) LOGGER.debug(html);

@@ -23,19 +23,19 @@ class Tester {
 
   static async htmlCache() {
     const opts = baseOptions();
-    return Main.baseTest(opts, await getFilesEngine(opts), null, true);
+    return Main.baseTest(opts.compile, await getFilesEngine(opts.compile), null, true);
   }
 
   static async htmlNoCache() {
     const opts = baseOptions();
-    opts.isCached = false;
-    return Main.baseTest(opts, await getFilesEngine(opts), null, true);
+    opts.compile.isCached = false;
+    return Main.baseTest(opts.compile, await getFilesEngine(opts.compile), null, true);
   }
 
   static async htmlCacheWithWatch() {
     const opts = baseOptions();
-    opts.watchRegistrationSourcePaths = true;
-    const test = await Main.init(opts, await getFilesEngine(opts));
+    opts.compile.watchRegistrationSourcePaths = true;
+    const test = await Main.init(opts.compile, await getFilesEngine(opts.compile));
     await test.engine.registerPartials(null, true);
     await partialFrag(test);
     return engine.clearCache(true); // should clear the cache/watches
@@ -43,8 +43,8 @@ class Tester {
 
   static async htmlCacheWithRegisterPartials() {
     const opts = baseOptions();
-    const partials = await Main.getFiles(opts.partialsPath, true);
-    return Main.baseTest(opts, await getFilesEngine(opts), partials, true);
+    const partials = await Main.getFiles(opts.compile.partialsPath, true);
+    return Main.baseTest(opts.compile, await getFilesEngine(opts.compile), partials, true);
   }
 }
 
@@ -58,10 +58,15 @@ if (!Main.usingTestRunner()) {
 
 function baseOptions() {
   return {
-    pathBase: '.',
-    path: 'test/views',
-    partialsPath: 'test/views/partials',
-    sourcePath: 'test/views/partials'
+    compile: {
+      pathBase: '.',
+      path: 'test/views',
+      partialsPath: 'test/views/partials',
+      sourcePath: 'test/views/partials'
+    },
+    render: {
+      rejectUnauthorized: false
+    }
   };
 }
 

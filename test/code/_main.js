@@ -190,7 +190,7 @@ class Main {
 
   static async init(opts, engine) {
     const rtn = await Main.getTemplateFiles();
-    rtn.engine = engine || new Engine(opts, JsFrmt, null, logger);
+    rtn.engine = engine || new Engine(opts, JsFrmt, logger);
     rtn.opts = opts;
     return rtn;
   }

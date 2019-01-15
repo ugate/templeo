@@ -73,19 +73,6 @@ exports.Engine = class Engine {
    * @param {TemplateOpts} [opts] The {@link TemplateOpts} to use
    * @param {Function} [formatFunc] The `function(string, formatOptions)` that will return a formatted string for a specified code block,
    * passing the formatting options from `opts.formatOptions` (e.g. minification and/or beautifying)
-   * @param {Object} [servePartials] The options to detemine if partial content will be loaded/read or uploaded/write to an `HTTPS` server (omit
-   * to serve template partials locally)
-   * none) 
-   * @param {Object} [servePartials.read] The configuration for reading/`GET` partial contents during reads. Uses `window.fetch` for browsers or
-   * the `https` module when running on the server (omit to prevent retrieving template partial content)
-   * @param {String} [servePartials.read.url] The __base__ URL used to `GET` template partials. The partial ID will be appended to the URL (e.g.
-   * `https://example.com/some/id.html` where `some/id.html` is the the partial ID). When calling {@link registerPartial} the `name` should
-   * _include_ the relative path on the server to the partial that will be captured.
-   * @param {Object} [servePartials.write] The configuration for writting/`POST` partial contents during writes. Uses `window.fetch` to upload
-   * content in browsers or the `https` module when running on the server
-   * @param {Object} [postPartials.write.url] The __base__ URL used to `POST` template partials. The partial ID will be appended to the URL (e.g.
-   * `https://example.com/some/id.html` where `some/id.html` is the the partial ID). When calling {@link registerPartial} the `name` should
-   * _include_ the relative path on the server to the partial that will be uploaded.
    * @param {Boolean} [servePartials.rejectUnauthorized=true] A flag that indicates the client should reject unauthorized servers (__Node.js ONLY__)
    * @param {Object} [logger] The logger for handling logging output
    * @param {Function} [logger.debug] A function that will accept __debug__ level logging messages (i.e. `debug('some message to log')`)
@@ -93,11 +80,11 @@ exports.Engine = class Engine {
    * @param {Function} [logger.warn] A function that will accept __warning__ level logging messages (i.e. `warn('some message to log')`)
    * @param {Function} [logger.error] A function that will accept __error__ level logging messages (i.e. `error('some message to log')`)
    */
-  constructor(opts, formatFunc, servePartials, logger) {
+  constructor(opts, formatFunc, logger) {
     const opt = opts instanceof TemplateOpts ? opts : new TemplateOpts(opts), ns = internal(this), hasCachier = formatFunc instanceof Cachier;
     ns.at.options = opt;
     ns.at.logger = logger || {};
-    ns.at.cache = hasCachier ? formatFunc : new Cachier(ns.at.options, formatFunc, true, servePartials, ns.at.logger);
+    ns.at.cache = hasCachier ? formatFunc : new Cachier(ns.at.options, formatFunc, true, ns.at.logger);
     ns.at.formatFunc = !hasCachier && formatFunc;
     ns.at.isInit = false;
     ns.at.prts = {};
@@ -116,7 +103,7 @@ exports.Engine = class Engine {
   static async indexedDBEngine(opts, formatFunc, indexedDB, logger) {
     opts = opts instanceof TemplateOpts ? opts : new TemplateOpts(opts);
     const CachierDB = opts.useCommonJs ? require('./lib/cachier-db.js') : /* TODO : ESM use... import('./lib/cachier-db.mjs') */null;
-    return new Engine(opts, new CachierDB(opts, indexedDB, formatFunc, logger), null, logger);
+    return new Engine(opts, new CachierDB(opts, indexedDB, formatFunc, logger), logger);
   }
 
   /**
@@ -132,7 +119,7 @@ exports.Engine = class Engine {
     const CachierFiles = useCommonJs ? require('./lib/cachier-files.js') : /* TODO : ESM use... await import('./lib/cachier-files.mjs')*/null;
     const TemplateFileOpts = useCommonJs ? require('./lib/template-file-options.js') : /* TODO : ESM use... await import('./lib/template-file-options.mjs')*/null;
     opts = opts instanceof TemplateFileOpts ? opts : new TemplateFileOpts(opts);
-    return new Engine(opts, new CachierFiles(opts, formatFunc, logger), null, logger);
+    return new Engine(opts, new CachierFiles(opts, formatFunc, logger), logger);
   }
 
   /**
