@@ -20,8 +20,9 @@ lab.experiment(plan, () => {
   lab.test(`${plan}: HTML - Partials Fetch From HTTPS Server (compile-time ERROR missing "options.pathBase")`, { timeout: TEST_TKO }, flags => {
     return new Promise(resolve => {
       flags.onUnhandledRejection = err => {
+        if (LOGGER.info) LOGGER.info(`Expected error message received for: ${err.message}`, err);
         expect(err).to.be.error();
-        if (LOGGER.info) LOGGER.info(`Expected error message received for: ${err.message}`);
+        expect(err.code).to.equal('ERR_INVALID_URL');
         resolve();
       };
       return Tester.htmlPartialsFetchHttpsServerCompiletimeReadNoPathError();
@@ -31,9 +32,9 @@ lab.experiment(plan, () => {
   lab.test(`${plan}: HTML - Partials Fetch From HTTPS Server (runtime ERROR missing "options.pathBase")`, { timeout: TEST_TKO }, flags => {
     return new Promise(resolve => {
       flags.onUnhandledRejection = err => {
+        if (LOGGER.info) LOGGER.info(`Expected error message received for: ${err.message}`, err);
         expect(err).to.be.error();
         expect(err.code).to.equal('ERR_INVALID_URL');
-        if (LOGGER.info) LOGGER.info(`Expected error message received for: ${err.message}`);
         resolve();
       };
       return Tester.htmlPartialsFetchHttpsServerRuntimeReadNoPathError();
