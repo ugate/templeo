@@ -9,7 +9,7 @@
 </b>
 
 ### Template Engine
-> ♌ `templeo` is a __zero dependency__ template engine that uses built-in JavaScript/ECMAScript [Template Literals](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Template_literals). __No [Regular Expressions](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Regular_Expressions) parsing of templates here!. Just 💯% _built-in_ ES Template Literals!__ 
+> ♌ `templeo` is a __0️⃣ dependency__ template engine that uses built-in JavaScript/ECMAScript [Template Literals](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Template_literals). __No [Regular Expressions](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Regular_Expressions) parsing of templates here!. Just 💯% _built-in_ ES Template Literals!__ 
 
 ### Install (Browser or [Node.js](https://nodejs.org))
 - `npm install templeo`
@@ -25,18 +25,17 @@ When a template is compiled into a rendering function it's no longer dependent u
 - __🛡️ Secure__ <br>
 Since `templeo` does not have any special parsing syntax it does not suffer from syntax-specific injections. Compilation is also locally _sandboxed_ to ensure that scope is isolated to global variable access (and [require](https://nodejs.org/api/modules.html#modules_require) when available). Since rendering is _stand-alone_, it is completely isolated from any scope other than the scope in which it is ran!<br><br>
 - __⛓️ Nested Includes__ <br>
-Fragments are reusable and can be included at `compile-time` or `render-time` using simple [Tagged Template Literals](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Template_literals#Tagged_templates).<br><br>
+Fragments are reusable and can be included at _compile-time_ and/or _render-time_ using simple [Tagged Template Literals](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Template_literals#Tagged_templates).<br><br>
 - __🐞 Debugging__ <br>
-Compiled templates are accessible directly via the VM or through module [imports](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/import)/[requires](https://nodejs.org/api/modules.html#modules_require) - allowing for seemless debugging capabilities. <br><br>
+Compiled templates are accessible directly via the VM `sourceURL` or through module [imports](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/import)/[requires](https://nodejs.org/api/modules.html#modules_require) - allowing for seemless debugging capabilities. <br><br>
 - __🧠 Extensible__ <br>
 Template Literals naturally allow for any of your helper functions to be accessible within the template literal itself as long as they are within scope of the `templeo` generated rendering function execution. However, for convenience and to ensure a truely _stand-alone_ renderer, `templeo` provides a simple way to add your own helper functions during compilation of renderers.<br><br>
 - __🛎️ Auto Fetch__ <br>
-Partial template fragments can _optionally_ be [fetched](https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API)/[requested](https://nodejs.org/api/https.html#https_https_request_url_options_callback) __automatically__ at _compile-time_ or _render-time_ from an HTTP server.<br><br>
+By default, partial template fragments can be [fetched](https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API)/[requested](https://nodejs.org/api/https.html#https_https_request_url_options_callback) __automatically__ at _compile-time_ and/or _render-time_ from an HTTP server. Render-time includes decouples the included template sources from the renderer allowing for newly dicovered template fragments to be included without re-compiling a new renderer!<br><br>
 - __🏧 Caching__ <br>
-  - [In-Memory](#in-memory) - The default cache that resides in-memory for the duration of the process lifespan
-  - [IndexedDB](#indexed-db) - Compiled templates are cached in an [IndexedDB](https://developer.mozilla.org/en-US/docs/Web/API/IndexedDB_API) store.
-  - [LevelDB](#level-db) - Compiled templates are cached in an [LevelDB](https://www.npmjs.com/package/level) store.
-  - [File System](#file-system) - Compiled templates are cached within the [file system](https://nodejs.org/api/fs.html) and __are loaded as modules so they can be debugged just like any other module__. If template _partials_/fragments are used the corresponding files can be _registered_ by providing a _base_ directory to be _scanned_. The _base_ directory can also be _watched_ for changes that will automaticaly reregister _partials_ with the updated _partial_ content. (__Node.js only__)
+By default, templates are cached [In-Memory](#in-memory) for the duration of the `Engine` lifespan. There are a few other extensions that may be more suitable depending upon your needs.
+  - [IndexedDB](#indexed-db) (Browser) / [LevelDB](#level-db) (Node.js) - Recommended when templates need to be persistent between usage. Compiled templates are cached in either an [IndexedDB](https://developer.mozilla.org/en-US/docs/Web/API/IndexedDB_API) store or a [LevelDB](https://www.npmjs.com/package/level) store.
+  - [File System](#file-system) (Node.js) - Recommended when running on the server. Compiled templates are cached within the [file system](https://nodejs.org/api/fs.html) and __are loaded as modules so they can be debugged just like any other module__. If template _partials_/fragments are used the corresponding files can be _registered_ by providing a _base_ directory to be _scanned_. The _base_ directory can also be _watched_ for changes that will automaticaly reregister _partials_ with the updated _partial_ content.
 
 For more details check out the tutorials and API docs!
 
@@ -50,8 +49,8 @@ The following examples illustrate __basic__ usage. For more advanced usage examp
 ```js
 const { Engine } = require('templeo');
 const engine = new Engine();
-const fn = await engine.compile('<html><body>Hello ${ it.name }!</body></html>');
-const rslt = fn({ name: 'templeo' });
+const renderer = await engine.compile('<html><body>Hello ${ it.name }!</body></html>');
+const rslt = renderer({ name: 'templeo' });
 console.log(rslt);
 // <html><body>Hello templeo!</body></html>
 ```

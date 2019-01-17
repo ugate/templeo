@@ -41,17 +41,17 @@ class Tester {
     await svr.close();
   }
 
-  static async htmlPartialsFetchHttpsServerRuntimeRead() {
+  static async htmlPartialsFetchHttpsServerRendertimeRead() {
     const basePath = 'test/views/partials', svr = await Main.httpsServer(basePath);
-    const opts = baseOptions();
-    opts.render.pathBase = svr.url; // partials will be served from this URL during runtime
+    const opts = baseOptions(`${svr.url}text.html`);
+    opts.render.pathBase = svr.url; // partials will be served from this URL during render-time
     const engine = new Engine(opts.compile, JsFrmt, LOGGER);
     // partials should be fetched via the HTTPS server when includes are encountered during rendering
-    await Main.baseTest(opts.compile, engine, null, false, opts.render); // false to prevent compile-time registerPartials
+    await Main.baseTest(opts.compile, engine, null, false, opts.render, opts.data); // false to prevent compile-time registerPartials
     await svr.close();
   }
 
-  static async htmlPartialsFetchHttpsServerRuntimeReadNoPathError() {
+  static async htmlPartialsFetchHttpsServerRendertimeReadNoPathError() {
     const basePath = 'test/views/partials', svr = await Main.httpsServer(basePath);
     const opts = baseOptions();
     const engine = new Engine(opts.compile, JsFrmt, LOGGER);
@@ -69,25 +69,16 @@ if (!Main.usingTestRunner()) {
   (async () => await Main.run(Tester))();
 }
 
-function baseOptions() {
+function baseOptions(dynamicIncludeURL) {
   return {
     compile: {
       rejectUnauthorized: false
     },
     render: {
       rejectUnauthorized: false
+    },
+    data: {
+      dynamicIncludeURL
     }
   };
-}
-
-async function httpsServerTest(compileOrRuntime, partialFiles) {
-  const basePath = 'test/views/partials', svr = await Main.httpsServer(basePath);
-  const opts = baseOptions();
-  if (compileOrRuntime === 'compiletime') opts.compile.pathBase = svr.url; // partials will be served from this URL
-  else if (compileOrRuntime === 'runtime') opts.render.pathBase = svr.url; // partials will be served from this URL
-  const engine = new Engine(opts.compile, JsFrmt, LOGGER);
-  // partials should be fetched via the HTTPS server during compilation via the cache read/fetch
-  const partials = partialFiles ? await Main.getFiles(basePath, partialFiles === 'prefetch') : null; // false will only return the partial names w/o content
-  await Main.baseTest(opts.compile, engine, partials, true, opts.render); // true to init read/fetch
-  await svr.close();
 }

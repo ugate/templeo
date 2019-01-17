@@ -28,8 +28,8 @@ lab.experiment(plan, () => {
       return Tester.htmlPartialsFetchHttpsServerCompiletimeReadNoPathError();
     });
   });
-  lab.test(`${plan}: HTML - Partials Fetch From HTTPS Server (runtime)`, { timeout: TEST_TKO }, Tester.htmlPartialsFetchHttpsServerRuntimeRead);
-  lab.test(`${plan}: HTML - Partials Fetch From HTTPS Server (runtime ERROR missing "options.pathBase")`, { timeout: TEST_TKO }, flags => {
+  lab.test(`${plan}: HTML - Partials Fetch From HTTPS Server (render-time)`, { timeout: TEST_TKO }, Tester.htmlPartialsFetchHttpsServerRendertimeRead);
+  lab.test(`${plan}: HTML - Partials Fetch From HTTPS Server (render-time ERROR missing "options.pathBase")`, { timeout: TEST_TKO }, flags => {
     return new Promise(resolve => {
       flags.onUnhandledRejection = err => {
         if (LOGGER.info) LOGGER.info(`Expected error message received for: ${err.message}`, err);
@@ -37,7 +37,7 @@ lab.experiment(plan, () => {
         expect(err.code).to.equal('ERR_INVALID_URL');
         resolve();
       };
-      return Tester.htmlPartialsFetchHttpsServerRuntimeReadNoPathError();
+      return Tester.htmlPartialsFetchHttpsServerRendertimeReadNoPathError();
     });
   });
 });

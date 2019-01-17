@@ -9,3 +9,6 @@
     }
   `)}
 </datalist>
+<div id="dynamicIncludeURL" data-url="${ it.dynamicIncludeURL }">
+  ${ await include`${ it.dynamicIncludeURL || '' }` }
+</div>

@@ -137,14 +137,20 @@ class Main {
     } else if (stats && (stats.isFile() || stats.isSymbolicLink())) await Fsp.unlink(path);
   }
 
-  static async baseTest(compileOpts, engine, partials, readPartials, renderOpts) {
+  static async baseTest(compileOpts, engine, partials, readPartials, renderOpts, extraContext) {
     const test = await Main.init(compileOpts, engine);
     test.registerPartialsResult = partials || readPartials ? await test.engine.registerPartials(partials, readPartials) : null;
     test.fn = await test.engine.compile(test.html);
     expect(test.fn).to.be.function();
-    test.result = await test.fn(test.data, renderOpts);
+    if (typeof extraContext === 'object') { // add extra context values
+      for (let prop in extraContext) {
+        if (!extraContext.hasOwnProperty(prop)) continue;
+        test.context[prop] = extraContext[prop];
+      }
+    }
+    test.result = await test.fn(test.context, renderOpts);
     if (logger.debug) logger.debug(test.result);//logger.debug(JsFrmt(test.result, compileOpts.formatOptions));
-    Main.expectDOM(test.result, test.data);
+    Main.expectDOM(test.result, test.context);
     return test;
   }
 
@@ -232,13 +238,22 @@ class Main {
   
     expect(hasSel).to.be.true();
   
-    // check for partials
+    // validate for partials
     expectColorDOM(dom, data, 'swatchSelectColor'); // select options
     expectColorDOM(dom, data, 'swatchDatalistColor'); // datalist options
   
-    // check nested partial
+    // validate nested partial
     const swatchDatalist = dom.window.document.getElementById('swatchDatalist');
     expect(swatchDatalist).to.be.object();
+
+    // validate partial from render-time read (if present)
+    //console.dir(data)
+    if (data.dynamicIncludeURL) {
+      const dynInclURL = dom.window.document.getElementById('dynamicIncludeURL');
+      expect(dynInclURL).to.be.object();
+      expect(dynInclURL.dataset.url).to.equal(data.dynamicIncludeURL);
+      expect(dynInclURL.innerText).to.equal('');
+    }
   
     //if (logger.debug) logger.debug(fn, rslt);
     return dom;
