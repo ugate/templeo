@@ -126,11 +126,11 @@ async function startServer(engine, opts, context, renderOpts) {
 
 async function reqAndValidate(engine, compileOpts, renderOpts) {
   const tmpl = await Main.getTemplateFiles();
-  server = await startServer(engine, compileOpts, tmpl.data, renderOpts);
+  server = await startServer(engine, compileOpts, tmpl.context, renderOpts);
 
   const html = await clientRequest(server.info.uri);
   if (LOGGER.debug) LOGGER.debug(html);
-  Main.expectDOM(html, tmpl.data);
+  Main.expectDOM(html, tmpl.context);
 }
 
 function clientRequest(url) {
@@ -141,6 +141,12 @@ function clientRequest(url) {
         data += chunk;
       });
       res.on('end', () => {
+        try {
+          JSON.parse(data);
+          reject(new Error(`Recieved JSON response: ${data}`));
+        } catch (err) {
+          // error means proper non-JSON response, consume error
+        }
         resolve(data);
       });
     });

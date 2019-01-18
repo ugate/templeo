@@ -21,12 +21,12 @@ class Tester {
     return engine ? engine.clearCache(true) : null; // cleanup temp files
   }
 
-  static async htmlCache() {
+  static async htmlPartialReadCache() {
     const opts = baseOptions();
     return Main.baseTest(opts.compile, await getFilesEngine(opts.compile), null, true);
   }
 
-  static async htmlNoCache() {
+  static async htmlPartialReadNoCache() {
     const opts = baseOptions();
     opts.compile.isCached = false;
     return Main.baseTest(opts.compile, await getFilesEngine(opts.compile), null, true);

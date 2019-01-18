@@ -17,8 +17,8 @@ lab.experiment(plan, () => {
 
   lab.after(Tester.after); // cleanup temp files
 
-  lab.test(`${plan}: HTML (cache)`, { timeout: TEST_TKO }, Tester.htmlCache);
-  lab.test(`${plan}: HTML (no-cache)`, { timeout: TEST_TKO }, Tester.htmlNoCache);
+  lab.test(`${plan}: HTML (cache)`, { timeout: TEST_TKO }, Tester.htmlPartialReadCache);
+  lab.test(`${plan}: HTML (no-cache)`, { timeout: TEST_TKO }, Tester.htmlPartialReadNoCache);
   lab.test(`${plan}: HTML (cache w/watch)`, { timeout: TEST_TKO }, Tester.htmlCacheWithWatch);
   lab.test(`${plan}: HTML (cache w/registerPartials)`, { timeout: TEST_TKO }, Tester.htmlCacheWithRegisterPartials);
 });

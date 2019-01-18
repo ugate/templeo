@@ -47,7 +47,7 @@ class Tester {
     opts.render.pathBase = svr.url; // partials will be served from this URL during render-time
     const engine = new Engine(opts.compile, JsFrmt, LOGGER);
     // partials should be fetched via the HTTPS server when includes are encountered during rendering
-    await Main.baseTest(opts.compile, engine, null, false, opts.render, opts.data); // false to prevent compile-time registerPartials
+    await Main.baseTest(opts.compile, engine, null, false, opts.render, opts.context); // false to prevent compile-time registerPartials
     await svr.close();
   }
 
@@ -77,7 +77,7 @@ function baseOptions(dynamicIncludeURL) {
     render: {
       rejectUnauthorized: false
     },
-    data: {
+    context: {
       dynamicIncludeURL
     }
   };

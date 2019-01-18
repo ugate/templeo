@@ -86,12 +86,12 @@ class Main {
           const contents = await Fsp.readFile(file);
           res.statusCode = 200;
           res.setHeader('Content-Type', type || 'text/html');
-          res.end(contents);
+          res.end(contents);console.log(contents)
         } catch (err) {
           if (logger.error) logger.error(err);
-          res.statusCode = 500;
+          res.statusCode = 400;
           res.setHeader('Content-Type', 'text/html');
-          res.end(`Failed to ${mthd} for: ${req.url}`);
+          res.end(`Failed to ${mthd} for: ${req.url}, ERROR: ${err.message} STACK: ${err.stack}`);
         }
       });
       server.listen(port, hostname, () => {
@@ -114,7 +114,7 @@ class Main {
     };
   
     rtn.html = (await getFile(rtn.tpmlPth, cache)).toString();
-    rtn.data = JSON.parse((await getFile(rtn.dtaPth, cache)).toString());
+    rtn.context = JSON.parse((await getFile(rtn.dtaPth, cache)).toString());
     
     return rtn;
   }
@@ -142,12 +142,15 @@ class Main {
     test.registerPartialsResult = partials || readPartials ? await test.engine.registerPartials(partials, readPartials) : null;
     test.fn = await test.engine.compile(test.html);
     expect(test.fn).to.be.function();
+
+    test.context = test.context || {};
     if (typeof extraContext === 'object') { // add extra context values
       for (let prop in extraContext) {
         if (!extraContext.hasOwnProperty(prop)) continue;
         test.context[prop] = extraContext[prop];
       }
     }
+
     test.result = await test.fn(test.context, renderOpts);
     if (logger.debug) logger.debug(test.result);//logger.debug(JsFrmt(test.result, compileOpts.formatOptions));
     Main.expectDOM(test.result, test.context);
@@ -210,7 +213,7 @@ class Main {
     });
   }
 
-  static expectDOM(html, data) {
+  static expectDOM(html, context) {
     const dom = new JSDOM(html);
     var el;
   
@@ -218,7 +221,7 @@ class Main {
     expect(html.includes('This is a comment')).to.be.false();
   
     // array iteration test
-    for (let i = 0, arr = data.metadata; i < arr.length; i++) {
+    for (let i = 0, arr = context.metadata; i < arr.length; i++) {
       el = dom.window.document.querySelector(`[name="${arr[i].name}"][content="${arr[i].content}"]`) || {};
       expect(el.name).to.equal(arr[i].name);
       expect(el.getAttribute('content')).to.equal(arr[i].content);
@@ -226,10 +229,10 @@ class Main {
   
     // object property iteration test
     var el, hasSel;
-    for (let state in data.globals.states) {
+    for (let state in context.globals.states) {
       el = dom.window.document.querySelector(`option[id="stateSelect${state}"]`) || {};
       expect(el.value).to.equal(state);
-      expect(el.innerHTML).to.equal(data.globals.states[state]);
+      expect(el.innerHTML).to.equal(context.globals.states[state]);
       if (state === 'FL') {
         hasSel = true;
         expect(el.selected).to.be.true(); // conditional check
@@ -239,20 +242,19 @@ class Main {
     expect(hasSel).to.be.true();
   
     // validate for partials
-    expectColorDOM(dom, data, 'swatchSelectColor'); // select options
-    expectColorDOM(dom, data, 'swatchDatalistColor'); // datalist options
+    expectColorDOM(dom, context, 'swatchSelectColor'); // select options
+    expectColorDOM(dom, context, 'swatchDatalistColor'); // datalist options
   
     // validate nested partial
     const swatchDatalist = dom.window.document.getElementById('swatchDatalist');
     expect(swatchDatalist).to.be.object();
 
     // validate partial from render-time read (if present)
-    //console.dir(data)
-    if (data.dynamicIncludeURL) {
+    if (context.dynamicIncludeURL) {
       const dynInclURL = dom.window.document.getElementById('dynamicIncludeURL');
       expect(dynInclURL).to.be.object();
-      expect(dynInclURL.dataset.url).to.equal(data.dynamicIncludeURL);
-      expect(dynInclURL.innerText).to.equal('');
+      expect(dynInclURL.dataset.url).to.equal(context.dynamicIncludeURL);
+      expect(dynInclURL.innerHTML).to.match(/[\n\r\s]*Test simple text inclusion[\n\r\s]*/);
     }
   
     //if (logger.debug) logger.debug(fn, rslt);
