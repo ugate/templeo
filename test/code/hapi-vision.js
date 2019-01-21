@@ -40,7 +40,11 @@ class Tester {
     const filesPathBase = opts.compile.partialsPath, svr = await Main.httpsServer(filesPathBase);
     opts.render.pathBase = svr.url; // partials will be served from this URL
     const engine = new Engine(opts.compile, JsFrmt, LOGGER);
-    return reqAndValidate(engine, opts.compile, opts.render);
+    // Hapi will not be happy with rendering options that are not part of the vision options
+    // when calling: h.view('index', context, renderOpts);
+    // Need to set the legacy render options instead
+    engine.legacyRenderOptions = opts.render;
+    return reqAndValidate(engine, opts.compile, `${svr.url}text.html`);
   }
 
   static async levelDbEngine() {
@@ -67,7 +71,7 @@ if (!Main.usingTestRunner()) {
   (async () => await Main.run(Tester))();
 }
 
-function baseOptions() {
+function baseOptions(dynamicIncludeURL) {
   return {
     compile: {
       pathBase: '.',
@@ -87,6 +91,7 @@ async function stopServer() {
   if (LOGGER.debug) LOGGER.debug(`Hapi.js server stopped @ ${server.info.uri}`);
 }
 
+// renderOpts must be vision options, not templeo options
 async function startServer(engine, opts, context, renderOpts) {
   if (LOGGER.debug) LOGGER.debug(`Starting Hapi.js server...`);
 
@@ -124,8 +129,9 @@ async function startServer(engine, opts, context, renderOpts) {
   return server;
 }
 
-async function reqAndValidate(engine, compileOpts, renderOpts) {
+async function reqAndValidate(engine, compileOpts, dynamicIncludeURL, renderOpts) {
   const tmpl = await Main.getTemplateFiles();
+  tmpl.context.dynamicIncludeURL = dynamicIncludeURL;
   server = await startServer(engine, compileOpts, tmpl.context, renderOpts);
 
   const html = await clientRequest(server.info.uri);
@@ -143,7 +149,7 @@ function clientRequest(url) {
       res.on('end', () => {
         try {
           JSON.parse(data);
-          reject(new Error(`Recieved JSON response: ${data}`));
+          reject(new Error(`Recieved JSON response for ${url}: ${data}`));
         } catch (err) {
           // error means proper non-JSON response, consume error
         }

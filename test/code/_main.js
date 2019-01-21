@@ -86,7 +86,8 @@ class Main {
           const contents = await Fsp.readFile(file);
           res.statusCode = 200;
           res.setHeader('Content-Type', type || 'text/html');
-          res.end(contents);console.log(contents)
+          res.end(contents);
+          if (logger.debug) logger.debug(`HTTPS server processed ${url}${req.url} with contents:`, contents);
         } catch (err) {
           if (logger.error) logger.error(err);
           res.statusCode = 400;

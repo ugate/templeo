@@ -126,9 +126,10 @@ exports.Engine = class Engine {
    * Compiles a template and returns a function that renders the template results using the passed `context` object
    * @param {String} content The raw template content
    * @param {Object} [opts] The options sent for compilation (omit to use the options set on the {@link Engine})
-   * @param {Function} [callback] Optional _callback style_ support __for legacy APIs__:  
+   * @param {Function} [callback] Optional _callback style_ support __for LEGACY-ONLY APIs__:  
    * `compile(content, opts, (error, (ctx, opts, cb) => cb(error, results)) => {})` or omit to run via
-   * `await compile(content, opts)`
+   * `await compile(content, opts)`. __Omission will return the normal stand-alone renderer that can be serialized/deserialized.
+   * When a _callback function_ is specified, serialization/deserialization of the rendering function will not be possible!__
    * @returns {function} The rendering `function(context)` that returns a template result string based upon the provided context
    */
   async compile(content, opts, callback) { // ensures partials are included in the compilation
@@ -144,8 +145,13 @@ exports.Engine = class Engine {
       } catch (err) {
         error = err;
       }
+      // legacy callback-style rendering :(
       callback(error, async (ctx, opts, cb) => {
         try {
+          // opts.constructor.isPrototypeOf(ns.at.options.constructor)
+          if (!opts || !Object.getOwnPropertyNames(opts).length) {
+            opts = ns.at.legacyRenderOptions;
+          } else if (!(opts instanceof TemplateOpts)) opts = new ns.at.options.constructor(opts);
           cb(null, await fn(ctx, opts));
         } catch (err) {
           cb(err);
@@ -153,6 +159,28 @@ exports.Engine = class Engine {
       });
     } else fn = compile(ns, content, ns.at.options, opts, null, ns.at.cache);
     return fn;
+  }
+
+  /**
+   * @returns {TemplateOpts} The __LEGACY-ONLY API__ {@link TemplateOpts} to use when no rendering options
+   * are passed (or are empty) into the rendering function __and a callback function__ is specified when
+   * calling {@link Engine.compile}
+   * See {@link Engine.compile} for more details.
+   */
+  get legacyRenderOptions() {
+    const ns = internal(this);
+    return ns.at.legacyRenderOptions;
+  }
+
+  /**
+   * The __LEGACY-ONLY API__ {@link TemplateOpts} to use when no rendering options
+   * are passed (or are empty) into the rendering function __and a callback function__ is specified when
+   * calling {@link Engine.compile}
+   * @param {*} opts The options to set
+   */
+  set legacyRenderOptions(opts) {
+    const ns = internal(this);
+    ns.at.legacyRenderOptions = opts instanceof TemplateOpts ? opts : new ns.at.options.constructor(opts);
   }
 
   /**
