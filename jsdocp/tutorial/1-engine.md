@@ -1,3 +1,78 @@
-### The Template Engine
-At the heart of template compilation and rendering is the [template engine](module-templeo-Engine.html). It handles compiling templates into functions, rendering results from those functions and partial template distribution to/from other templates that have included them.
+### 🚂 The Template Engine
+At the heart of template compilation and rendering is the [Template Engine](module-templeo-Engine.html). It handles compiling [Template Literals](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Template_literals) into __stand-alone/independent__ _rendering functions_ that __can be ran in either the same VM in which they were compiled or an entirely new VM!__ Each rendering function is responsible for outputting templated results based upon _context_ data supplied to the function in JSON format. The `Engine` is also responsible for handling _partial_ template fragments that may be included/nested within other template(s) that are being rendered. Any distribution of included partial templates can be resolved/loaded/read during __compile-time__ or __render-time__. This flexibility allows for some partial template inclusions to be loaded during compilation while others can be loaded when the template(s) are actually encountered during rendering.
+
+#### ⛓️ `include`
+
+The `include` _directive_ provides a standard [ECMAScript Tagged Template](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Template_literals#Tagged_templates) function that accepts a template literal and loads/outputs one or more resolved partial templates that have a matching partial `name` used during [registration]().
+
+__Although, we are not limited to HTML___, we'll start with some simple HTML templates to illustrate its use. Assume that we have the following templates...
+
+```html
+<!-- template.html -->
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Hello ${ it.name }!</title>
+  </head>
+  <body>
+    ${ await include`first/item` }
+  </body>
+</html>
+```
+
+```html
+<!-- first.html -->
+<ol>
+  <li>This is the first partial named ${ it.first }</li>
+  ${ await include`second/item` }
+</ol>
+```
+
+```html
+<!-- second.html -->
+<li>This is the second partial named ${ it.second }</li>
+```
+
+Also assume the following __context__ JSON...
+
+```json
+{
+  "name": "templeo",
+  "first": "#1",
+  "second": "#2"
+}
+```
+
+Using the aforementioned sources we can compile and render the results.
+
+```js
+// "template" contains the HTML template
+// "first" contains the HTML for 1st partial
+// "second" contains the HTML for the 2nd partial
+// "context" contains the JSON data
+const { Engine } = require('templeo');
+const engine = new Engine();
+const renderer = await engine.compile(template);
+const rslt = await renderer(context);
+console.log(rslt);
+```
+
+The output to the console would contain the following:
+
+```html
+<!-- rendered results -->
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Hello templeo!</title>
+  </head>
+  <body>
+    <ol>
+      <li>This is the first partial named #1</li>
+      <li>This is the second partial named #2</li>
+    </ol>
+  </body>
+</html>
+```
+
 
