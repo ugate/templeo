@@ -1,8 +1,10 @@
 'use strict';
 
 const { expect, LOGGER, Engine, JSDOM, Path, Fs, JsFrmt, Main } = require('./_main');
+const CachierFiles = require('../../lib/cachier-files.js');
 // ESM uncomment the following lines...
 // TODO : import { expect, LOGGER, Engine, JSDOM, Path, Fs, JsFrmt, Main } from './_main.mjs';
+// TODO : import * as CachierFiles from '../../lib/cachier-files.mjs';
 
 const PARTIAL_DETECT_DELAY_MS = 100;
 var engine;
@@ -72,7 +74,8 @@ function baseOptions() {
 
 async function getFilesEngine(opts) {
   if (engine) await engine.clearCache(true); // cleanup temp files
-  engine = await Engine.filesEngine(opts, JsFrmt, LOGGER);
+  const cachier = new CachierFiles(opts, JsFrmt, LOGGER);
+  engine = new Engine(cachier);
   return engine;
 }
 

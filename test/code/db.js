@@ -1,8 +1,10 @@
 'use strict';
 
 const { expect, LOGGER, Engine, JsFrmt, Main } = require('./_main.js');
+const CachierDB = require('../../lib/cachier-db.js');
 // ESM uncomment the following lines...
 // TODO : import { expect, LOGGER, Engine, JsFrmt, Main } from './_main.mjs';
+// TODO : import * as CachierDB from '../../lib/cachier-db.mjs';
 
 var db, engine;
 
@@ -28,7 +30,8 @@ class Tester {
 
   static async levelDbFromRegisterPartials() {
     const opts = baseOptions();
-    engine = await Engine.indexedDBEngine(opts.compile, JsFrmt, db.indexedDB, LOGGER);
+    const cachier = new CachierDB(opts.compile, db.indexedDB, JsFrmt, LOGGER);
+    engine = Engine.create(cachier);
     const partials = await Main.getFiles('test/views/partials');
     return Main.baseTest(opts.compile, engine, partials, true, opts.render);
   }
@@ -36,7 +39,8 @@ class Tester {
   static async levelDbFromPartialsInDb() {
     // partials should still be cached from previous test w/registerPartials
     const opts = baseOptions();
-    engine = await Engine.indexedDBEngine(opts.compile, JsFrmt, db.indexedDB, LOGGER);
+    const cachier = new CachierDB(opts.compile, db.indexedDB, JsFrmt, LOGGER);
+    engine = Engine.create(cachier);
     return Main.baseTest(opts.compile, engine, null, true, opts.render);
   }
 }

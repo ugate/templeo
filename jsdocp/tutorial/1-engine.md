@@ -1,11 +1,15 @@
 ### 🚂 The Template Engine
 At the heart of template compilation and rendering is the [Template Engine](module-templeo-Engine.html). It handles compiling [Template Literals](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Template_literals) into __stand-alone/independent__ _rendering functions_ that __can be ran in either the same VM in which they were compiled or an entirely new VM!__ Each rendering function is responsible for outputting templated results based upon _context_ data supplied to the function in JSON format. The `Engine` is also responsible for handling _partial_ template fragments that may be included/nested within other template(s) that are being rendered. Any distribution of included partial templates can be resolved/loaded/read during __compile-time__ or __render-time__. This flexibility allows for some partial template inclusions to be loaded during compilation while others can be loaded when the template(s) are actually encountered during rendering.
 
+> The following tutorials assume a basic knowledge of [Template Literals](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Template_literals) and [Tagged Template Literal Functions](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Template_literals#Tagged_templates).
+
 #### ⛓️ `include`
 
-The `include` _directive_ provides a standard [ECMAScript Tagged Template](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Template_literals#Tagged_templates) function that accepts a template literal and loads/outputs one or more resolved partial templates that have a matching partial `name` used during [registration]().
+The `include` _directive_ provides a standard [ECMAScript Tagged Template](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Template_literals#Tagged_templates) function that accepts a template literal and loads/outputs one or more resolved partial templates that have a matching partial `name` used during [registration](module-templeo.Engine.html#registerPartial).
 
-__Although, we are not limited to HTML___, we'll start with some simple HTML templates to illustrate its use. Assume that we have the following templates...
+> There are better ways to [automatically register partials using `Cachier`s](), but for illustrational purposes we'll be registering them manually using `registerPartial`.
+
+__Although, we are not limited to HTML__, we'll start with some simple HTML templates to illustrate its use. Assume that we have the following templates...
 
 ```html
 <!-- template.html -->
@@ -78,15 +82,15 @@ The output to the console would contain the following:
 </html>
 ```
 
-As seen in the previous examples, each `include` directive is [awaited](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/await) and returns the template literal parsed output for the partials being included. A single `include` can contain more than one partial name separated by literal strings/expressions and will be resolved in the order they are defined.
+As seen in the previous examples, each `include` directive is [awaited](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/await) and returns the template literal parsed output for the partials being included. A single `include` can also contain more than one partial name separated by literal strings/expressions and will be resolved in the order they are defined.
 
 ```js
 engine.registerPartial('name/two', 'Two, ');
 engine.registerPartial('name/four', 'Four');
-const renderer = await engine.compile('One, ${ include`name/two${ it.three }name/four` }');
+const tmpl = 'One, ${ await include`name/two${ it.three }name/four` }';
+const renderer = await engine.compile(tmpl);
 const rslt = await renderer({ three: 'Three, ' });
 console.log(rslt);
 // One, Two, Three, Four
 ```
-
-In most cases manually registering partial template content isn't ideal since it places a
+So far, we've illustrated __compile-time__ inclusions. We could also 

@@ -1,11 +1,15 @@
 'use strict';
 
 const { LOGGER, Engine, JsFrmt, Main } = require('./_main.js');
+const CachierDB = require('../../lib/cachier-db.js');
+const CachierFiles = require('../../lib/cachier-files.js');
 const Hapi = require('hapi');
 const Vision = require('vision');
 const Http = require('http');
 // ESM uncomment the following lines...
 // TODO : import { LOGGER, Engine, JsFrmt, Main } from './_main.mjs';
+// TODO : import * as CachierDB from '../../lib/cachier-db.mjs';
+// TODO : import * as CachierFiles from '../../lib/cachier-files.mjs';
 // TODO : import * as Hapi from 'hapi';
 // TODO : import * as Vision from 'vision';
 // TODO : import * as Http from 'http';
@@ -50,14 +54,16 @@ class Tester {
   static async levelDbEngine() {
     const opts = baseOptions();
     const db = await Main.openIndexedDB();
-    const engine = await Engine.indexedDBEngine(opts.compile, JsFrmt, db.indexedDB, LOGGER);
+    const cachier = new CachierDB(opts.compile, db.indexedDB, JsFrmt, LOGGER);
+    const engine = Engine.create(cachier);
     await reqAndValidate(engine, opts.compile);
     return Main.closeIndexedDB(db, engine);
   }
 
   static async filesEngine() {
     const opts = baseOptions();
-    const engine = await Engine.filesEngine(opts.compile, JsFrmt, LOGGER);
+    const cachier = new CachierFiles(opts.compile, JsFrmt, LOGGER);
+    const engine = new Engine(cachier);
     await reqAndValidate(engine, opts.compile);
     return engine.clearCache(true);
   }

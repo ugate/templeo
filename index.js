@@ -23,23 +23,24 @@ exports.JsonEngine = JsonEngine;
  * @module templeo
  * @example
  * // Basic example in browser
- * const Tmpl = require('templeo');
- * const htmlEngine = new Tmpl.Engine();
+ * const { Engine } = require('templeo');
+ * const htmlEngine = new Engine();
  * @example
  * // Hapi.js example:
  * const Hapi = require('hapi');
  * const Vision = require('vision');
  * const JsFrmt = require('js-beautify').js;
- * const Tmpl = require('templeo');
+ * const { Engine } = require('templeo');
  * const econf = {
  *   pathBase: '.',
  *   path: 'views',
  *   partialsPath: 'views/partials',
  *   defaultExtension: 'html' // can be HTML, JSON, etc.
  * };
- * const htmlEngine = await Tmpl.Engine.filesEngine(econf, JsFrmt);
+ * const cachier = new CachierFiles(econf, JsFrmt);
+ * const htmlEngine = new Engine(cachier);
  * // use the following instead if compiled templates don't need to be stored in files
- * // const htmlEngine = new Tmpl.Engine(econf, JsFrmt);
+ * // const htmlEngine = new Engine(econf, JsFrmt);
  * const server = Hapi.Server({});
  * await server.register(Vision);
  * server.views({
@@ -53,7 +54,7 @@ exports.JsonEngine = JsonEngine;
  *  helpersPath: 'views/helpers',
  *  engines: {
  *    html: htmlEngine,
- *    json: new Tmpl.JsonEngine()
+ *    json: new JsonEngine()
  *  }
  * });
  * // optionally set a partial function that can be accessed in the routes for
@@ -69,7 +70,7 @@ exports.Engine = class Engine {
 // TODO : ESM use... export class Engine {
 
   /**
-   * Creates a template parsing engine
+   * Creates a template literal engine
    * @param {TemplateOpts} [opts] The {@link TemplateOpts} to use
    * @param {Function} [formatFunc] The `function(string, formatOptions)` that will return a formatted string for a specified code block,
    * passing the formatting options from `opts.formatOptions` (e.g. minification and/or beautifying)
@@ -81,45 +82,22 @@ exports.Engine = class Engine {
    * @param {Function} [logger.error] A function that will accept __error__ level logging messages (i.e. `error('some message to log')`)
    */
   constructor(opts, formatFunc, logger) {
-    const opt = opts instanceof TemplateOpts ? opts : new TemplateOpts(opts), ns = internal(this), hasCachier = formatFunc instanceof Cachier;
-    ns.at.options = opt;
-    ns.at.logger = logger || {};
-    ns.at.cache = hasCachier ? formatFunc : new Cachier(ns.at.options, formatFunc, true, ns.at.logger);
-    ns.at.formatFunc = !hasCachier && formatFunc;
+    const ns = internal(this);
+    const isCachier = opts instanceof Cachier;
+    ns.at.cache = isCachier ? opts : new Cachier(opts, formatFunc, true, logger);
     ns.at.isInit = false;
     ns.at.prts = {};
     ns.at.prtlFuncs = {};
   }
 
   /**
-   * An [IndexedDB]{@link https://developer.mozilla.org/en-US/docs/Web/API/IndexedDB_API} template cached {@link Engine}
-   * @param {TemplateOpts} [opts] The {@link TemplateOpts}
-   * @param {Function} [formatFunc] The `function(string, formatOptions)` that will return a formatted string when __writting__
-   * data, passing the formatting options from `opts.formatOptions`. Used when formatting compiled code.
-   * @param {Object} [indexedDB] The `IndexedDB` implementation that will be used for caching (defaults to `window.indexedDB`).
-   * Can be either a `IndexedDB` compilant instance or a `LevelDB`/`level` instance.
-   * @returns {Engine} A new {@link Engine} instance with IndexedDB cache
+   * Creates a new {@link Engine} from a {@link Cachier} instance
+   * @param {Cachier} cachier The {@link Cachier} to use for persistence management
+   * @returns {Engine} The generated {@link Engine}
    */
-  static async indexedDBEngine(opts, formatFunc, indexedDB, logger) {
-    opts = opts instanceof TemplateOpts ? opts : new TemplateOpts(opts);
-    const CachierDB = opts.useCommonJs ? require('./lib/cachier-db.js') : /* TODO : ESM use... import('./lib/cachier-db.mjs') */null;
-    return new Engine(opts, new CachierDB(opts, indexedDB, formatFunc, logger), logger);
-  }
-
-  /**
-   * A [Node.js]{@link https://nodejs.org/api/fs.html} __only__ {@link Engine} to cache compiled template code in the file system for improved
-   * debugging/caching capabilities
-   * @param {TemplateOpts} [opts] The {@link TemplateFileOpts}
-   * @param {Function} [formatFunc] The `function(string, formatOptions)` that will return a formatted string when __writting__
-   * data, passing the formatting options from `opts.formatOptions`. Used when formatting compiled code.
-   * @returns {Engine} A new {@link Engine} instance with file system cache
-   */
-  static async filesEngine(opts, formatFunc, logger) {
-    const useCommonJs = (opts && opts.useCommonJs) || TemplateOpts.defaults.useCommonJs;
-    const CachierFiles = useCommonJs ? require('./lib/cachier-files.js') : /* TODO : ESM use... await import('./lib/cachier-files.mjs')*/null;
-    const TemplateFileOpts = useCommonJs ? require('./lib/template-file-options.js') : /* TODO : ESM use... await import('./lib/template-file-options.mjs')*/null;
-    opts = opts instanceof TemplateFileOpts ? opts : new TemplateFileOpts(opts);
-    return new Engine(opts, new CachierFiles(opts, formatFunc, logger), logger);
+  static create(cachier) {
+    if (!(cachier instanceof Cachier)) throw new Error(`cachier must be an instance of ${Cachier.name}, not ${cachier ? cachier.constructor.name : cachier}`);
+    return new Engine(cachier);
   }
 
   /**
@@ -137,8 +115,8 @@ exports.Engine = class Engine {
     opts = opts || {};
     var fn, error;
     if (callback) {
-      if (ns.at.logger.info) {
-        ns.at.logger.info('Compiling template w/callback style conventions');
+      if (ns.at.cache.logger.info) {
+        ns.at.cache.logger.info('Compiling template w/callback style conventions');
       }
       try {
         fn = await compile(ns, content, ns.at.options, opts, null, ns.at.cache);
@@ -148,16 +126,16 @@ exports.Engine = class Engine {
       // legacy callback-style rendering :(
       callback(error, async (ctx, opts, cb) => {
         try {
-          // opts.constructor.isPrototypeOf(ns.at.options.constructor)
+          // opts.constructor.isPrototypeOf(ns.at.cache.options.constructor)
           if (!opts || !Object.getOwnPropertyNames(opts).length) {
             opts = ns.at.legacyRenderOptions;
-          } else if (!(opts instanceof TemplateOpts)) opts = new ns.at.options.constructor(opts);
+          } else if (!(opts instanceof TemplateOpts)) opts = new ns.at.cache.options.constructor(opts);
           cb(null, await fn(ctx, opts));
         } catch (err) {
           cb(err);
         }
       });
-    } else fn = compile(ns, content, ns.at.options, opts, null, ns.at.cache);
+    } else fn = compile(ns, content, ns.at.cache.options, opts, null, ns.at.cache);
     return fn;
   }
 
@@ -180,7 +158,7 @@ exports.Engine = class Engine {
    */
   set legacyRenderOptions(opts) {
     const ns = internal(this);
-    ns.at.legacyRenderOptions = opts instanceof TemplateOpts ? opts : new ns.at.options.constructor(opts);
+    ns.at.legacyRenderOptions = opts instanceof TemplateOpts ? opts : new ns.at.cache.options.constructor(opts);
   }
 
   /**
@@ -259,7 +237,7 @@ exports.Engine = class Engine {
    */
   get options() {
     const ns = internal(this);
-    return ns.at.options;
+    return ns.at.cache.options;
   }
 };
 
@@ -285,7 +263,7 @@ async function compile(ns, content, options, def, tname, cache) {
   try {
     return await cache.compile(tnm, content); // await in order to catch errors
   } catch (e) {
-    if (ns.at.logger.error) ns.at.logger.error(`Could not compile template ${tnm} (ERROR: ${e.message}): ${content}`);
+    if (ns.at.cache.logger.error) ns.at.cache.logger.error(`Could not compile template ${tnm} (ERROR: ${e.message}): ${content}`);
     throw e;
   }
 }
