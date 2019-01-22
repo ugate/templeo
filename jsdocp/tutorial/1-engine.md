@@ -46,12 +46,15 @@ Also assume the following __context__ JSON...
 Using the aforementioned sources we can compile and render the results.
 
 ```js
+// There are different supplied methods to load resources - see Cachier
 // "template" contains the HTML template
 // "first" contains the HTML for 1st partial
 // "second" contains the HTML for the 2nd partial
 // "context" contains the JSON data
 const { Engine } = require('templeo');
 const engine = new Engine();
+engine.registerPartial('first/item', first);
+engine.registerPartial('second/item', second);
 const renderer = await engine.compile(template);
 const rslt = await renderer(context);
 console.log(rslt);
@@ -75,4 +78,15 @@ The output to the console would contain the following:
 </html>
 ```
 
+As seen in the previous examples, each `include` directive is [awaited](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/await) and returns the template literal parsed output for the partials being included. A single `include` can contain more than one partial name separated by literal strings/expressions and will be resolved in the order they are defined.
 
+```js
+engine.registerPartial('name/two', 'Two, ');
+engine.registerPartial('name/four', 'Four');
+const renderer = await engine.compile('One, ${ include`name/two${ it.three }name/four` }');
+const rslt = await renderer({ three: 'Three, ' });
+console.log(rslt);
+// One, Two, Three, Four
+```
+
+In most cases manually registering partial template content isn't ideal since it places a
