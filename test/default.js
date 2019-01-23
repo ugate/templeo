@@ -15,6 +15,7 @@ const plan = `${PLAN} Default`;
 
 lab.experiment(plan, () => {
 
+  lab.test(`${plan}: JSON - registerPartials`, { timeout: TEST_TKO }, Tester.jsonRegisterPartials);
   lab.test(`${plan}: HTML - registerPartials`, { timeout: TEST_TKO }, Tester.htmlRegisterPartials);
   lab.test(`${plan}: HTML - Partials Fetch From HTTPS Server (compile-time)`, { timeout: TEST_TKO }, Tester.htmlPartialsFetchHttpsServerCompiletimeRead);
   lab.test(`${plan}: HTML - Partials Fetch From HTTPS Server (compile-time ERROR missing "options.pathBase")`, { timeout: TEST_TKO }, flags => {

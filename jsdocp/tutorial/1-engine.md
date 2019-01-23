@@ -3,11 +3,11 @@ At the heart of template compilation and rendering is the [Template Engine](modu
 
 > The following tutorials assume a basic knowledge of [Template Literals](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Template_literals) and [Tagged Template Literal Functions](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Template_literals#Tagged_templates).
 
-#### ⛓️ `include`
+### ⛓️ include (compile-time) <sub id="compiletime"></sub>
 
 The `include` _directive_ provides a standard [ECMAScript Tagged Template](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Template_literals#Tagged_templates) function that accepts a template literal and loads/outputs one or more resolved partial templates that have a matching partial `name` used during [registration](module-templeo.Engine.html#registerPartial).
 
-> There are better ways to [automatically register partials using `Cachier`s](), but for illustrational purposes we'll be registering them manually using `registerPartial`.
+> There are better ways to [automatically register partials using `Cachier`s](), but for illustrational purposes we'll be registering them manually using `Engine.registerPartial`.
 
 __Although, we are not limited to HTML__, we'll start with some simple HTML templates to illustrate its use. Assume that we have the following templates...
 
@@ -50,7 +50,7 @@ Also assume the following __context__ JSON...
 Using the aforementioned sources we can compile and render the results.
 
 ```js
-// There are different supplied methods to load resources - see Cachier
+// There are methods provided that will load resources - see Cachier
 // "template" contains the HTML template
 // "first" contains the HTML for 1st partial
 // "second" contains the HTML for the 2nd partial
@@ -93,4 +93,7 @@ const rslt = await renderer({ three: 'Three, ' });
 console.log(rslt);
 // One, Two, Three, Four
 ```
-So far, we've illustrated __compile-time__ inclusions. We could also 
+
+### ⛓️ include (render-time) <sub id="rendertime"></sub>
+
+So far, we've illustrated [compile-time](#compiletime) inclusions. We could also resolve/load partials as they are encountered in the template when they are rendered.

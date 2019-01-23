@@ -119,7 +119,7 @@ exports.Engine = class Engine {
         ns.at.cache.logger.info('Compiling template w/callback style conventions');
       }
       try {
-        fn = await compile(ns, content, ns.at.options, opts, null, ns.at.cache);
+        fn = await compile(ns, content, ns.at.cache.options, opts, null, ns.at.cache);
       } catch (err) {
         error = err;
       }
@@ -174,11 +174,12 @@ exports.Engine = class Engine {
    * Registers and caches a partial template
    * @param {String} name The template name that uniquely identifies the template content
    * @param {String} content The partial template content to register
+   * @param {String} [extension=options.defaultExtension] Optional override for a file extension designation for the partial
    * @returns {String} The partial content
    */
-  registerPartial(name, content) {
+  registerPartial(name, content, extension) {
     const ns = internal(this);
-    return ns.at.cache.registerPartial(name, content);
+    return ns.at.cache.registerPartial(name, content, extension);
   }
 
   /**
@@ -187,12 +188,14 @@ exports.Engine = class Engine {
    * @param {Object[]} [partials] The partials to register
    * @param {String} partials[].name The template name that uniquely identifies the template content
    * @param {String} [partials[].content] The partial template content to register (omit when `read === true` to read content from cache)
+   * @param {String} [partials[].extension] Optional override for a file extension designation for the partial
    * @param {Boolean} [read=true] When `true`, an attempt will be made to also _read_ any partials that do not have a `content` property
    * @returns {Object} An object that contains the registration results:
    * 
    * - `partials` The `partials` object that contains the fragments that have been registered
    *   - `name` The template name that uniquely identifies the template content
    *   - `content` The template content
+   *   - `extension` The template file extension designation
    *   - `fromRead` A flag that indicates that the 
    * - `dirs` Present __only__ when {@link Engine.filesEngine} was used. Contains the directories/sub-directories that were created
    */
@@ -259,9 +262,10 @@ async function compile(ns, content, options, def, tname, cache) {
   const opts = options instanceof TemplateOpts ? options : new TemplateOpts(options);
   if (!def) def = opts; // use definitions from the options when none are supplied
   cache = cache instanceof Cachier ? cache : new Cachier(opts);
-  const tnm = tname || (def && def.filename && def.filename.match && def.filename.match(opts.filename)[2]) || ('template_' + Sandbox.guid(null, false));
+  const parts = def && def.filename && def.filename.match && def.filename.match(opts.filename);
+  const tnm = tname || (parts && parts[2]) || ('template_' + Sandbox.guid(null, false));
   try {
-    return await cache.compile(tnm, content); // await in order to catch errors
+    return await cache.compile(tnm, content, parts && parts[3]); // await in order to catch errors
   } catch (e) {
     if (ns.at.cache.logger.error) ns.at.cache.logger.error(`Could not compile template ${tnm} (ERROR: ${e.message}): ${content}`);
     throw e;
