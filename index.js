@@ -1,16 +1,13 @@
 'use strict';
 
 const TemplateOpts = require('./lib/template-options');
-const JsonEngine = require('./lib/json-engine');
 const Cachier = require('./lib/cachier');
 const Sandbox = require('./lib/sandbox');
 // TODO : ESM remove the following lines...
 exports.TemplateOpts = TemplateOpts;
 exports.Cachier = Cachier;
-exports.JsonEngine = JsonEngine;
 // TODO : ESM uncomment the following lines...
 // TODO : import * as TemplateOpts from './lib/template-options.mjs';
-// TODO : import * as JsonEngine from './lib/json-engine.mjs';
 // TODO : import * as Cachier from './lib/cachier.mjs';
 // TODO : import * as Sandbox from './lib/sandbox.mjs';
 // TODO : export * as TemplateOpts from TemplateOpts;
