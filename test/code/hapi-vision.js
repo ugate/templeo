@@ -80,10 +80,10 @@ if (!Main.usingTestRunner()) {
 function baseOptions(dynamicIncludeURL) {
   return {
     compile: {
-      pathBase: '.',
-      path: 'test/views',
-      partialsPath: 'test/views/partials',
-      sourcePath: 'test/views/partials'
+      pathBase: Main.PATH_BASE,
+      path: Main.PATH_VIEWS_DIR,
+      partialsPath: Main.PATH_HTML_PARTIALS_DIR,
+      sourcePath: Main.PATH_HTML_PARTIALS_DIR
     },
     render: {
       rejectUnauthorized: false

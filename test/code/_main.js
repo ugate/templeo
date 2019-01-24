@@ -68,12 +68,21 @@ exports.LOGGER = logger;
 // export const LOGGER = logger;
 
 const Fsp = Fs.promises;
+const PATH_BASE = '.';
+const PATH_DATA_DIR = 'test/data';
+const PATH_VIEWS_DIR = 'test/views';
+const PATH_HTML_PARTIALS_DIR = `${PATH_VIEWS_DIR}/partials/html`;
+const PATH_HTML_TEMPLATE = `${PATH_VIEWS_DIR}/template.html`;
+const PATH_CONTEXT = `${PATH_DATA_DIR}/it.json`;
+
+const PATH_JSON_PARTIALS_DIR = `${PATH_VIEWS_DIR}/partials/json`;
+const PATH_JSON_TEMPALTE = `${PATH_VIEWS_DIR}/template.jsont`;
 
 // TODO : ESM uncomment the following line...
 // export
 class Main {
 
-  static httpsServer(baseFilePath, hostname, port) {
+  static httpsServer(baseFilePath = `${PATH_BASE}/${PATH_HTML_PARTIALS_DIR}`, hostname = undefined, port = undefined) {
     return new Promise((resolve, reject) => {
       const sec = selfSignedCert();
       var url;
@@ -110,12 +119,18 @@ class Main {
 
   static async getTemplateFiles(cache = true) {
     const rtn = {
-      tpmlPth: './test/views/template.html',
-      dtaPth: './test/data/it.json'
+      htmlPath: PATH_HTML_TEMPLATE,
+      jsonPath: PATH_JSON_TEMPALTE,
+      contextPath: PATH_CONTEXT
     };
-  
-    rtn.html = (await getFile(rtn.tpmlPth, cache)).toString();
-    rtn.context = JSON.parse((await getFile(rtn.dtaPth, cache)).toString());
+
+    rtn.html = getFile(rtn.htmlPath, cache);
+    rtn.json = getFile(rtn.jsonPath, cache);
+    rtn.context = getFile(rtn.contextPath, cache);
+
+    rtn.html = (await rtn.html).toString();
+    rtn.json = (await rtn.json).toString();
+    rtn.context = JSON.parse((await rtn.context).toString());
     
     return rtn;
   }
@@ -140,8 +155,11 @@ class Main {
 
   static async baseTest(compileOpts, engine, partials, readPartials, renderOpts, extraContext) {
     const test = await Main.init(compileOpts, engine);
+    const opts = test.engine.options;
+    if (!/^html$|^json$/.test(opts.defaultExtension)) throw new Error(`Invalid TEST compileOpts.defaultExtension -> ${opts.defaultExtension}`);
+    const isJSON = opts.defaultExtension === 'json';
     test.registerPartialsResult = partials || readPartials ? await test.engine.registerPartials(partials, readPartials) : null;
-    test.fn = await test.engine.compile(test.html);
+    test.fn = await test.engine.compile(isJSON ? test.json : test.html);
     expect(test.fn).to.be.function();
 
     test.context = test.context || {};
@@ -154,21 +172,24 @@ class Main {
 
     test.result = await test.fn(test.context, renderOpts);
     if (logger.debug) logger.debug(test.result);//logger.debug(JsFrmt(test.result, compileOpts.formatOptions));
-    Main.expectDOM(test.result, test.context);
+    if (isJSON) Main.expectJSON(test.result, test.context);
+    else Main.expectDOM(test.result, test.context);
     return test;
   }
 
-  static async getFiles(dir, readContent = true, rmBasePartial = true, cache = true) {
+  static async getFiles(dir, readContent = true, rmBasePartial = true, cache = true, _initDir = null) {
+    if (!_initDir) _initDir = dir.replace(/[\/\\]/g, Path.sep);
     const sdirs = await Fs.promises.readdir(dir);
-    var spth, stat, sfiles, files = [], filed;
+    var spth, stat, sfiles, files = [], filed, named;
     for (let sdir of sdirs) {
       spth = Path.join(dir, sdir), stat = await Fs.promises.stat(spth);
       if (stat.isDirectory()) {
-        sfiles = await Main.getFiles(spth, readContent, rmBasePartial, cache);
+        sfiles = await Main.getFiles(spth, readContent, rmBasePartial, cache, _initDir);
         files = sfiles && sfiles.length ? files.length ? files.concat(sfiles) : sfiles : files;
       } else if (stat.isFile()) {
+        named = rmBasePartial ? spth.replace(_initDir, '').replace(/^[\.\/\\]+/, '') : spth;
         filed = {
-          name: (rmBasePartial ? spth.replace(/[\/\\]?test[\/\\]views[\/\\]partials[\/\\]?/, '') : spth).replace(/\..+$/, '').replace(/\\+/g, '/'),
+          name: named.replace(/\..+$/, '').replace(/\\+/g, '/'),
           path: spth
         };
         if (readContent) filed.content = (await Fs.promises.readFile(spth)).toString();
@@ -262,8 +283,12 @@ class Main {
     return dom;
   }
 
-  static usingTestRunner() {
-    return process.mainModule.filename.endsWith('lab');
+  static expectJSON(json, context) {
+    json = typeof json === 'string' ? JSON.parse(json) : json;
+    expect(json.test).to.be.object();
+    expect(json.test.one).to.be.object();
+    expect(json.test.one.two).to.be.object();
+    expect(json.test.one.two.three).to.equal(context.json.three);
   }
 
   /**
@@ -310,6 +335,42 @@ class Main {
     }
 
     return rtn;
+  }
+
+  static usingTestRunner() {
+    return process.mainModule.filename.endsWith('lab');
+  }
+
+  static get PATH_BASE() {
+    return PATH_BASE;
+  }
+
+  static get PATH_DATA_DIR() {
+    return PATH_DATA_DIR;
+  }
+
+  static get PATH_VIEWS_DIR() {
+    return PATH_VIEWS_DIR;
+  }
+
+  static get PATH_HTML_PARTIALS_DIR() {
+    return PATH_HTML_PARTIALS_DIR;
+  }
+
+  static get PATH_HTML_TEMPLATE() {
+    return PATH_HTML_TEMPLATE;
+  }
+
+  static get PATH_JSON_TEMPALTE() {
+    return PATH_JSON_TEMPALTE;
+  }
+
+  static get PATH_JSON_PARTIALS_DIR() {
+    return PATH_JSON_PARTIALS_DIR;
+  }
+
+  static get PATH_CONTEXT() {
+    return PATH_CONTEXT;
   }
 }
 

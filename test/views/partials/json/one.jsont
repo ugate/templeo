@@ -1,0 +1,3 @@
+{
+  "one": ${ await include`${ it.json.one }` }
+}

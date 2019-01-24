@@ -32,7 +32,7 @@ class Tester {
     const opts = baseOptions();
     const cachier = new CachierDB(opts.compile, db.indexedDB, JsFrmt, LOGGER);
     engine = Engine.create(cachier);
-    const partials = await Main.getFiles('test/views/partials');
+    const partials = await Main.getFiles(Main.PATH_HTML_PARTIALS_DIR);
     return Main.baseTest(opts.compile, engine, partials, true, opts.render);
   }
 

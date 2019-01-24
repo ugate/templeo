@@ -106,8 +106,8 @@
     }
   },
   "json": {
-    "one": 1,
-    "two": 2,
+    "one": "two",
+    "two": "three",
     "three": 3
   }
 }
