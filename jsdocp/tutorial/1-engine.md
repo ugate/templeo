@@ -3,14 +3,16 @@ At the heart of template compilation and rendering is the [Template Engine](modu
 
 > The following tutorials assume a basic knowledge of [Template Literals](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Template_literals) and [Tagged Template Literal Functions](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Template_literals#Tagged_templates).
 
-### ⛓️ include (compile-time) <sub id="compiletime"></sub>
+### ⛓️ include <sub id="include"></sub>
 
 The `include` _directive_ provides a standard [ECMAScript Tagged Template](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Template_literals#Tagged_templates) function that accepts a template literal and loads/outputs one or more resolved partial templates that have a matching partial `name` used during [registration](module-templeo.Engine.html#registerPartial).
 
-__Although, we are not limited to HTML__, we'll start with some simple HTML templates to illustrate its use. Assume that we have the following templates...
+> There are many different ways an `include` can capture/read template __content__ and/or __context__. The built-in technique is either _manual registration_ or reading/loading them via [HTTP client requests](Cachier.html). Reads can also come from a [file system](index.html#caching), a [database](index.html#caching) or any other desired source. What happens when a `read` takes place is determined by the [Cachier](Cachier.html) used on the `Engine` using [`Engine.create(cachier:Cachier)`](module-templeo.Engine.html#.create).
+
+__Although, we are not limited to just HTML__, we'll start with some simple HTML templates to illustrate basic `include` usage. Assume that we have the following templates and context...
 
 ```html
-<!-- template.html -->
+<!-- https://localhost:8080/template.html -->
 <!DOCTYPE html>
 <html>
   <head>
@@ -35,47 +37,42 @@ __Although, we are not limited to HTML__, we'll start with some simple HTML temp
 <li>This is the second partial named ${ it.second }</li>
 ```
 
-Also assume the following __context__ JSON...
-
-```json
+```js
+// https://localhost:9000/context.json
 {
-  "name": "templeo",
+  "name": "World",
   "first": "#1",
   "second": "#2"
 }
 ```
 
-Using the aforementioned sources we can compile and render the results.
+Assuming that the aforementioned sources are accessible from an HTTP server, we can assign a server URL to the [`options.templatePathBase`](module-templeo_options.html#.Options). Any partial template that is not registered when calling [`Engine.registerPartials(partials)`](module-templeo.Engine.html#registerPartials) will be fetched from the server by appending the partial name from the include to the `templatePathBase`. For example, with `templatePathBase = 'https://localhost:8080'` and an `` include`first/item` ``, a read/fetch will be made to `https://localhost:8080/first/item.html` (the file extension is determined by [`options.defaultExtension`](module-templeo_options.html#.Options)).
+
+Likewise, if template _content_ is not specified when calling [`Engine.compile(content)`](module-templeo.Engine.html#compile), an atempt will be made to read/fetch the content from `https://localhost:8080/template.html`. The "template" name can be configured using [`options.defaultTemplateName`](module-templeo_options.html#.Options).
+
+The same read/fetch criteria applies to the _context_ used when invoking the rendering function. If no context is specified when calling `renderer(context)`, an attempt will be made to read/fetch `https://localhost:9000/context.json` at render-time (assuming that [`options.contextPathBase`](module-templeo_options.html#.Options) is set to `https://localhost:9000`). The "context" name can be configured using [`options.defaultContextName`](module-templeo_options.html#.Options).
 
 ```js
-// assumes HTTPS server is serving our static templates
-const { Engine } = require('templeo'); 
+// read the template at compile-time, the template context at render-time
+// and the partial templates as includes are encountered during render-time
+const { Engine } = require('templeo');
 const engine = new Engine({
-  // let the engine know that we're reading from a static server
-  pathBase: 'https://localhost:8080'
+  templatePathBase: 'https://localhost:8080',
+  contextPathBase: 'https://localhost:9000'
 });
-// registerPartails with 2nd arg indicating we want the templates
-// to be read from the server during registration (i.e. compile-time)
-engine.registerPartails(null, true);
-// we could, of course pass the partials instead of loading them
-// from a server:
-/* engine.registerPartails([
-  { name: 'first/item', content: loaded1stContent },
-  { name: 'second/item', content: loaded2ndContent }
-]); */
-const renderer = await engine.compile(template);
-const rslt = await renderer(context);
+const renderer = await engine.compile();
+const rslt = await renderer();
 console.log(rslt);
 ```
 
-The output to the console would contain the following:
+OUTPUT:
 
 ```html
 <!-- rendered results -->
 <!DOCTYPE html>
 <html>
   <head>
-    <title>Hello templeo!</title>
+    <title>Hello World!</title>
   </head>
   <body>
     <ol>
@@ -86,7 +83,25 @@ The output to the console would contain the following:
 </html>
 ```
 
-> There are other ways to `read` rather than the default [client request](Cachier.html). What happens when a `read` takes place is determined by the [Cachier](Cachier.html) used on the [Engine](module-templeo.Engine.html) using [Engine.create(cachier:Cachier)](module-templeo.Engine.html#.create).
+The same output could also be accomplished by either registering partials _manually_ by passing them into [registerPartials(partials)](module-templeo.Engine.html#registerPartials). Any partials that are not registered will be read/loaded either at __compile-time__ (when calling `registerPartials`) or at __render-time__ when an `include` is encountered during rendering that has not yet been registered.
+
+```js
+// OPTION 1:
+// manually register partial content
+engine.registerPartails([
+  { name: 'first/item', content: preloadedContent1 },
+  { name: 'second/item', content: preloadedContent2 }
+]);
+// OPTION 2:
+// read/load defined partials at compile-time
+engine.registerPartails([
+  { name: 'first/item' },
+  { name: 'second/item' }
+], true); // true for read/fetch on compile
+// OPTION 3:
+// omit engine.registerPartials to read/load partials
+// as includes are encountered at render-time
+```
 
 As seen in the previous examples, each `include` directive is [awaited](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/await) and returns the template literal parsed output for the partials being included. A single `include` can also contain more than one partial name separated by literal strings/expressions and will be resolved in the order they are defined.
 
@@ -133,7 +148,3 @@ console.log(rslt);
   }
 }
 ```
-
-### ⛓️ include (render-time) <sub id="rendertime"></sub>
-
-So far, we've illustrated [compile-time](#compiletime) inclusions. We could also resolve/load partials as they are encountered in the template when they are rendered.

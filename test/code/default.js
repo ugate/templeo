@@ -32,7 +32,7 @@ class Tester {
   static async htmlPartialsFetchHttpsServerCompiletimeRead() {
     const svr = await Main.httpsServer();
     const opts = baseOptions();
-    opts.compile.pathBase = svr.url; // partials will be served from this URL during compile-time
+    opts.compile.templatePathBase = svr.url; // partials will be served from this URL during compile-time
     const engine = new Engine(opts.compile, JsFrmt, LOGGER);
     // partials should be fetched via the HTTPS server during compilation via the cache read/fetch
     const partials = await Main.getFiles(Main.PATH_HTML_PARTIALS_DIR, false); // false will only return the partial names w/o content
@@ -52,7 +52,7 @@ class Tester {
   static async htmlPartialsFetchHttpsServerRendertimeRead() {
     const svr = await Main.httpsServer();
     const opts = baseOptions(`${svr.url}text.html`);
-    opts.render.pathBase = svr.url; // partials will be served from this URL during render-time
+    opts.render.templatePathBase = svr.url; // partials will be served from this URL during render-time
     const engine = new Engine(opts.compile, JsFrmt, LOGGER);
     // partials should be fetched via the HTTPS server when includes are encountered during rendering
     await Main.baseTest(opts.compile, engine, null, false, opts.render, opts.htmlContext); // false to prevent compile-time registerPartials

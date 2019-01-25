@@ -18,7 +18,7 @@ lab.experiment(plan, () => {
   lab.test(`${plan}: JSON - registerPartials`, { timeout: TEST_TKO }, Tester.jsonRegisterPartials);
   lab.test(`${plan}: HTML - registerPartials`, { timeout: TEST_TKO }, Tester.htmlRegisterPartials);
   lab.test(`${plan}: HTML - Partials Fetch From HTTPS Server (compile-time)`, { timeout: TEST_TKO }, Tester.htmlPartialsFetchHttpsServerCompiletimeRead);
-  lab.test(`${plan}: HTML - Partials Fetch From HTTPS Server (compile-time ERROR missing "options.pathBase")`, { timeout: TEST_TKO }, flags => {
+  lab.test(`${plan}: HTML - Partials Fetch From HTTPS Server (compile-time ERROR missing "options.templatePathBase")`, { timeout: TEST_TKO }, flags => {
     return new Promise(resolve => {
       flags.onUnhandledRejection = err => {
         if (LOGGER.info) LOGGER.info(`Expected error message received for: ${err.message}`, err);
@@ -30,7 +30,7 @@ lab.experiment(plan, () => {
     });
   });
   lab.test(`${plan}: HTML - Partials Fetch From HTTPS Server (render-time)`, { timeout: TEST_TKO }, Tester.htmlPartialsFetchHttpsServerRendertimeRead);
-  lab.test(`${plan}: HTML - Partials Fetch From HTTPS Server (render-time ERROR missing "options.pathBase")`, { timeout: TEST_TKO }, flags => {
+  lab.test(`${plan}: HTML - Partials Fetch From HTTPS Server (render-time ERROR missing "options.templatePathBase")`, { timeout: TEST_TKO }, flags => {
     return new Promise(resolve => {
       flags.onUnhandledRejection = err => {
         if (LOGGER.info) LOGGER.info(`Expected error message received for: ${err.message}`, err);

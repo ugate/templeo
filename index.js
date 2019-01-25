@@ -29,8 +29,8 @@ exports.Cachier = Cachier;
  * const JsFrmt = require('js-beautify').js;
  * const { Engine } = require('templeo');
  * const econf = {
- *   pathBase: '.',
- *   path: 'views',
+ *   templatePathBase: '.',
+ *   viewsPath: 'views',
  *   partialsPath: 'views/partials',
  *   defaultExtension: 'html' // can be HTML, JSON, etc.
  * };
@@ -42,8 +42,8 @@ exports.Cachier = Cachier;
  * await server.register(Vision);
  * server.views({
  *  compileMode: 'async',
- *  relativeTo: econf.pathBase,
- *  path: econf.path,
+ *  relativeTo: econf.templatePathBase,
+ *  path: econf.viewsPath,
  *  partialsPath: econf.partialsPath,
  *  defaultExtension: econf.defaultExtension,
  *  layoutPath: 'views/layout',
@@ -260,8 +260,8 @@ async function compile(ns, content, options, ropts, tname, cache) {
   if (!ropts) ropts = opts; // use definitions from the options when none are supplied
   cache = cache instanceof Cachier ? cache : new Cachier(opts);
   const parts = ropts && ropts.filename && ropts.filename.match && ropts.filename.match(opts.filename);
-  const tnm = tname || (parts && parts[2]) || (ropts && ropts.defaultBaseTemplateName)
-    || opts.defaultBaseTemplateName || `template_${Sandbox.guid(null, false)}`;
+  const tnm = tname || (parts && parts[2]) || (ropts && ropts.defaultTemplateName)
+    || opts.defaultTemplateName || `template_${Sandbox.guid(null, false)}`;
   try {
     return await cache.compile(tnm, content, parts && parts[3]); // await in order to catch errors
   } catch (e) {

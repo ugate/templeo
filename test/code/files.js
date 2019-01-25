@@ -61,8 +61,8 @@ if (!Main.usingTestRunner()) {
 function baseOptions() {
   return {
     compile: {
-      pathBase: Main.PATH_BASE,
-      path: Main.PATH_VIEWS_DIR,
+      templatePathBase: Main.PATH_BASE,
+      viewsPath: Main.PATH_VIEWS_DIR,
       partialsPath: Main.PATH_HTML_PARTIALS_DIR,
       sourcePath: Main.PATH_HTML_PARTIALS_DIR
     },
@@ -91,7 +91,7 @@ async function partialFrag(test, elId, name) {
   });
 
   // write frag (should be picked up and registered by the file watcher set via registerPartials read)
-  test.frag.path = `${Path.join(test.opts.pathBase, test.opts.partialsPath, test.frag.name)}.html`;
+  test.frag.path = `${Path.join(test.opts.templatePathBase, test.opts.partialsPath, test.frag.name)}.html`;
   await Fs.promises.writeFile(test.frag.path, test.frag.html);
 
   try {
