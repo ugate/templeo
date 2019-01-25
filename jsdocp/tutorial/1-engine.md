@@ -7,8 +7,6 @@ At the heart of template compilation and rendering is the [Template Engine](modu
 
 The `include` _directive_ provides a standard [ECMAScript Tagged Template](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Template_literals#Tagged_templates) function that accepts a template literal and loads/outputs one or more resolved partial templates that have a matching partial `name` used during [registration](module-templeo.Engine.html#registerPartial).
 
-> There are better ways to [automatically register partials using `Cachier`s](), but for illustrational purposes we'll be registering them manually using `Engine.registerPartial`.
-
 __Although, we are not limited to HTML__, we'll start with some simple HTML templates to illustrate its use. Assume that we have the following templates...
 
 ```html
@@ -25,7 +23,7 @@ __Although, we are not limited to HTML__, we'll start with some simple HTML temp
 ```
 
 ```html
-<!-- first.html -->
+<!-- https://localhost:8080/first/item.html -->
 <ol>
   <li>This is the first partial named ${ it.first }</li>
   ${ await include`second/item` }
@@ -33,7 +31,7 @@ __Although, we are not limited to HTML__, we'll start with some simple HTML temp
 ```
 
 ```html
-<!-- second.html -->
+<!-- https://localhost:8080/second/item.html -->
 <li>This is the second partial named ${ it.second }</li>
 ```
 
@@ -50,15 +48,21 @@ Also assume the following __context__ JSON...
 Using the aforementioned sources we can compile and render the results.
 
 ```js
-// There are methods provided that will load resources - see Cachier
-// "template" contains the HTML template
-// "first" contains the HTML for 1st partial
-// "second" contains the HTML for the 2nd partial
-// "context" contains the JSON data
-const { Engine } = require('templeo');
-const engine = new Engine();
-engine.registerPartial('first/item', first);
-engine.registerPartial('second/item', second);
+// assumes HTTPS server is serving our static templates
+const { Engine } = require('templeo'); 
+const engine = new Engine({
+  // let the engine know that we're reading from a static server
+  pathBase: 'https://localhost:8080'
+});
+// registerPartails with 2nd arg indicating we want the templates
+// to be read from the server during registration (i.e. compile-time)
+engine.registerPartails(null, true);
+// we could, of course pass the partials instead of loading them
+// from a server:
+/* engine.registerPartails([
+  { name: 'first/item', content: loaded1stContent },
+  { name: 'second/item', content: loaded2ndContent }
+]); */
 const renderer = await engine.compile(template);
 const rslt = await renderer(context);
 console.log(rslt);
@@ -82,6 +86,8 @@ The output to the console would contain the following:
 </html>
 ```
 
+> There are other ways to `read` rather than the default [client request](Cachier.html). What happens when a `read` takes place is determined by the [Cachier](Cachier.html) used on the [Engine](module-templeo.Engine.html) using [Engine.create(cachier:Cachier)](module-templeo.Engine.html#.create).
+
 As seen in the previous examples, each `include` directive is [awaited](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/await) and returns the template literal parsed output for the partials being included. A single `include` can also contain more than one partial name separated by literal strings/expressions and will be resolved in the order they are defined.
 
 ```js
@@ -92,6 +98,40 @@ const renderer = await engine.compile(tmpl);
 const rslt = await renderer({ three: 'Three, ' });
 console.log(rslt);
 // One, Two, Three, Four
+```
+
+So far, the inclusion examples we've used have been on HTML, but any format that can be represented as a string value can be processed by Template Literals. Lets take a look at an example using the `include` directive with `json`.
+
+```jsdocp test/views/template.jsont
+// template.json
+```
+```jsdocp test/views/partials/json/one.jsont
+// one.json
+```
+```jsdocp test/views/partials/json/two.jsont
+// two.json
+```
+```jsdocp test/views/partials/json/three.jsont
+// three.json
+```
+```jsdocp test/context/json/it.json
+// context.json
+```
+
+```js
+engine.registerPartial('one', );
+engine.registerPartial('name/four', 'Four');
+const tmpl = 'One, ${ await include`name/two${ it.three }name/four` }';
+const renderer = await engine.compile(tmpl);
+const rslt = await renderer({ three: 'Three, ' });
+console.log(rslt);
+{
+  "one": {
+    "two": {
+      "three": 3
+    }
+  }
+}
 ```
 
 ### ⛓️ include (render-time) <sub id="rendertime"></sub>

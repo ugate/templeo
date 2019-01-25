@@ -99,10 +99,10 @@ async function partialFrag(test, elId, name) {
     // compile the updated HTML
     const fn = await test.engine.compile(test.html);
     // check the result and make sure the test partial was detected 
-    const rslt = await fn(test.context), dom = new JSDOM(rslt);
+    const rslt = await fn(test.htmlContext), dom = new JSDOM(rslt);
     const prtl = dom.window.document.getElementById(test.frag.elementId);
     expect(prtl).not.null();
-    Main.expectDOM(rslt, test.context);
+    Main.expectDOM(rslt, test.htmlContext);
   } finally {
     await Fs.promises.unlink(test.frag.path); // remove test fragment
   }

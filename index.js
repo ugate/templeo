@@ -247,20 +247,21 @@ exports.Engine = class Engine {
  * @param {Object} ns The namespace of the template engine
  * @param {String} content The raw template content
  * @param {TemplateOpts} [options] The options that overrides the default engine options
- * @param {Object} [def] The object definition to be used in the template
- * @param {String} [def.filename] When the template name is omitted, an attempt will be made to extract a name from the `filename` using `options.filename`
+ * @param {Object} [ropts] The object definition to be used in the template
+ * @param {String} [ropts.filename] When the template name is omitted, an attempt will be made to extract a name from the `filename` using `options.filename`
  * regular expression
  * @param {String} [tname] Name to be given to the template (omit to use the one from `options.filename` or an auto generated name)
  * @param {Cachier} [cache] The {@link Cachier} instance that will handle the {@link Cachier.write} of the compiled template code. Defaults to in-memory
  * cache.
  * @returns {Function} The rendering `function(context)` that returns a template result string based upon the provided context
  */
-async function compile(ns, content, options, def, tname, cache) {
+async function compile(ns, content, options, ropts, tname, cache) {
   const opts = options instanceof TemplateOpts ? options : new TemplateOpts(options);
-  if (!def) def = opts; // use definitions from the options when none are supplied
+  if (!ropts) ropts = opts; // use definitions from the options when none are supplied
   cache = cache instanceof Cachier ? cache : new Cachier(opts);
-  const parts = def && def.filename && def.filename.match && def.filename.match(opts.filename);
-  const tnm = tname || (parts && parts[2]) || ('template_' + Sandbox.guid(null, false));
+  const parts = ropts && ropts.filename && ropts.filename.match && ropts.filename.match(opts.filename);
+  const tnm = tname || (parts && parts[2]) || (ropts && ropts.defaultBaseTemplateName)
+    || opts.defaultBaseTemplateName || `template_${Sandbox.guid(null, false)}`;
   try {
     return await cache.compile(tnm, content, parts && parts[3]); // await in order to catch errors
   } catch (e) {

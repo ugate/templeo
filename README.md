@@ -21,7 +21,7 @@ No special syntax required! Everything is baked into the ECMAScript Template Lit
 - __🌱 Grows with the language__ <br>
 No need to update `templeo` when new features are added to the Template Literal spec. Any feature/syntax changes available within Template Literals are available for immediate use!<br><br>
 - __🌐 Stand-Alone Rendering__ <br>
-When a template is compiled into a rendering function it's no longer dependent upon `templeo` internals to render output - making rendering functions fully portable! So, rendering functions can even be serverd from an HTTP server or any other source without any references back to `templeo`!<br><br>
+When a template is compiled into a rendering function it's no longer dependent upon `templeo` internals to render output - making rendering functions fully portable! Rendering functions can even be serverd from an HTTP server or any other source without any references back to `templeo`!<br><br>
 - __🛡️ Secure__ <br>
 Since `templeo` does not have any special parsing syntax it does not suffer from syntax-specific injections. Compilation is also locally _sandboxed_ to ensure that scope is isolated to global variable access (and [require](https://nodejs.org/api/modules.html#modules_require) when available). Since rendering is _stand-alone_ and _portable_, it is completely isolated from any scope other than the scope in which it is ran!<br><br>
 - __⛓️ Nested Includes__ <br>

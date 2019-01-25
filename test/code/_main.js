@@ -30,9 +30,8 @@ const { JSDOM } = require('jsdom');
 exports.JSDOM = JSDOM;
 const Level = require('level');
 exports.Level = Level;
-const { Engine, JsonEngine } = require('../../index.js');
+const { Engine } = require('../../index.js');
 exports.Engine = Engine;
-exports.JsonEngine = JsonEngine;
 exports.PLAN = 'Template Engine';
 exports.TASK_DELAY = 500;
 exports.TEST_TKO = 20000;
@@ -59,9 +58,8 @@ exports.LOGGER = logger;
 // export * as JSDOM from JSDOM;
 // TODO : import * as Level from 'level';
 // export * as Level from Level;
-// TODO : import { Engine, JsonEngine } from '../index.mjs';
+// TODO : import { Engine } from '../index.mjs';
 // export * as Engine from Engine;
-// export * as JsonEngine from JsonEngine;
 // export const PLAN = 'Template Engine';
 // export const TASK_DELAY = 500;
 // export const TEST_TKO = 20000;
@@ -69,14 +67,17 @@ exports.LOGGER = logger;
 
 const Fsp = Fs.promises;
 const PATH_BASE = '.';
-const PATH_DATA_DIR = 'test/data';
 const PATH_VIEWS_DIR = 'test/views';
+
+const PATH_HTML_CONTEXT_DIR = 'test/context/html';
 const PATH_HTML_PARTIALS_DIR = `${PATH_VIEWS_DIR}/partials/html`;
 const PATH_HTML_TEMPLATE = `${PATH_VIEWS_DIR}/template.html`;
-const PATH_CONTEXT = `${PATH_DATA_DIR}/it.json`;
+const PATH_HTML_CONTEXT = `${PATH_HTML_CONTEXT_DIR}/it.json`;
 
+const PATH_JSON_CONTEXT_DIR = 'test/context/json';
 const PATH_JSON_PARTIALS_DIR = `${PATH_VIEWS_DIR}/partials/json`;
 const PATH_JSON_TEMPALTE = `${PATH_VIEWS_DIR}/template.jsont`;
+const PATH_JSON_CONTEXT = `${PATH_JSON_CONTEXT_DIR}/it.json`;
 
 // TODO : ESM uncomment the following line...
 // export
@@ -120,17 +121,20 @@ class Main {
   static async getTemplateFiles(cache = true) {
     const rtn = {
       htmlPath: PATH_HTML_TEMPLATE,
+      htmlContextPath: PATH_HTML_CONTEXT,
       jsonPath: PATH_JSON_TEMPALTE,
-      contextPath: PATH_CONTEXT
+      jsonContextPath: PATH_JSON_CONTEXT,
     };
 
     rtn.html = getFile(rtn.htmlPath, cache);
     rtn.json = getFile(rtn.jsonPath, cache);
-    rtn.context = getFile(rtn.contextPath, cache);
+    rtn.htmlContext = getFile(rtn.htmlContextPath, cache);
+    rtn.jsonContext = getFile(rtn.jsonContextPath, cache);
 
     rtn.html = (await rtn.html).toString();
     rtn.json = (await rtn.json).toString();
-    rtn.context = JSON.parse((await rtn.context).toString());
+    rtn.htmlContext = JSON.parse((await rtn.htmlContext).toString());
+    rtn.jsonContext = JSON.parse((await rtn.jsonContext).toString());
     
     return rtn;
   }
@@ -162,18 +166,20 @@ class Main {
     test.fn = await test.engine.compile(isJSON ? test.json : test.html);
     expect(test.fn).to.be.function();
 
-    test.context = test.context || {};
+    var context;
+    if (isJSON) context = test.jsonContext = test.jsonContext || {};
+    else context = test.htmlContext = test.htmlContext || {};
     if (typeof extraContext === 'object') { // add extra context values
       for (let prop in extraContext) {
         if (!extraContext.hasOwnProperty(prop)) continue;
-        test.context[prop] = extraContext[prop];
+        context[prop] = extraContext[prop];
       }
     }
 
-    test.result = await test.fn(test.context, renderOpts);
+    test.result = await test.fn(context, renderOpts);
     if (logger.debug) logger.debug(test.result);//logger.debug(JsFrmt(test.result, compileOpts.formatOptions));
-    if (isJSON) Main.expectJSON(test.result, test.context);
-    else Main.expectDOM(test.result, test.context);
+    if (isJSON) Main.expectJSON(test.result, context);
+    else Main.expectDOM(test.result, context);
     return test;
   }
 
@@ -288,7 +294,7 @@ class Main {
     expect(json.test).to.be.object();
     expect(json.test.one).to.be.object();
     expect(json.test.one.two).to.be.object();
-    expect(json.test.one.two.three).to.equal(context.json.three);
+    expect(json.test.one.two.three).to.equal(context.three);
   }
 
   /**
@@ -345,12 +351,12 @@ class Main {
     return PATH_BASE;
   }
 
-  static get PATH_DATA_DIR() {
-    return PATH_DATA_DIR;
-  }
-
   static get PATH_VIEWS_DIR() {
     return PATH_VIEWS_DIR;
+  }
+
+  static get PATH_HTML_CONTEXT_DIR() {
+    return PATH_HTML_CONTEXT_DIR;
   }
 
   static get PATH_HTML_PARTIALS_DIR() {
@@ -361,16 +367,24 @@ class Main {
     return PATH_HTML_TEMPLATE;
   }
 
-  static get PATH_JSON_TEMPALTE() {
-    return PATH_JSON_TEMPALTE;
+  static get PATH_HTML_CONTEXT() {
+    return PATH_HTML_CONTEXT;
+  }
+
+  static get PATH_JSON_CONTEXT_DIR() {
+    return PATH_JSON_CONTEXT_DIR;
   }
 
   static get PATH_JSON_PARTIALS_DIR() {
     return PATH_JSON_PARTIALS_DIR;
   }
 
-  static get PATH_CONTEXT() {
-    return PATH_CONTEXT;
+  static get PATH_JSON_TEMPALTE() {
+    return PATH_JSON_TEMPALTE;
+  }
+
+  static get PATH_JSON_CONTEXT() {
+    return PATH_JSON_CONTEXT;
   }
 }
 

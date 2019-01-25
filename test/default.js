@@ -1,11 +1,11 @@
 'use strict';
 
-const { expect, Lab, PLAN, TEST_TKO, LOGGER } = require('./code/_main.js');
+const { expect, Lab, PLAN, TEST_TKO, LOGGER, Engine } = require('./code/_main.js');
 const Tester = require('./code/default');
 const lab = Lab.script();
 exports.lab = lab;
 // ESM uncomment the following lines...
-// TODO : import { expect, Lab, PLAN, TEST_TKO, LOGGER } from './code/_main.mjs';
+// TODO : import { expect, Lab, PLAN, TEST_TKO, LOGGER, Engine } from './code/_main.mjs';
 // TODO : import * as Tester from './code/default.mjs';
 // TODO : export * as lab from lab;
 
@@ -39,6 +39,16 @@ lab.experiment(plan, () => {
         resolve();
       };
       return Tester.htmlPartialsFetchHttpsServerRendertimeReadNoPathError();
+    });
+  });
+  lab.test(`${plan}: JSON - Engine.create (ERROR not Cachier)`, { timeout: TEST_TKO }, flags => {
+    return new Promise(resolve => {
+      flags.onUncaughtException = err => {
+        if (LOGGER.info) LOGGER.info(`Expected error message received for: ${err.message}`, err);
+        expect(err).to.be.error();
+        resolve();
+      };
+      setTimeout(() => Engine.create({}));
     });
   });
 });

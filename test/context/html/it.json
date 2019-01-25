@@ -104,10 +104,5 @@
       "WI": "Wisconsin",
       "WY": "Wyoming"
     }
-  },
-  "json": {
-    "one": "two",
-    "two": "three",
-    "three": 3
   }
 }

@@ -137,12 +137,12 @@ async function startServer(engine, opts, context, renderOpts) {
 
 async function reqAndValidate(engine, compileOpts, dynamicIncludeURL, renderOpts) {
   const tmpl = await Main.getTemplateFiles();
-  tmpl.context.dynamicIncludeURL = dynamicIncludeURL;
-  server = await startServer(engine, compileOpts, tmpl.context, renderOpts);
+  tmpl.htmlContext.dynamicIncludeURL = dynamicIncludeURL;
+  server = await startServer(engine, compileOpts, tmpl.htmlContext, renderOpts);
 
   const html = await clientRequest(server.info.uri);
   if (LOGGER.debug) LOGGER.debug(html);
-  Main.expectDOM(html, tmpl.context);
+  Main.expectDOM(html, tmpl.htmlContext);
 }
 
 function clientRequest(url) {
