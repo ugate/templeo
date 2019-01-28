@@ -9,7 +9,7 @@
 </b>
 
 ### Template Engine
-> ♌ `templeo` is a __0️⃣ dependency__ template engine that uses built-in JavaScript/ECMAScript [Template Literals](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Template_literals). __No [Regular Expressions](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Regular_Expressions) parsing of templates here!. Just 💯% _built-in_ ES Template Literals!__ 
+> ♌ `templeo` is a __0️⃣ dependency__ template engine that uses the built-in JavaScript/ECMAScript [Template Literals](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Template_literals). __No [Regular Expressions](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Regular_Expressions) parsing of templates here!. Just 💯% _built-in_ ES Template Literals!__ 
 
 ### Install (Browser or [Node.js](https://nodejs.org))
 - `npm install templeo`
@@ -21,7 +21,7 @@ No special syntax required! Everything is baked into the ECMAScript Template Lit
 - __🌱 Grows with the language__ <br>
 No need to update `templeo` when new features are added to the Template Literal spec. Any feature/syntax changes available within Template Literals are available for immediate use!<br><br>
 - __🌐 Stand-Alone Rendering__ <br>
-When a template is compiled into a rendering function it's no longer dependent upon `templeo` internals to render output - making rendering functions fully portable! Rendering functions can even be serverd from an HTTP server or any other source without any references back to `templeo`!<br><br>
+When a template is compiled into a rendering function it's no longer dependent upon `templeo` internals to render output - making rendering functions fully portable! Rendering functions can even be serverd from an HTTP server or any other source without any dependencies or references back to `templeo`!<br><br>
 - __🛡️ Secure__ <br>
 Since `templeo` does not have any special parsing syntax it does not suffer from syntax-specific injections. Compilation is also locally _sandboxed_ to ensure that scope is isolated to global variable access (and [require](https://nodejs.org/api/modules.html#modules_require) when available). Since rendering is _stand-alone_ and _portable_, it is completely isolated from any scope other than the scope in which it is ran!<br><br>
 - __⛓️ Nested Includes__ <br>
@@ -29,17 +29,19 @@ Fragments are reusable and can be included at _compile-time_ and/or _render-time
 - __🐞 Debugging__ <br>
 Compiled templates are accessible directly via the VM `sourceURL` or through module [imports](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/import)/[requires](https://nodejs.org/api/modules.html#modules_require) - allowing for seemless debugging capabilities. <br><br>
 - __🧠 Extensible__ <br>
-Template Literals naturally allow for any of your helper functions to be accessible within the template literal itself as long as they are within scope of the `templeo` generated rendering function execution. However, for convenience and to ensure a truely _stand-alone_ renderer, `templeo` provides a simple way to add your own helper functions during compilation of renderers.<br><br>
+Template Literals naturally allow for any of your helper functions to be accessible within the template literal itself as long as they are within scope of the `templeo` generated rendering function execution. Extending an existing directive, function, etc. is as easy as defining one or more functions in the same scope as that the rendering function is executed. No API calls - just define and execute! This also provides an ability to assign different features to different rendering agents that use the exact same rendering function without re-compiling!<br><br>
 - __🛎️ Auto Fetch__ <br>
 By default, partial template fragments can be [fetched](https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API)/[requested](https://nodejs.org/api/https.html#https_https_request_url_options_callback) __automatically__ at _compile-time_ and/or _render-time_ from an HTTP server. Render-time includes decouples the included template sources from the renderer allowing for newly dicovered template fragments to be included without re-compiling a new renderer!<br><br>
 - __🏧 Caching__ <sub id="caching"></sub><br>
 By default, templates are cached [In-Memory](#in-memory) for the duration of the `Engine` lifespan. There are a few other extensions that may be more suitable depending upon your needs.
-  - [IndexedDB](#indexed-db) (Browser) / [LevelDB](#level-db) (Node.js) - Recommended when templates need to be persistent between usage. Compiled templates are cached in either an [IndexedDB](https://developer.mozilla.org/en-US/docs/Web/API/IndexedDB_API) store or a [LevelDB](https://www.npmjs.com/package/level) store.
-  - [File System](#file-system) (Node.js) - Recommended when running on the server. Compiled templates are cached within the [file system](https://nodejs.org/api/fs.html) and __are loaded as modules so they can be debugged just like any other module__. If template _partials_/fragments are used the corresponding files can be _registered_ by providing a _base_ directory to be _scanned_. The _base_ directory can also be _watched_ for changes that will automaticaly reregister _partials_ with the updated _partial_ content.
+  - [IndexedDB](#indexed-db) (Browser) / [LevelDB](#level-db) (Node.js)<br>
+  Recommended when templates need to be persistent between usage. Compiled templates are cached in either an [IndexedDB](https://developer.mozilla.org/en-US/docs/Web/API/IndexedDB_API) store or a [LevelDB](https://www.npmjs.com/package/level) store.
+  - [File System](#file-system) (Node.js)<br>
+  Recommended when running on the server. Compiled templates are cached within the [file system](https://nodejs.org/api/fs.html) and __are loaded as modules so they can be debugged just like any other module__. If template _partials_/fragments are used the corresponding files can be _registered_ by providing a _base_ directory to be _scanned_. The _base_ directory can also be _watched_ for changes that will automaticaly reregister _partials_ with the updated _partial_ content.
 
 For more details check out the tutorials and API docs!
 
-* [Tutorials](https://ugate.github.io/templeo/tutorial-1-engine.html)
+* [Tutorials](https://ugate.github.io/templeo/tutorial-1-basics.html)
 * [API Docs](https://ugate.github.io/templeo/module-templeo-Engine.html)
 
 #### Basic Examples

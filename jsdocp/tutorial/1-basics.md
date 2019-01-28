@@ -1,7 +1,37 @@
 ### 🚂 The Template Engine
-At the heart of template compilation and rendering is the [Template Engine](module-templeo-Engine.html). It handles compiling [Template Literals](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Template_literals) into __stand-alone/independent__ _rendering functions_ that __can be ran in either the same VM in which they were compiled or an entirely new VM!__ Each rendering function is responsible for outputting templated results based upon _context_ data supplied to the function in JSON format. The `Engine` is also responsible for handling _partial_ template fragments that may be included/nested within other template(s) that are being rendered. Any distribution of included partial templates can be resolved/loaded/read during __compile-time__ or __render-time__. This flexibility allows for some partial template inclusions to be loaded during compilation while others can be loaded when the template(s) are actually encountered during rendering.
+At the heart of template compilation and rendering is the [Template Engine](module-templeo-Engine.html). It handles compiling features, options and any number of nested "_partial_" templates into a __stand-alone__ rendering function that __can be ran in either the same VM in which it was compiled or an entirely new VM!__ Rendering functions are fully independent from _any_ internal or external dependencies and can be serialized/deserialized on-demand. They are responsible for outputting parsed [template literal expressions](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Template_literals) using a specified JSON context as a primary datasource. The `Engine` handles _partial_ template fragments that may be included/nested within other template(s) that are being rendered. Any distribution of included partial templates can be resolved/loaded/read during __compile-time__ or __render-time__. This flexibility allows for some partial template inclusions to be loaded during compilation while others can be loaded when the template(s) are actually encountered during rendering.
 
 > The following tutorials assume a basic knowledge of [Template Literals](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Template_literals) and [Tagged Template Literal Functions](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Template_literals#Tagged_templates).
+
+The following illustrates basic usage that is typical with most template engine implementations.
+
+```js
+// Raw Template Literal:
+const context = { name: 'World' };
+console.log(`<html><body>Hello ${ it.name }!</body></html>`);
+// Compiled/Rendered Template Literals using an Engine
+const { Engine } = require('templeo');
+const engine = new Engine();
+const renderer = await engine.compile('<html><body>Hello ${ it.name }!</body></html>');
+const rslt = renderer({ name: 'World' });
+console.log(rslt);
+
+// Both examples above output:
+// <html><body>Hello World!</body></html>
+```
+
+You may have noticed that there isn't much difference between the _raw_ template example above and the _compiled_/_rendered_ template example. One advantage that an `Engine` has over parsing raw template literals is reusability. Parsing raw templates requires both the template and the context to be known up-front and leaves the template exposed to any variables that may be in scope. Using an `Engine` isolates the template variables to global scope (and `require`, when available). The rendering function can also be serialized/deserialized to a file system or other persistent source. __Although you'd typically would not need to manually serialize/deserialize rendering functions__, the example below demonstrates a simplified serialization/deserialization sequence that is typically performed by the [Cachier](Cachier.html) assigned to an `Engine`.
+
+```js
+// Demo purposes only:
+// save the rendering function to a persistent source
+saveRenderFunction('myRenderFunction.js', renderer.toString());
+// ... sometime later (maybe even on another machine/VM/etc.)
+const renderer = loadRenderFunction('myRenderFunction.js');
+const rslt = renderer({ name: 'World' });
+```
+
+There are many other advantages to using an `Engine` over raw template literals that we'll discuss in more details in subsequent tutorial sections.
 
 ### ⛓️ include <sub id="include"></sub>
 
@@ -103,6 +133,15 @@ engine.registerPartails([
 // as includes are encountered at render-time
 ```
 
+Like registering partial templates, the primary template and context can also be passed instead of read/loaded by the `Engine`.
+
+```js
+const templateString = getMyTemplate();
+const contextJSON = getMyContext();
+const renderer = await engine.compile(templateString);
+const rslt = await renderer(contextJSON);
+```
+
 As seen in the previous examples, each `include` directive is [awaited](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/await) and returns the template literal parsed output for the partials being included. A single `include` can also contain more than one partial name separated by literal strings/expressions and will be resolved in the order they are defined.
 
 ```js
@@ -129,7 +168,7 @@ So far, the inclusion examples we've used have been on HTML, but any format that
 ```jsdocp test/views/partials/json/three.jsont
 // three.json
 ```
-```jsdocp test/context/json/it.json
+```jsdocp test/context/json/context.json
 // context.json
 ```
 

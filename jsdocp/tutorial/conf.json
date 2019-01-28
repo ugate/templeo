@@ -1,6 +1,6 @@
 {
-  "1-engine": {
-    "title": "Template Literals"
+  "1-basics": {
+    "title": "The Basics"
   },
   "2-cache": {
     "title": "Cache"
