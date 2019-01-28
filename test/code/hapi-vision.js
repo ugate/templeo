@@ -41,7 +41,7 @@ class Tester {
 
   static async defaultEnginePartialFetchHttpServer() {
     const opts = baseOptions();
-    const filesPathBase = opts.compile.partialsPath, svr = await Main.httpsServer(filesPathBase);
+    const svr = await Main.httpsServer(opts.compile);
     opts.render.templatePathBase = svr.url; // partials will be served from this URL
     const engine = new Engine(opts.compile, JsFrmt, LOGGER);
     // Hapi will not be happy with rendering options that are not part of the vision options

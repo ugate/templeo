@@ -30,7 +30,8 @@ const { JSDOM } = require('jsdom');
 exports.JSDOM = JSDOM;
 const Level = require('level');
 exports.Level = Level;
-const { Engine } = require('../../index.js');
+const TemplateOptsFiles = require('../../lib/template-file-options');
+const { Engine, TemplateOpts } = require('../../index.js');
 exports.Engine = Engine;
 exports.PLAN = 'Template Engine';
 exports.TASK_DELAY = 500;
@@ -58,7 +59,8 @@ exports.LOGGER = logger;
 // export * as JSDOM from JSDOM;
 // TODO : import * as Level from 'level';
 // export * as Level from Level;
-// TODO : import { Engine } from '../index.mjs';
+// TODO : import * as TemplateOptsFiles from '../../lib/template-file-options';
+// TODO : import { Engine, TemplateOpts } from '../index.mjs';
 // export * as Engine from Engine;
 // export const PLAN = 'Template Engine';
 // export const TASK_DELAY = 500;
@@ -72,22 +74,26 @@ const PATH_VIEWS_DIR = 'test/views';
 const PATH_HTML_CONTEXT_DIR = 'test/context/html';
 const PATH_HTML_PARTIALS_DIR = `${PATH_VIEWS_DIR}/partials/html`;
 const PATH_HTML_TEMPLATE = `${PATH_VIEWS_DIR}/template.html`;
-const PATH_HTML_CONTEXT = `${PATH_HTML_CONTEXT_DIR}/it.json`;
+const PATH_HTML_CONTEXT = `${PATH_HTML_CONTEXT_DIR}/context.json`;
 
 const PATH_JSON_CONTEXT_DIR = 'test/context/json';
 const PATH_JSON_PARTIALS_DIR = `${PATH_VIEWS_DIR}/partials/json`;
 const PATH_JSON_TEMPALTE = `${PATH_VIEWS_DIR}/template.jsont`;
-const PATH_JSON_CONTEXT = `${PATH_JSON_CONTEXT_DIR}/it.json`;
+const PATH_JSON_CONTEXT = `${PATH_JSON_CONTEXT_DIR}/context.json`;
 
 // TODO : ESM uncomment the following line...
 // export
 class Main {
 
-  static httpsServer(baseFilePath = `${PATH_BASE}/${PATH_HTML_PARTIALS_DIR}`, hostname = undefined, port = undefined) {
+  static httpsServer(opts, hostname = undefined, port = undefined) {
     return new Promise((resolve, reject) => {
       const sec = selfSignedCert();
       var url;
       const server = https.createServer({ key: sec.key, cert: sec.cert }, async (req, res) => {
+        const topts = opts instanceof TemplateOptsFiles ? opts : new TemplateOptsFiles(opts);
+        const isMainTmpl = req.url.endsWith(`${topts.defaultTemplateName}${topts.defaultExtension ? `.${topts.defaultExtension}` : ''}`);
+        const isContext = !isMainTmpl && req.url.endsWith(`${topts.defaultContextName}.json`);
+        const baseFilePath = `${PATH_BASE}/${isMainTmpl ? PATH_VIEWS_DIR : isContext ? PATH_HTML_CONTEXT_DIR : PATH_HTML_PARTIALS_DIR}`;
         const mthd = req.method.toUpperCase();
         try {
           if (logger.info) logger.info(`HTTPS server received: ${url}${req.url}`);
@@ -95,7 +101,7 @@ class Main {
           const file = Path.join(baseFilePath, req.url);
           const contents = await Fsp.readFile(file);
           res.statusCode = 200;
-          res.setHeader('Content-Type', type || 'text/html');
+          res.setHeader('Content-Type', type || (isContext ? 'application/json' : 'text/html'));
           res.end(contents);
           if (logger.debug) logger.debug(`HTTPS server processed ${url}${req.url} with contents:`, contents);
         } catch (err) {

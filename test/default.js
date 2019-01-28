@@ -41,6 +41,7 @@ lab.experiment(plan, () => {
       return Tester.htmlPartialsFetchHttpsServerRendertimeReadNoPathError();
     });
   });
+  lab.test(`${plan}: HTML - Template/Context Fetch From HTTPS Server (compile-time/render-time)`, { timeout: TEST_TKO }, Tester.htmlTmplAndContextFetchHttpsServerRead);
   lab.test(`${plan}: JSON - Engine.create (ERROR not Cachier)`, { timeout: TEST_TKO }, flags => {
     return new Promise(resolve => {
       flags.onUncaughtException = err => {
