@@ -3,6 +3,7 @@
 const TemplateOpts = require('./lib/template-options');
 const Cachier = require('./lib/cachier');
 const Sandbox = require('./lib/sandbox');
+const Director = require('./lib/director');
 // TODO : ESM remove the following lines...
 exports.TemplateOpts = TemplateOpts;
 exports.Cachier = Cachier;
@@ -10,6 +11,7 @@ exports.Cachier = Cachier;
 // TODO : import * as TemplateOpts from './lib/template-options.mjs';
 // TODO : import * as Cachier from './lib/cachier.mjs';
 // TODO : import * as Sandbox from './lib/sandbox.mjs';
+// TODO : import * as Director from './lib/director.mjs';
 // TODO : export * as TemplateOpts from TemplateOpts;
 // TODO : export * as Cachier from Cachier;
 
@@ -263,7 +265,7 @@ async function compile(ns, content, options, ropts, tname, cache) {
   const tnm = tname || (parts && parts[2]) || (ropts && ropts.defaultTemplateName)
     || opts.defaultTemplateName || `template_${Sandbox.guid(null, false)}`;
   try {
-    return await cache.compile(tnm, content, parts && parts[3]); // await in order to catch errors
+    return await cache.compile(tnm, content, parts && parts[3], Director); // await in order to catch errors
   } catch (e) {
     if (ns.at.cache.logger.error) ns.at.cache.logger.error(`Could not compile template ${tnm} (ERROR: ${e.message}): ${content}`);
     throw e;
