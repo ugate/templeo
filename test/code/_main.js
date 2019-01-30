@@ -12,8 +12,10 @@ const logger = {};
 //const logger = console;
 
 const Forge = require('node-forge');
-const https = require('https');
-exports.https = https;
+const Http = require('http');
+exports.Http = Http;
+const Https = require('https');
+exports.Https = Https;
 const Os = require('os');
 exports.Os = Os;
 const Fs = require('fs');
@@ -40,7 +42,7 @@ exports.LOGGER = logger;
 // TODO : ESM uncomment the following lines...
 // TODO : import * as Forge from 'node-forge';
 // TODO : import * as http from 'https';
-// export * as https from https;
+// export * as Https from https;
 // TODO : import * as Os from 'os';
 // export * as Os from Os;
 // TODO : import * as Fs from 'fs';
@@ -85,11 +87,29 @@ const PATH_JSON_CONTEXT = `${PATH_JSON_CONTEXT_DIR}/context.json`;
 // export
 class Main {
 
-  static httpsServer(opts, hostname = undefined, port = undefined) {
+  /**
+   * Creates a test HTTPS server with a self-signed certificate for testing partial template `reads`. Each _response_ will contain either
+   * the partial template content, the primary template being tested or the context JSON. Which content that is set in the response is
+   * based upon the same path patterns outlined in the `include` documentation for partials.
+   * 
+   * When the request is for a partial HTML template, the request can also contain URL parameters. Each URL parameter will be appened to
+   * the response in the form of an HTML `input` element using the parameters __key__ as the `id` and __value__ as the `value`. This
+   * tests includes that can have dynamic partial template content based upon URL parameters being passed into a server.
+   * @async
+   * @param {Object} [opts] The template options that will determine how to handle requests. Options can be set after creating the server
+   * since they are not used until an actual request is made
+   * @param {String} [paramsInputIdPrefix='fromServer_'] The prefix that will be used for the HTML `input` IDs generated from the URL parameters 
+   * @param {String} [hostname] The _host_ passed into {@link Https.Server.listen}
+   * @param {String} [port] The _port_ passed into {@link Https.Server.listen}
+   * @returns {Object} An object containing:
+   * - `url:String` - The created server's URL
+   * - `close:Function` - A parameterless async function that will stop/close the server
+   */
+  static httpsServer(opts, paramsInputIdPrefix = 'fromServer_', hostname = undefined, port = undefined) {
     return new Promise((resolve, reject) => {
       const sec = selfSignedCert();
       var url;
-      const server = https.createServer({ key: sec.key, cert: sec.cert }, async (req, res) => {
+      const server = Https.createServer({ key: sec.key, cert: sec.cert }, async (req, res) => {
         const topts = opts instanceof TemplateOptsFiles ? opts : new TemplateOptsFiles(opts);
         const isMainTmpl = req.url.endsWith(`${topts.defaultTemplateName}${topts.defaultExtension ? `.${topts.defaultExtension}` : ''}`);
         const isContext = !isMainTmpl && req.url.endsWith(`${topts.defaultContextName}.json`);
@@ -97,9 +117,15 @@ class Main {
         const mthd = req.method.toUpperCase();
         try {
           if (logger.info) logger.info(`HTTPS server received: ${url}${req.url}`);
-          const prms = new URL(`${url}${req.url}`).searchParams, type = prms.get('type');
-          const file = Path.join(baseFilePath, req.url);
-          const contents = await Fsp.readFile(file);
+          const urlo = new URL(`${url}${req.url}`), prms = urlo.searchParams, type = prms.get('type');
+          const filePath = urlo.href.replace(urlo.origin, '').replace(urlo.search, '').replace(urlo.hash, '');
+          const file = Path.join(baseFilePath, filePath);
+          var contents = await Fsp.readFile(file);
+          if (!isMainTmpl && !isContext) {
+            for (let prm of prms.entries()) {
+              contents += `<input id="${paramsInputIdPrefix}${prm[0]}" value="${prm[1]}" />`; // add parameters as input
+            }
+          }
           res.statusCode = 200;
           res.setHeader('Content-Type', type || (isContext ? 'application/json' : 'text/html'));
           res.end(contents);
@@ -108,7 +134,7 @@ class Main {
           if (logger.error) logger.error(err);
           res.statusCode = 400;
           res.setHeader('Content-Type', 'text/html');
-          res.end(`Failed to ${mthd} for: ${req.url}, ERROR: ${err.message} STACK: ${err.stack}`);
+          res.end(`Failed to ${mthd} for: ${url}${req.url}, ERROR: ${err.message} STACK: ${err.stack}`);
         }
       });
       server.listen(port, hostname, () => {
@@ -124,6 +150,49 @@ class Main {
     });
   }
 
+  /**
+   * Initiates a client request
+   * @param {String} url The URL to request
+   * @param {Boolean} [secure] `true` to use HTTPS. Otherwise, use HTTP
+   * @returns {(String | Object)} Either the response string or response JSON
+   */
+  static clientRequest(url, secure) {
+    return new Promise(async (resolve, reject) => {
+      const req = (secure ? Https : Http).request(url, { method: 'GET' }, res => {
+        var data = '';
+        res.on('data', chunk => {
+          data += chunk;
+        });
+        res.on('end', () => {
+          try {
+            JSON.parse(data);
+            reject(new Error(`Recieved JSON response for ${url}: ${data}`));
+          } catch (err) {
+            // error means proper non-JSON response, consume error
+          }
+          resolve(data);
+        });
+      });
+      req.on('error', err => {
+        reject(err);
+      });
+      req.end();
+    });
+  }
+
+  /**
+   * Captures the primary template and context data used for testing
+   * @param {Boolean} cache `true` to cache read content for subsequent calls
+   * @returns {Object} An object containing read file content and metadata used for testing:
+   * - `htmlPath:String` - The path to the primary test HTML template file
+   * - `htmlContextPath:String` - The path to the test HTML context file
+   * - `jsonPath:String` - The path to the test primary JSON template file
+   * - `jsonContextPath:String` - The path to the test JSON context file
+   * - `html:String` - The primary test HTML template contents
+   * - `json:String` - The primary test JSON template contents
+   * - `htmlContext:Object` - The HTML context
+   * - `jsonContext:Object` - The JSON context
+   */
   static async getTemplateFiles(cache = true) {
     const rtn = {
       htmlPath: PATH_HTML_TEMPLATE,
@@ -145,24 +214,19 @@ class Main {
     return rtn;
   }
 
-  static async rmrf(path) {
-    var stats, subx;
-    try {
-      stats = await Fsp.stat(path);
-    } catch (e) {
-      stats = null;
-    }
-    if (stats && stats.isDirectory()) {
-      for (let sub of await Fsp.readdir(path)) {
-        subx = Path.resolve(path, sub);
-        stats = await Fsp.stat(subx);
-        if (stats.isDirectory()) await Main.rmrf(subx);
-        else if (stats.isFile() || stats.isSymbolicLink()) await Fsp.unlink(subx);
-      }
-      await Fsp.rmdir(path); // dir path should be empty
-    } else if (stats && (stats.isFile() || stats.isSymbolicLink())) await Fsp.unlink(path);
-  }
-
+  /**
+   * Runs the primary set of tests for an `Engine` for either {@link Main.expectDOM} for HTML output or {@link Main.expectJSON} for JSON output
+   * @param {Object} [compileOpts] The options to use when calling {@link Main.init}
+   * @param {Engine} [engine] The `Engine` to use when calling {@link Main.init}
+   * @param {Object} [partials] The partials to pass into {@link Engine.registerPartials}
+   * @param {Boolean} [readPartials] The read flag to pass into {@link Engine.registerPartials}
+   * @param {Object} [renderOpts] The options to pass into the rendering function generated from {@link Engine.compile}
+   * @param {Object} [extraContext] Key/value pairs to add to the extracted context JSON
+   * @returns {Object} The test object parameters that contain property/values from {@link Main.init} as well as the following:
+   * - `registerPartialsResult` - Result from calling {@link Engine.registerPartials} when called
+   * - `fn` - The rendering funtion returned from {@link Engine.compile}
+   * - `result` - The rendered result from calling the rendering function
+   */
   static async baseTest(compileOpts, engine, partials, readPartials, renderOpts, extraContext) {
     const test = await Main.init(compileOpts, engine);
     const opts = test.engine.options;
@@ -189,14 +253,26 @@ class Main {
     return test;
   }
 
-  static async getFiles(dir, readContent = true, rmBasePartial = true, cache = true, _initDir = null) {
+  /**
+   * Gets files from a directory and any sub-directories
+   * @param {String} dir The directory to get the files from
+   * @param {Boolean} [readContent=true] `true` to include read file contents in the return value for each file found
+   * @param {Booean} [rmBasePartial=true] `true` to remove the initial `dir` when composing the name in the return value
+   * @param {Boolean} [cache=true] Value passed when calling {@link } 
+   * @param {String} [_initDir=null] Used to keep track of the original `dir` when making recursive calls __Internal use only!__
+   * @returns {Object[]} The files that were found with each object entry containing the follwoing:
+   * - `name:String` - The derived name of the file
+   * - `path:String` - The file path
+   * - `content:String` - The file contents (omitted when `readContent` is falsy)
+   */
+  static async getFiles(dir, readContent = true, rmBasePartial = true, _initDir = null) {
     if (!_initDir) _initDir = dir.replace(/[\/\\]/g, Path.sep);
     const sdirs = await Fs.promises.readdir(dir);
     var spth, stat, sfiles, files = [], filed, named;
     for (let sdir of sdirs) {
       spth = Path.join(dir, sdir), stat = await Fs.promises.stat(spth);
       if (stat.isDirectory()) {
-        sfiles = await Main.getFiles(spth, readContent, rmBasePartial, cache, _initDir);
+        sfiles = await Main.getFiles(spth, readContent, rmBasePartial, _initDir);
         files = sfiles && sfiles.length ? files.length ? files.concat(sfiles) : sfiles : files;
       } else if (stat.isFile()) {
         named = rmBasePartial ? spth.replace(_initDir, '').replace(/^[\.\/\\]+/, '') : spth;
@@ -211,6 +287,11 @@ class Main {
     return files;
   }
 
+  /**
+   * Opens an IndexedDB instance
+   * @param {String} [locPrefix] The IndexedDB location prefix to use
+   * @returns {Object} A metadata object containing `{ locPrefix:String, loc:String, indexedDB:IndexedDB }`
+   */
   static async openIndexedDB(locPrefix = 'templeo-test-indexedDB-') {
     if (DB[locPrefix]) return DB[locPrefix];
     const loc = await Fs.promises.mkdtemp(Path.join(Os.tmpdir(), locPrefix));
@@ -219,6 +300,11 @@ class Main {
     return DB[locPrefix];
   }
 
+  /**
+   * Closes any resources associated with an IndexedDB instance
+   * @param {Object} db An object generated from a prior call to {@link Main.openIndexedDB}
+   * @param {Engine} engine The engine being used
+   */
   static async closeIndexedDB(db, engine) {
     if (engine) {
       if (logger.debug) logger.debug(`Clearing cache for LevelDB @ ${db.loc}`);
@@ -231,6 +317,12 @@ class Main {
     return Main.rmrf(db.loc);
   }
 
+  /**
+   * Gets {@link Main.getTemplateFiles} along with an `Engine` with options
+   * @param {Object} [opts] The template options to use
+   * @param {Engine} [engine] The `Engine` instance to use (omit to create)
+   * @returns {Object} An `{ engine:Engine, opts:Object }` along with properties from {@link Main.getTemplateFiles}
+   */
   static async init(opts, engine) {
     const rtn = await Main.getTemplateFiles();
     rtn.engine = engine || new Engine(opts, JsFrmt, logger);
@@ -238,6 +330,13 @@ class Main {
     return rtn;
   }
 
+  /**
+   * Async test that will either `resolve`/`reject` after a given amount of time
+   * @async
+   * @param {Integer} delay The delay in milliseconds to wait before resolving/rejecting
+   * @param {*} [val] The value to return when resolved or error message/Error when rejecting
+   * @param {Boolean} [rejectIt] `true` to reject, otherwise resolve
+   */
   static wait(delay, val, rejectIt) {
     return new Promise((resolve, reject) => {
       setTimeout(() => {
@@ -247,6 +346,12 @@ class Main {
     });
   }
 
+  /**
+   * Validates common DOM nodes/values for a given parsed template HTML string
+   * @param {String} html The parsed template HTML to validate
+   * @param {Object} context The template context to validate against
+   * @returns {JSDOM} The generated DOM
+   */
   static expectDOM(html, context) {
     const dom = new JSDOM(html);
     var el;
@@ -295,6 +400,11 @@ class Main {
     return dom;
   }
 
+  /**
+   * Validates test JSON output with a matching context data object
+   * @param {(String | Object)} json Either the JSON string or JSON object to validate
+   * @param {Object} context The context data to validate the JSON against
+   */
   static expectJSON(json, context) {
     json = typeof json === 'string' ? JSON.parse(json) : json;
     expect(json.test).to.be.object();
@@ -349,6 +459,31 @@ class Main {
     return rtn;
   }
 
+  /**
+   * Utility used to recursivly remove files and/or directories for a given path
+   * @param {String} path The path to remove
+   */
+  static async rmrf(path) {
+    var stats, subx;
+    try {
+      stats = await Fsp.stat(path);
+    } catch (e) {
+      stats = null;
+    }
+    if (stats && stats.isDirectory()) {
+      for (let sub of await Fsp.readdir(path)) {
+        subx = Path.resolve(path, sub);
+        stats = await Fsp.stat(subx);
+        if (stats.isDirectory()) await Main.rmrf(subx);
+        else if (stats.isFile() || stats.isSymbolicLink()) await Fsp.unlink(subx);
+      }
+      await Fsp.rmdir(path); // dir path should be empty
+    } else if (stats && (stats.isFile() || stats.isSymbolicLink())) await Fsp.unlink(path);
+  }
+
+  /**
+   * @returns {Boolean} `true` when the process is being ran from a _test utility_
+   */
   static usingTestRunner() {
     return process.mainModule.filename.endsWith('lab');
   }
@@ -397,11 +532,23 @@ class Main {
 // TODO : ESM remove the following line...
 exports.Main = Main;
 
+/**
+ * Captures a test file contents
+ * @param {String} path The path to the file to read/get
+ * @param {Boolean} cache `true` to cache the read content for subsequent calls
+ * @returns {Buffer} The file contents
+ */
 async function getFile(path, cache = true) {
   if (cache && TEST_FILES[path]) return TEST_FILES[path];
   return cache ? TEST_FILES[path] = await Fs.promises.readFile(path) : Fs.promises.readFile(path);
 }
 
+/**
+ * Validates that the supplied DOM contains the color values from the context data
+ * @param {JSDOM} dom The `JSDOM` instance
+ * @param {Object} data The context data to validate the colors output in the DOM
+ * @param {String} [prefix] A prefix to use when capturing element IDs 
+ */
 function expectColorDOM(dom, data, prefix) {
   var el, hasSel, idx = -1;
   for (let color of data.swatch) {
@@ -417,6 +564,11 @@ function expectColorDOM(dom, data, prefix) {
   expect(hasSel).to.be.true();
 }
 
+/**
+ * Generates a self-signed certificate
+ * @param {Boolean} publicKey `true` to generate a __public__ key or _falsy_ to return a __private__ key
+ * @returns {Object} The `{ key, cert }` The object that contains the key (public or private) and the certificate
+ */
 function selfSignedCert(publicKey) {
   Forge.options.usePureJavaScript = true;
   const pki = Forge.pki, keys = pki.rsa.generateKeyPair(2048), cert = pki.createCertificate();

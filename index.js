@@ -174,11 +174,13 @@ exports.Engine = class Engine {
    * @param {String} name The template name that uniquely identifies the template content
    * @param {String} content The partial template content to register
    * @param {String} [extension=options.defaultExtension] Optional override for a file extension designation for the partial
+   * @param {Object} [params] The JSON parameters that will be added to scope as `options.includesParametersName` when the template is
+   * parsed
    * @returns {String} The partial content
    */
-  registerPartial(name, content, extension) {
+  registerPartial(name, content, extension, params) {
     const ns = internal(this);
-    return ns.at.cache.registerPartial(name, content, extension);
+    return ns.at.cache.registerPartial(name, content, extension, params);
   }
 
   /**
@@ -188,6 +190,8 @@ exports.Engine = class Engine {
    * @param {String} partials[].name The template name that uniquely identifies the template content
    * @param {String} [partials[].content] The partial template content to register (omit when `read === true` to read content from cache)
    * @param {String} [partials[].extension] Optional override for a file extension designation for the partial
+   * @param {Object} [includes[].params] The JSON parameters that will be added to scope as `options.includesParametersName` when
+   * the template is parsed
    * @param {Boolean} [read=true] When `true`, an attempt will be made to also _read_ any partials that do not have a `content` property
    * @returns {Object} An object that contains the registration results:
    * 
@@ -195,6 +199,7 @@ exports.Engine = class Engine {
    *   - `name` The template name that uniquely identifies the template content
    *   - `content` The template content
    *   - `extension` The template file extension designation
+   *   - `params` The JSON template parameters added to the partial's scope
    *   - `fromRead` A flag that indicates that the 
    * - `dirs` Present __only__ when {@link Engine.filesEngine} was used. Contains the directories/sub-directories that were created
    */

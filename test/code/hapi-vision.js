@@ -5,14 +5,12 @@ const CachierDB = require('../../lib/cachier-db.js');
 const CachierFiles = require('../../lib/cachier-files.js');
 const Hapi = require('hapi');
 const Vision = require('vision');
-const Http = require('http');
 // ESM uncomment the following lines...
 // TODO : import { LOGGER, Engine, JsFrmt, Main } from './_main.mjs';
 // TODO : import * as CachierDB from '../../lib/cachier-db.mjs';
 // TODO : import * as CachierFiles from '../../lib/cachier-files.mjs';
 // TODO : import * as Hapi from 'hapi';
 // TODO : import * as Vision from 'vision';
-// TODO : import * as Http from 'http';
 
 var server;
 
@@ -140,31 +138,7 @@ async function reqAndValidate(engine, compileOpts, dynamicIncludeURL, renderOpts
   tmpl.htmlContext.dynamicIncludeURL = dynamicIncludeURL;
   server = await startServer(engine, compileOpts, tmpl.htmlContext, renderOpts);
 
-  const html = await clientRequest(server.info.uri);
+  const html = await Main.clientRequest(server.info.uri);
   if (LOGGER.debug) LOGGER.debug(html);
   Main.expectDOM(html, tmpl.htmlContext);
-}
-
-function clientRequest(url) {
-  return new Promise(async (resolve, reject) => {
-    const req = Http.request(url, { method: 'GET' }, res => {
-      var data = '';
-      res.on('data', chunk => {
-        data += chunk;
-      });
-      res.on('end', () => {
-        try {
-          JSON.parse(data);
-          reject(new Error(`Recieved JSON response for ${url}: ${data}`));
-        } catch (err) {
-          // error means proper non-JSON response, consume error
-        }
-        resolve(data);
-      });
-    });
-    req.on('error', err => {
-      reject(err);
-    });
-    req.end();
-  });
 }

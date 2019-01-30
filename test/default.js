@@ -42,6 +42,7 @@ lab.experiment(plan, () => {
     });
   });
   lab.test(`${plan}: HTML - Template/Context Fetch From HTTPS Server (compile-time/render-time)`, { timeout: TEST_TKO }, Tester.htmlTmplAndContextFetchHttpsServerRead);
+  lab.test(`${plan}: HTML - Include With URL Parameters From HTTPS Server (render-time)`, { timeout: TEST_TKO }, Tester.htmlIncludeWithParametersHttpsServerRead);
   lab.test(`${plan}: JSON - Engine.create (ERROR not Cachier)`, { timeout: TEST_TKO }, flags => {
     return new Promise(resolve => {
       flags.onUncaughtException = err => {
