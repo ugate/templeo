@@ -93,7 +93,7 @@ class Main {
    * based upon the same path patterns outlined in the `include` documentation for partials.
    * 
    * When the request is for a partial HTML template, the request can also contain URL parameters. Each URL parameter will be appened to
-   * the response in the form of an HTML `input` element using the parameters __key__ as the `id` and __value__ as the `value`. This
+   * the response in the form of an HTML `input` element using the parameters __key__ as the `name` and __value__ as the `value`. This
    * tests includes that can have dynamic partial template content based upon URL parameters being passed into a server.
    * @async
    * @param {Object} [opts] The template options that will determine how to handle requests. Options can be set after creating the server
@@ -123,7 +123,7 @@ class Main {
           var contents = await Fsp.readFile(file);
           if (!isMainTmpl && !isContext) {
             for (let prm of prms.entries()) {
-              contents += `<input id="${paramsInputIdPrefix}${prm[0]}" value="${prm[1]}" />`; // add parameters as input
+              contents += `<input name="${paramsInputIdPrefix}${prm[0]}" value="${prm[1]}" />`; // add parameters as input
             }
           }
           res.statusCode = 200;
