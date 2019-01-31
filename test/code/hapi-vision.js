@@ -84,7 +84,9 @@ function baseOptions(dynamicIncludeURL) {
       sourcePath: Main.PATH_HTML_PARTIALS_DIR
     },
     render: {
-      rejectUnauthorized: false
+      readFetchRequestOptions: {
+        rejectUnauthorized: false
+      }
     }
   };
 }

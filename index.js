@@ -73,7 +73,6 @@ exports.Engine = class Engine {
    * @param {TemplateOpts} [opts] The {@link TemplateOpts} to use
    * @param {Function} [formatFunc] The `function(string, formatOptions)` that will return a formatted string for a specified code block,
    * passing the formatting options from `opts.formatOptions` (e.g. minification and/or beautifying)
-   * @param {Boolean} [servePartials.rejectUnauthorized=true] A flag that indicates the client should reject unauthorized servers (__Node.js ONLY__)
    * @param {Object} [logger] The logger for handling logging output
    * @param {Function} [logger.debug] A function that will accept __debug__ level logging messages (i.e. `debug('some message to log')`)
    * @param {Function} [logger.info] A function that will accept __info__ level logging messages (i.e. `info('some message to log')`)
@@ -172,15 +171,14 @@ exports.Engine = class Engine {
   /**
    * Registers and caches a partial template
    * @param {String} name The template name that uniquely identifies the template content
-   * @param {String} content The partial template content to register
+   * @param {(String | URLSearchParams)} contentOrParams Either the partial template content __string__ to register _or_ the
+   * `URLSearchParams` that will be passed during the content `read`
    * @param {String} [extension=options.defaultExtension] Optional override for a file extension designation for the partial
-   * @param {Object} [params] The JSON parameters that will be added to scope as `options.includesParametersName` when the template is
-   * parsed
    * @returns {String} The partial content
    */
-  registerPartial(name, content, extension, params) {
+  registerPartial(name, contentOrParams, extension) {
     const ns = internal(this);
-    return ns.at.cache.registerPartial(name, content, extension, params);
+    return ns.at.cache.registerPartial(name, contentOrParams, extension);
   }
 
   /**
@@ -188,10 +186,10 @@ exports.Engine = class Engine {
    * @async
    * @param {Object[]} [partials] The partials to register
    * @param {String} partials[].name The template name that uniquely identifies the template content
-   * @param {String} [partials[].content] The partial template content to register (omit when `read === true` to read content from cache)
+   * @@param {String} [partials[].content] The partial template content to register. Omit when `read === true` to read content from cache
+   * @param {URLSearchParams} [partials[].params] The `URLSearchParams` that will be passed during the content `read`
+   * (__ignored when `content` is specified__)
    * @param {String} [partials[].extension] Optional override for a file extension designation for the partial
-   * @param {Object} [includes[].params] The JSON parameters that will be added to scope as `options.includesParametersName` when
-   * the template is parsed
    * @param {Boolean} [read=true] When `true`, an attempt will be made to also _read_ any partials that do not have a `content` property
    * @returns {Object} An object that contains the registration results:
    * 
@@ -199,7 +197,7 @@ exports.Engine = class Engine {
    *   - `name` The template name that uniquely identifies the template content
    *   - `content` The template content
    *   - `extension` The template file extension designation
-   *   - `params` The JSON template parameters added to the partial's scope
+   *   - `params` The URLSearchParams passed during the __initial__ content read
    *   - `fromRead` A flag that indicates that the 
    * - `dirs` Present __only__ when {@link Engine.filesEngine} was used. Contains the directories/sub-directories that were created
    */

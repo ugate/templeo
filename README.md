@@ -24,8 +24,8 @@ No need to update `templeo` when new features are added to the Template Literal 
 When a template is compiled into a rendering function it's no longer dependent upon `templeo` internals to render output - making rendering functions fully portable! Rendering functions can even be serverd from an HTTP server or any other source without any dependencies or references back to `templeo`!<br><br>
 - __🛡️ Secure__ <br>
 Since `templeo` does not have any special parsing syntax it does not suffer from syntax-specific injections. Compilation is also locally _sandboxed_ to ensure that scope is isolated to global variable access (and [require](https://nodejs.org/api/modules.html#modules_require) when available). Since rendering is _stand-alone_ and _portable_, it is completely isolated from any scope other than the scope in which it is ran!<br><br>
-- __⛓️ Nested Includes__ <br>
-Fragments are reusable and can be included at _compile-time_ and/or _render-time_ using simple [Tagged Template Literals](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Template_literals#Tagged_templates).<br><br>
+- __⛓️ Parameterized/Nested Includes__ <br>
+Fragments are reusable and can be [included](https://ugate.github.io/templeo/tutorial-1-basics.html#include) at _compile-time_ and/or _render-time_ using simple [Tagged Template Literals](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Template_literals#Tagged_templates). Also, supports [passing parameters](https://ugate.github.io/templeo/tutorial-1-basics.html#include-params) into included templates where the parameter scope is confined to the partial being included.<br><br>
 - __🐞 Debugging__ <br>
 Compiled templates are accessible directly via the VM `sourceURL` or through module [imports](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/import)/[requires](https://nodejs.org/api/modules.html#modules_require) - allowing for seemless debugging capabilities. <br><br>
 - __🧠 Extensible__ <br>

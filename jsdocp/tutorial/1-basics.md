@@ -7,8 +7,9 @@ The following illustrates basic usage that is typical with most template engine 
 
 ```js
 // Raw Template Literal:
-const context = { name: 'World' };
+const it = { name: 'World' };
 console.log(`<html><body>Hello ${ it.name }!</body></html>`);
+
 // Compiled/Rendered Template Literals using an Engine
 const { Engine } = require('templeo');
 const engine = new Engine();
@@ -35,11 +36,11 @@ There are many other advantages to using an `Engine` over raw template literals 
 
 ### ⛓️ include <sub id="include"></sub>
 
-The `include` _directive_ provides a standard [ECMAScript Tagged Template](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Template_literals#Tagged_templates) function that accepts a template literal and loads/outputs one or more resolved partial templates that have a matching partial `name` used during [registration](module-templeo.Engine.html#registerPartial).
+The `include` _directive_ provides a standard [ECMAScript Tagged Template](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Template_literals#Tagged_templates) _async_ function that accepts a template literal and loads/outputs one or more resolved partial templates that have a matching partial `name` used during [registration](module-templeo.Engine.html#registerPartial).
 
 > There are many different ways an `include` can capture/read template __content__ and/or __context__. The built-in technique is either _manual registration_ or reading/loading them via [HTTP client requests](Cachier.html). Reads can also come from a [file system](index.html#caching), a [database](index.html#caching) or any other desired source. What happens when a `read` takes place is determined by the [Cachier](Cachier.html) used on the `Engine` using [`Engine.create(cachier:Cachier)`](module-templeo.Engine.html#.create).
 
-__Although, we are not limited to just HTML__, we'll start with some simple HTML templates to illustrate basic `include` usage. Assume that we have the following templates and context...
+Although, we are not limited to just HTML, we'll start with some simple HTML templates to illustrate basic `include` usage. Assume that we have the following templates and context...
 
 ```html
 <!-- https://localhost:8080/template.html -->
@@ -78,7 +79,7 @@ __Although, we are not limited to just HTML__, we'll start with some simple HTML
 
 Assuming that the aforementioned sources are accessible from an HTTP server, we can assign a server URL to the [`options.templatePathBase`](module-templeo_options.html#.Options). Any partial template that is not registered when calling [`Engine.registerPartials(partials)`](module-templeo.Engine.html#registerPartials) will be fetched from the server by appending the partial name from the include to the `templatePathBase`. For example, with `templatePathBase = 'https://localhost:8080'` and an `` include`first/item` ``, a read/fetch will be made to `https://localhost:8080/first/item.html` (the file extension is determined by [`options.defaultExtension`](module-templeo_options.html#.Options)).
 
-Likewise, if template _content_ is not specified when calling [`Engine.compile(content)`](module-templeo.Engine.html#compile), an atempt will be made to read/fetch the content from `https://localhost:8080/template.html`. The "template" name can be configured using [`options.defaultTemplateName`](module-templeo_options.html#.Options).
+Likewise, if template _content_ is __not__ specified when calling [`Engine.compile(content)`](module-templeo.Engine.html#compile), an atempt will be made to read/fetch the content from `https://localhost:8080/template.html`. The "template" name can be configured using [`options.defaultTemplateName`](module-templeo_options.html#.Options).
 
 The same read/fetch criteria applies to the _context_ used when invoking the rendering function. If no context is specified when calling `renderer(context)`, an attempt will be made to read/fetch `https://localhost:9000/context.json` at render-time (assuming that [`options.contextPathBase`](module-templeo_options.html#.Options) is set to `https://localhost:9000`). The "context" name can be configured using [`options.defaultContextName`](module-templeo_options.html#.Options).
 
@@ -113,7 +114,7 @@ OUTPUT:
 </html>
 ```
 
-The same output could also be accomplished by either registering partials _manually_ by passing them into [registerPartials(partials)](module-templeo.Engine.html#registerPartials). Any partials that are not registered will be read/loaded either at __compile-time__ (when calling `registerPartials`) or at __render-time__ when an `include` is encountered during rendering that has not yet been registered.
+The same output could also be accomplished by either registering partials _manually_ by passing them into [`Engine.registerPartials(partials)`](module-templeo.Engine.html#registerPartials). Any partials that are not registered will be read/loaded either at __compile-time__ (when calling `registerPartials`) or at __render-time__ when an `include` is encountered during rendering that has not yet been registered.
 
 ```js
 // OPTION 1:
@@ -127,13 +128,13 @@ engine.registerPartails([
 engine.registerPartails([
   { name: 'first/item' },
   { name: 'second/item' }
-], true); // true for read/fetch on compile
+], true); // true for read/fetch during compile
 // OPTION 3:
 // omit engine.registerPartials to read/load partials
 // as includes are encountered at render-time
 ```
 
-Like registering partial templates, the primary template and context can also be passed instead of read/loaded by the `Engine`.
+Like registering partial templates, the primary template and context can also be _passed_ instead of read/loaded by the `Engine` (as illustrated below).
 
 ```js
 const templateString = getMyTemplate();
@@ -142,7 +143,65 @@ const renderer = await engine.compile(templateString);
 const rslt = await renderer(contextJSON);
 ```
 
-As seen in the previous examples, each `include` directive is [awaited](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/await) and returns the template literal parsed output for the partials being included. A single `include` can also contain more than one partial name separated by literal strings/expressions and will be resolved in the order they are defined.
+#### Parameter Passing <sub id="include-params"></sub>
+
+Not only can _includes_ load/`read` template and context at compile-time or render-time, but they can also contain __parameters__ obtained during [interpolation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Template_literals#Expression_interpolation):
+- When an expression being passed into the `include` interpolates into a [URLSearchParams](https://developer.mozilla.org/en-US/docs/Web/API/URLSearchParams) instance, the parameters are passed into the [`read` operation](Cachier.html#read) in order to fetch a fresh copy of the partial template contents.
+- When an expression interpolates into an ordinary JSON object, the object will be in accessible __only__ within the partial which is being included using the [`options.includesParametersName`](module-templeo_options.html#.Options) as an alias. JSON parameters are never passed when reading/fetching partial content.
+
+This makes for some interesting capabilities. `URLSearchParams` can be used to dynamically generate template sources based on parameters being passed, while JSON parameters can dynamically generate template sources within the partial template itself. Consider the following examples.
+
+```js
+// register some partials
+engine.registerPartails([
+  {
+    name: 'second/item',
+    params: new URLSearchParams({
+      param1: 123
+    })
+  }
+], true);
+const renderer = await engine.compile();
+const rslt = await renderer({
+  my1stParams: {
+    param1: 456
+  }
+});
+// Assume the following snippets exist in the template being used...
+
+// 1st include:
+// initiates a read w/o parameters since "first/item" is not registered or has no content
+${ await include`first/item` }
+// 2nd include:
+// initiates a read with new parameters: { param1: 456 }
+${ await include`first/item${ new URLSearchParams(it.my1stParams) }` }
+// 3rd include:
+// uses the last cached "first/item" content from the 2nd include
+${ await include`first/item` }
+// 4th include:
+// uses the last cached "first/item" content from the 2nd include
+// and "params" is accessible only within this include as: params.test === 'TEST'
+${ await include`first/item${ { env: 'TEST' } }` }
+
+// 1st include:
+// initiates a read with compile-time parameters: { param1: 123 }
+${ await include`second/item` }
+// 2nd include:
+// initiates a read with new parameters: { param2: 789 }
+${ await include`second/item${ new URLSearchParams({ param2: 789 }) }` }
+// 3rd include:
+// uses last cached "second/item" content from 2nd include
+${ await include`second/item` }
+```
+
+From the snippets above we can conclude that there are really only two types of parameters that can be passed:
+- __Compile-time Parameter Passing:__ Set before compilation using [Engine.registerPartials](module-templeo.Engine.html#registerPartials) or [Engine.registerPartial](module-templeo.Engine.html#registerPartial) and will be passed when an `include` is encountered that does not pass it's own parameters. Acts as a default parameter
+set to use for one or more compilation/rendering executions.
+- __Render-time Parameter Passing:__ Set on each individual `include`. When present, will always initiate a new `read` usng the parameters provided.
+
+The template literal snippet would cause an attempt to first check if `first/item` is cached
+
+A single `include` can also contain more than one partial name separated by literal strings/expressions and will be resolved in the order they are defined.
 
 ```js
 engine.registerPartial('name/two', 'Two, ');
