@@ -30,7 +30,7 @@ class Tester {
 
   static async htmlPartialReadNoCache() {
     const opts = baseOptions();
-    opts.compile.isCached = false;
+    opts.compile.cacheRawTemplates = false;
     return Main.baseTest(opts.compile, await getFilesEngine(opts.compile), null, true);
   }
 

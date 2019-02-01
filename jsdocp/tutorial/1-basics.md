@@ -34,6 +34,22 @@ const rslt = renderer({ name: 'World' });
 
 There are many other advantages to using an `Engine` over raw template literals that we'll discuss in more details in subsequent tutorial sections.
 
+#### Metadata and Context
+
+Each template has a finite set of variable data that is accessible from within the template itself. As seen in the previous example, there is the `context` variable that is passed into the `renderer`. Other than the supplied [directive functions](#directives), there are a few variables that are defined within scope of each template:
+- `context` The variable passed into the rendering function that is accessible to both the template being rendered and any child/partial templates that may be included within it. Also available via the [`options.varName`](module-templeo_options.html#.Options) alias (defaults to `it`).
+- `metadata` Contains metadata about the template such as the _name_ assigned to the template, _parent_ metadata when the template is nested and other data pertaining to the template compilation/rendering.
+- `params` Any [include parameters](#include-params) passed into the template. The `params` name may vary depending upon [options.includesParametersName](module-templeo_options.html#.Options).
+
+## ↩ Directives <sub id="directives"></sub>
+
+Directives are functions that assist in the templatating process to ease the amount of effort exerted during template creation. Each function performs a specific task during [interpolation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Template_literals#Expression_interpolation).
+
+The built-in directives include:
+- [`include`](#include)
+- [`repeat`](#repeat)
+- [`comment`](#comment)
+
 ### ⛓️ include <sub id="include"></sub>
 
 The `include` _directive_ provides a standard [ECMAScript Tagged Template](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Template_literals#Tagged_templates) _async_ function that accepts a template literal and loads/outputs one or more resolved partial templates that have a matching partial `name` used during [registration](module-templeo.Engine.html#registerPartial).
@@ -145,9 +161,9 @@ const rslt = await renderer(contextJSON);
 
 #### Parameter Passing <sub id="include-params"></sub>
 
-Not only can _includes_ load/`read` template and context at compile-time or render-time, but they can also contain __parameters__ obtained during [interpolation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Template_literals#Expression_interpolation):
-- When an expression being passed into the `include` interpolates into a [URLSearchParams](https://developer.mozilla.org/en-US/docs/Web/API/URLSearchParams) instance, the parameters are passed into the [`read` operation](Cachier.html#read) in order to fetch a fresh copy of the partial template contents.
-- When an expression interpolates into an ordinary JSON object, the object will be in accessible __only__ within the partial which is being included using the [`options.includesParametersName`](module-templeo_options.html#.Options) as an alias. JSON parameters are never passed when reading/fetching partial content.
+Not only can _includes_ load/`read` template and context at compile-time or render-time, but they can also contain __parameters__ obtained during [interpolation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Template_literals#Expression_interpolation). There are two types of parameters that can be passed into an `include`:
+- [`URLSearchParams`](https://developer.mozilla.org/en-US/docs/Web/API/URLSearchParams) - When an expression being passed into the `include` interpolates into a `URLSearchParams` instance, the parameters are passed into the [`read` operation](Cachier.html#read) in order to fetch a new copy of the raw partial template contents.
+- `JSON` - When an expression interpolates into an ordinary JSON object, the object will be in accessible __only__ within the partial for which it is being included into. Access is made available via the [`options.includesParametersName`](module-templeo_options.html#.Options) alias (defaults to "`params`"). JSON parameters are never passed when reading/fetching partial content.
 
 This makes for some interesting capabilities. `URLSearchParams` can be used to dynamically generate template sources based on parameters being passed, while JSON parameters can dynamically generate template sources within the partial template itself. Consider the following examples.
 
@@ -174,43 +190,28 @@ const rslt = await renderer({
 ${ await include`first/item` }
 // 2nd include:
 // initiates a read with new parameters: { param1: 456 }
-${ await include`first/item${ new URLSearchParams(it.my1stParams) }` }
+${ await include`first/item ${ new URLSearchParams(it.my1stParams) }` }
 // 3rd include:
 // uses the last cached "first/item" content from the 2nd include
 ${ await include`first/item` }
 // 4th include:
 // uses the last cached "first/item" content from the 2nd include
 // and "params" is accessible only within this include as: params.test === 'TEST'
-${ await include`first/item${ { env: 'TEST' } }` }
+${ await include`first/item ${ { env: 'TEST' } }` }
 
 // 1st include:
 // initiates a read with compile-time parameters: { param1: 123 }
 ${ await include`second/item` }
 // 2nd include:
 // initiates a read with new parameters: { param2: 789 }
-${ await include`second/item${ new URLSearchParams({ param2: 789 }) }` }
+${ await include`second/item ${ new URLSearchParams({ param2: 789 }) }` }
 // 3rd include:
 // uses last cached "second/item" content from 2nd include
 ${ await include`second/item` }
-```
 
-From the snippets above we can conclude that there are really only two types of parameters that can be passed:
-- __Compile-time Parameter Passing:__ Set before compilation using [Engine.registerPartials](module-templeo.Engine.html#registerPartials) or [Engine.registerPartial](module-templeo.Engine.html#registerPartial) and will be passed when an `include` is encountered that does not pass it's own parameters. Acts as a default parameter
-set to use for one or more compilation/rendering executions.
-- __Render-time Parameter Passing:__ Set on each individual `include`. When present, will always initiate a new `read` usng the parameters provided.
-
-The template literal snippet would cause an attempt to first check if `first/item` is cached
-
-A single `include` can also contain more than one partial name separated by literal strings/expressions and will be resolved in the order they are defined.
-
-```js
-engine.registerPartial('name/two', 'Two, ');
-engine.registerPartial('name/four', 'Four');
-const tmpl = 'One, ${ await include`name/two${ it.three }name/four` }';
-const renderer = await engine.compile(tmpl);
-const rslt = await renderer({ three: 'Three, ' });
-console.log(rslt);
-// One, Two, Three, Four
+// includes can even be combined
+// Each pair of partial name and parameter expression are handled independently from one another.
+${ await include`first/item ${ new URLSearchParams(it.my1stParams) } second/item ${ { env: 'TEST' } }` }
 ```
 
 So far, the inclusion examples we've used have been on HTML, but any format that can be represented as a string value can be processed by Template Literals. Lets take a look at an example using the `include` directive with `json`.

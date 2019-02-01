@@ -102,7 +102,7 @@ async function startServer(engine, opts, context, renderOpts) {
   if (LOGGER.debug) LOGGER.debug(`Starting Hapi.js server...`);
 
   const sopts = LOGGER.debug ? { debug: { request: ['error'] } } : {};
-  server = Hapi.Server(sopts);
+  server = Hapi.server(sopts);
   await server.register(Vision);
   server.views({
     engines: { html: engine },

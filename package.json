@@ -38,11 +38,11 @@
     "js-beautify": "^1.8.9",
     "jsdoc": "^3.5.5",
     "jsdocp": "^1.0.1",
-    "jsdom": "^13.1.0",
+    "jsdom": "^13.2.0",
     "lab": "^18.0.1",
     "level": "^4.0.0",
     "minami": "^1.2.3",
-    "node-forge": "^0.7.6",
+    "node-forge": "^0.8.0",
     "vision": "^5.4.4"
   },
   "files": [
