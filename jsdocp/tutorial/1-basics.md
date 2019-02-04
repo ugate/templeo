@@ -327,9 +327,10 @@ There isn't any built-in directives for control flow since the syntax is already
 
 Helper directives are serializable named functions that can be accessed within template interpolations. Each function must contain a valid __name__ and should _not_ contain any external scope/closure references other than:
 - _global variables_
-- [the metadata](#meta-context)
+- [metadata](#meta-context)
+- [context](#meta-context)
 - [built-in directives](#directives)
-- `require` when available
+- `require` (when available)
 
 They can be registered as _synchronous_ or _`async`hronous_ functions at compile-time using [`Engine.registerHelper`](module-templeo.Engine.html#registerHelper). Below is an example of how a helper directive can be used to produce conditional template sources.
 

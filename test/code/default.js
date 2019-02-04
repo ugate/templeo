@@ -43,21 +43,25 @@ class Tester {
     });
 
     const renderer = await engine.compile(template);
-    const rslt = await renderer({ person: { name: 'World' } });
-    
-    if (LOGGER.info) LOGGER.info(template, '\nRESULTS:', rslt);
-    const dom = new JSDOM(rslt), label = 'Person H1 element';
-    const h1s = dom.window.document.getElementsByTagName('h1');
-    expect(h1s, label).to.not.be.null();
-    expect(h1s.length, label).to.be.equal(1);
-    expect(h1s[0].innerHTML.trim(), label).to.be.equal('Hello World!');
 
-    const rslt2 = await renderer({});
-    if (LOGGER.info) LOGGER.info(template, '\nRESULTS:', rslt2);
-    const dom2 = new JSDOM(rslt2), label2 = 'Person input element';
-    const el = dom2.window.document.getElementById('personName');
-    expect(el, label2).to.not.be.null();
-    expect(el.placeholder, label2).to.be.equal('Please enter your name');
+    const contexts = [{ person: { name: 'World' } }, {}];
+    let rslt, dom, els, label;
+    for (let ctx of contexts) {
+      rslt = await renderer(ctx);
+      if (LOGGER.info) LOGGER.info(template, '\nRESULTS:', rslt);
+      dom = new JSDOM(rslt);
+      label = `Person ${ ctx.person ? 'H1' : 'input' } element`;
+      if (ctx.person) {
+        els = dom.window.document.getElementsByTagName('h1');
+        expect(els, label).to.not.be.null();
+        expect(els.length, label).to.be.equal(1);
+        expect(els[0].innerHTML.trim(), label).to.be.equal('Hello World!');
+      } else {
+        els = dom.window.document.getElementById('personName');
+        expect(els, label).to.not.be.null();
+        expect(els.placeholder, label).to.be.equal('Please enter your name');
+      }
+    }
   }
 
   static async htmlPartialsFetchHttpsServerCompiletimeRead() {
