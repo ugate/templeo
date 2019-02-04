@@ -29,6 +29,37 @@ class Tester {
     return Main.baseTest(opts.compile, engine, partials, true, opts.render);
   }
 
+  static async htmlregisterHelper() {
+    const opts = baseOptions();
+    const engine = new Engine(opts.compile, JsFrmt, LOGGER);
+
+    const template = '<html><body>${ hasPerson(it) }</body></html>';
+    engine.registerHelper(function hasPerson(it) {
+      if (it.person && it.person.name) {
+        return `<h1> Hello ${ it.person.name }! </h3>`;
+      } else {
+        return `<input id="personName" placeholder="Please enter your name">`;
+      }
+    });
+
+    const renderer = await engine.compile(template);
+    const rslt = await renderer({ person: { name: 'World' } });
+    
+    if (LOGGER.info) LOGGER.info(template, '\nRESULTS:', rslt);
+    const dom = new JSDOM(rslt), label = 'Person H1 element';
+    const h1s = dom.window.document.getElementsByTagName('h1');
+    expect(h1s, label).to.not.be.null();
+    expect(h1s.length, label).to.be.equal(1);
+    expect(h1s[0].innerHTML.trim(), label).to.be.equal('Hello World!');
+
+    const rslt2 = await renderer({});
+    if (LOGGER.info) LOGGER.info(template, '\nRESULTS:', rslt2);
+    const dom2 = new JSDOM(rslt2), label2 = 'Person input element';
+    const el = dom2.window.document.getElementById('personName');
+    expect(el, label2).to.not.be.null();
+    expect(el.placeholder, label2).to.be.equal('Please enter your name');
+  }
+
   static async htmlPartialsFetchHttpsServerCompiletimeRead() {
     const opts = baseOptions();
     const svr = await Main.httpsServer(opts.compile);

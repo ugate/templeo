@@ -1,9 +1,18 @@
 ### 🚂 The Template Engine
 At the heart of template compilation and rendering is the [Template Engine](module-templeo-Engine.html). It handles compiling features, options and any number of nested "_partial_" templates into a __stand-alone__ rendering function that __can be ran in either the same VM in which it was compiled or an entirely new VM!__ Rendering functions are fully independent from _any_ internal or external dependencies and can be serialized/deserialized on-demand. They are responsible for outputting parsed [template literal expressions](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Template_literals) using a specified JSON context as a primary datasource. The `Engine` handles _partial_ template fragments that may be included/nested within other template(s) that are being rendered. Any distribution of included partial templates can be resolved/loaded/read during __compile-time__ or __render-time__. This flexibility allows for some partial template inclusions to be loaded during compilation while others can be loaded when the template(s) are actually encountered during rendering.
 
-> The following tutorials assume a basic knowledge of [Template Literals](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Template_literals) and [Tagged Template Literal Functions](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Template_literals#Tagged_templates).
+> TOC
+- [Metadata &amp; Context](#meta-context)
+- [Directives](#directives)
+  - [`include`](#include)
+  - [`repeat`](#repeat)
+  - [`comment`](#comment)
+- [Conditional Statements](#conditionals)
+- [Helper Directives](#helpers)
 
-The following illustrates basic usage that is typical with most template engine implementations.
+The following tutorials assume a basic knowledge of [Template Literals](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Template_literals) and [Tagged Template Literal Functions](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Template_literals#Tagged_templates).
+
+The example below illustrates basic usage that is typical with most template engine implementations.
 
 ```js
 // Raw Template Literal:
@@ -34,7 +43,7 @@ const rslt = renderer({ name: 'World' });
 
 There are many other advantages to using an `Engine` over raw template literals that we'll discuss in more details in subsequent tutorial sections.
 
-#### Metadata and Context
+#### 📃 Metadata and Context <sub id="meta-context"></sub>
 
 Each template has a finite set of variable data that is accessible from within the template itself. As seen in the previous example, there is the `context` variable that is passed into the `renderer`. Other than the supplied [directive functions](#directives), there are a few variables that are defined within scope of each template:
 - `context` The variable passed into the rendering function that is accessible to both the template being rendered and any child/partial templates that may be included within it. Also available via the [`options.varName`](module-templeo_options.html#.Options) alias (defaults to `it`).
@@ -45,10 +54,10 @@ Each template has a finite set of variable data that is accessible from within t
 
 Directives are functions that assist in the templatating process to ease the amount of effort exerted during template creation. Each function performs a specific task during [interpolation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Template_literals#Expression_interpolation).
 
-The built-in directives include:
-- [`include`](#include)
-- [`repeat`](#repeat)
-- [`comment`](#comment)
+The built-in directives include (also see the [conditionals section](#conditionals)):
+- [⛓️ `include`](#include)
+- [🔁 `repeat`](#repeat)
+- [💭 `comment`](#comment)
 
 ### ⛓️ include <sub id="include"></sub>
 
@@ -163,7 +172,7 @@ const rslt = await renderer(contextJSON);
 
 Not only can _includes_ load/`read` template and context at compile-time or render-time, but they can also contain __parameters__ obtained during [interpolation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Template_literals#Expression_interpolation). There are two types of parameters that can be passed into an `include`:
 - [`URLSearchParams`](https://developer.mozilla.org/en-US/docs/Web/API/URLSearchParams) - When an expression being passed into the `include` interpolates into a `URLSearchParams` instance, the parameters are passed into the [`read` operation](Cachier.html#read) in order to fetch a new copy of the raw partial template contents.
-- `JSON` - When an expression interpolates into an ordinary JSON object, the object will be in accessible __only__ within the partial for which it is being included into. Access is made available via the [`options.includesParametersName`](module-templeo_options.html#.Options) alias (defaults to "`params`"). JSON parameters are never passed when reading/fetching partial content.
+- `JSON` - When an expression interpolates into an ordinary JSON object, the object will be in accessible __only__ within the partial for which it is being included into. Access is made available via the [`options.includesParametersName`](module-templeo_options.html#.Options) alias (defaults to "`params`"). JSON parameters are never passed when fetching/reading partial content.
 
 This makes for some interesting capabilities. `URLSearchParams` can be used to dynamically generate template sources based on parameters being passed, while JSON parameters can dynamically generate template sources within the partial template itself. Consider the following examples.
 
@@ -196,7 +205,7 @@ ${ await include`first/item ${ new URLSearchParams(it.my1stParams) }` }
 ${ await include`first/item` }
 // 4th include:
 // uses the last cached "first/item" content from the 2nd include
-// and "params" is accessible only within this include as: params.test === 'TEST'
+// and "params" is accessible only within this include as: ${ params.test === 'TEST' }
 ${ await include`first/item ${ { env: 'TEST' } }` }
 
 // 1st include:
@@ -217,33 +226,129 @@ ${ await include`first/item ${ new URLSearchParams(it.my1stParams) } second/item
 So far, the inclusion examples we've used have been on HTML, but any format that can be represented as a string value can be processed by Template Literals. Lets take a look at an example using the `include` directive with `json`.
 
 ```jsdocp test/views/template.jsont
-// template.json
+// https://localhost:8080/template.json
 ```
 ```jsdocp test/views/partials/json/one.jsont
-// one.json
+// https://localhost:8080/one.json
 ```
 ```jsdocp test/views/partials/json/two.jsont
-// two.json
+// https://localhost:8080/two.json
 ```
 ```jsdocp test/views/partials/json/three.jsont
-// three.json
+// https://localhost:8080/three.json
 ```
 ```jsdocp test/context/json/context.json
-// context.json
+// https://localhost:9000/context.json
 ```
 
 ```js
-engine.registerPartial('one', );
-engine.registerPartial('name/four', 'Four');
-const tmpl = 'One, ${ await include`name/two${ it.three }name/four` }';
-const renderer = await engine.compile(tmpl);
-const rslt = await renderer({ three: 'Three, ' });
+// read the template at compile-time, the template context at render-time
+// and the partial templates as includes are encountered during render-time
+const { Engine } = require('templeo');
+const engine = new Engine({
+  templatePathBase: 'https://localhost:8080',
+  contextPathBase: 'https://localhost:9000'
+});
+const renderer = await engine.compile();
+const rslt = await renderer();
 console.log(rslt);
-{
-  "one": {
-    "two": {
-      "three": 3
-    }
+// { "one": { "two": { "three": 3 } } }
+```
+
+### 🔁 repeat <sub id="repeat"></sub>
+
+The `repeat` directive iterates over a series of values or properties. The `repeat` directive takes two arguments:
+- `iterable` - The iterable array, array-like objects, etc. that will be repeated in the form of a [`for of`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/for...of) loop or an iterable non-symbol enumerable whose properties will be traversed in the form of a [`for in`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/for...in) loop
+- `function` - The function that will return a result for each iteration.
+  - When using `for of` the follwing arguments will be passed:
+    - `item` The item being iterated
+    - `index` The index of the current iteration
+  - When using `for in` the following will be passed:
+    - `key` The property/key being traversed
+    - `value` The value accessed using the current key
+    - `index` The index of the current traversal
+
+The subsequent example illustrates the use of a `for of` loop:
+
+```html
+<!-- for of -->
+<select id="mySelectionList">
+  ${ repeat(it.mySelectionList, (value, index) => `
+    <option id="mySelectionList${ index }" value="${ value }">${ value }</option>
+  `)}
+</select>
+```
+Lets assume we have a context that contains an object called "_states_" where each _property name_ is an abbreviation for a state in the USA and the full state name is it's _value_ (i.e. `{ states: { AL: "Alabama", ... } }`).
+
+```html
+<!-- for in -->
+<select id="state">
+  ${ repeat(it.states, (abbr, state, index) => `
+    <option id="stateSelect${ abbr }" value="${ abbr }" data-index="${ index }">${ state }</option>
+  `)}
+</select>
+```
+
+### 💭 comment <sub id="comment"></sub>
+
+The `comment` directive is a standard [ECMAScript Tagged Template](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Template_literals#Tagged_templates) that simply _consumes_ an interpolated value from the output.
+
+```html
+<!-- input -->
+<div>
+  ${ comment` This is a comment ` }
+  Other content here...
+</div>
+
+<!-- output -->
+<div>
+
+  Other content here...
+</div>
+```
+
+### ⁉️ Conditional Statements <sub id="conditionals"></sub>
+
+There isn't any built-in directives for control flow since the syntax is already made available using [ternary operators](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Conditional_Operator) or a [helper function](#helpers).
+
+```html
+<!-- ternary operator example -->
+<div>
+  ${ it.person.name ? `
+    <h1> Hello ${ it.person.name }! </h3>
+  ` : `
+    <input id="personName" placeholder="Please enter your name">
+  `
   }
-}
+</div>
+```
+
+### ❔ Helper Directives <sub id="helpers"></sub>
+
+Helper directives are serializable named functions that can be accessed within template interpolations. Each function must contain a valid __name__ and should _not_ contain any external scope/closure references other than:
+- _global variables_
+- [the metadata](#meta-context)
+- [built-in directives](#directives)
+- `require` when available
+
+They can be registered as _synchronous_ or _`async`hronous_ functions at compile-time using [`Engine.registerHelper`](module-templeo.Engine.html#registerHelper). Below is an example of how a helper directive can be used to produce conditional template sources.
+
+```js
+const { Engine } = require('templeo');
+const engine = new Engine();
+
+const template = '<html><body>${ hasPerson(it) }</body></html>';
+const renderer = await engine.compile(template);
+// helper directive functions must have a name
+engine.registerHelper(function hasPerson(it) {
+  if (it.person && it.person.name) {
+    return `<h1> Hello ${ it.person.name }! </h1>`;
+  } else {
+    return `<input id="personName" placeholder="Please enter your name">`;
+  }
+});
+
+const rslt = await renderer({ person: { name: 'World' } });
+console.log(rslt);
+// <html><body><h1> Hello World! </h1></body></html>
 ```

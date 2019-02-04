@@ -17,6 +17,7 @@ lab.experiment(plan, () => {
 
   lab.test(`${plan}: JSON - registerPartials`, { timeout: TEST_TKO }, Tester.jsonRegisterPartials);
   lab.test(`${plan}: HTML - registerPartials`, { timeout: TEST_TKO }, Tester.htmlRegisterPartials);
+  lab.test(`${plan}: HTML - registerHelper`, { timeout: TEST_TKO }, Tester.htmlregisterHelper);
   lab.test(`${plan}: HTML - Partials Fetch From HTTPS Server (compile-time)`, { timeout: TEST_TKO }, Tester.htmlPartialsFetchHttpsServerCompiletimeRead);
   lab.test(`${plan}: HTML - Partials Fetch From HTTPS Server (compile-time ERROR missing "options.templatePathBase")`, { timeout: TEST_TKO }, flags => {
     return new Promise(resolve => {

@@ -3,7 +3,6 @@
 const TemplateOpts = require('./lib/template-options');
 const Cachier = require('./lib/cachier');
 const Sandbox = require('./lib/sandbox');
-const Director = require('./lib/director');
 // TODO : ESM remove the following lines...
 exports.TemplateOpts = TemplateOpts;
 exports.Cachier = Cachier;
@@ -11,7 +10,6 @@ exports.Cachier = Cachier;
 // TODO : import * as TemplateOpts from './lib/template-options.mjs';
 // TODO : import * as Cachier from './lib/cachier.mjs';
 // TODO : import * as Sandbox from './lib/sandbox.mjs';
-// TODO : import * as Director from './lib/director.mjs';
 // TODO : export * as TemplateOpts from TemplateOpts;
 // TODO : export * as Cachier from Cachier;
 
@@ -160,6 +158,17 @@ exports.Engine = class Engine {
   }
 
   /**
+   * Registers a _directive_ function that can be used within template
+   * [interpolations](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Template_literals#Expression_interpolation)
+   * @param {Function} func A __named__ `function` that has no external scope dependencies/closures other than those exposed
+   * via templates during rendering
+   */
+  registerHelper(func) {
+    const ns = internal(this);
+    return ns.at.cache.registerHelper(func);
+  }
+
+  /**
    * Unregisters a partial template from cache
    * @param {String} name The template name that uniquely identifies the template content
    */
@@ -268,14 +277,14 @@ async function compile(ns, content, options, ropts, tname, cache) {
   const tnm = tname || (parts && parts[2]) || (ropts && ropts.defaultTemplateName)
     || opts.defaultTemplateName || `template_${Sandbox.guid(null, false)}`;
   try {
-    return await cache.compile(tnm, content, parts && parts[3], Director); // await in order to catch errors
+    return await cache.compile(tnm, content, parts && parts[3]); // await in order to catch errors
   } catch (e) {
     if (ns.at.cache.logger.error) ns.at.cache.logger.error(`Could not compile template ${tnm} (ERROR: ${e.message}): ${content}`);
     throw e;
   }
 }
 
-// private mapping
+// private mapping substitute until the following is adopted: https://github.com/tc39/proposal-class-fields#private-fields
 let map = new WeakMap();
 let internal = function(object) {
   if (!map.has(object)) {
