@@ -1,4 +1,4 @@
-### 🚂 The Template Engine
+### 🏎️ The Template Engine
 At the heart of template compilation and rendering is the [Template Engine](module-templeo-Engine.html). It handles compiling features, options and any number of nested "_partial_" templates into a __stand-alone__ rendering function that __can be ran in either the same VM in which it was compiled or an entirely new VM!__ Rendering functions are fully independent from _any_ internal or external dependencies and can be serialized/deserialized on-demand. They are responsible for outputting parsed [template literal expressions](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Template_literals) using a specified JSON context as a primary datasource. The `Engine` handles _partial_ template fragments that may be included/nested within other template(s) that are being rendered. Any distribution of included partial templates can be resolved/loaded/read during __compile-time__ or __render-time__. This flexibility allows for some partial template inclusions to be loaded during compilation while others can be loaded when the template(s) are actually encountered during rendering.
 
 > TOC
@@ -50,16 +50,16 @@ Each template has a finite set of variable data that is accessible from within t
 - `metadata` Contains metadata about the template such as the _name_ assigned to the template, _parent_ metadata when the template is nested and other data pertaining to the template compilation/rendering.
 - `params` Any [include parameters](#include-params) passed into the template. The `params` name may vary depending upon [options.includesParametersName](module-templeo_options.html#.Options).
 
-## ↩ Directives <sub id="directives"></sub>
+## ⚡ Directives <sub id="directives"></sub>
 
-Directives are functions that assist in the templatating process to ease the amount of effort exerted during template creation. Each function performs a specific task during [interpolation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Template_literals#Expression_interpolation).
-
-The built-in directives include (also see the [conditionals section](#conditionals)):
-- [⛓️ `include`](#include)
+The built-in directives (also see the [conditionals section](#conditionals)):
+- [🔗 `include`](#include)
 - [🔁 `repeat`](#repeat)
 - [💭 `comment`](#comment)
 
-### ⛓️ include <sub id="include"></sub>
+Directives are functions that assist in the templatating process to ease the amount of effort exerted during template creation. Each function performs a specific task during [interpolation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Template_literals#Expression_interpolation).
+
+### 🔗 include <sub id="include"></sub>
 
 The `include` _directive_ provides a standard [ECMAScript Tagged Template](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Template_literals#Tagged_templates) _async_ function that accepts a template literal and loads/outputs one or more resolved partial templates that have a matching partial `name` used during [registration](module-templeo.Engine.html#registerPartial).
 
@@ -309,7 +309,7 @@ The `comment` directive is a standard [ECMAScript Tagged Template](https://devel
 
 ### ⁉️ Conditional Statements <sub id="conditionals"></sub>
 
-There isn't any built-in directives for control flow since the syntax is already made available using [ternary operators](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Conditional_Operator) or a [helper function](#helpers).
+There isn't any built-in directives for control flow since the syntax is already made available using [ternary operators](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Conditional_Operator) or a [helper directive](#helpers).
 
 ```html
 <!-- ternary operator example -->
@@ -332,7 +332,7 @@ Helper directives are serializable named functions that can be accessed within t
 - [built-in directives](#directives)
 - `require` (when available)
 
-They can be registered as _synchronous_ or _`async`hronous_ functions at compile-time using [`Engine.registerHelper`](module-templeo.Engine.html#registerHelper). Below is an example of how a helper directive can be used to produce conditional template sources.
+They can be registered as _synchronous_ or _`async`hronous_ functions at compile-time using [`Engine.registerHelper`](module-templeo.Engine.html#registerHelper) and should return a value that will be interpolated. Below is an example of how a helper directive can be used to produce conditional template sources.
 
 ```js
 const { Engine } = require('templeo');
