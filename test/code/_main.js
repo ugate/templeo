@@ -104,11 +104,12 @@ class Main {
    * @returns {Object} An object containing:
    * - `url:String` - The created server's URL
    * - `close:Function` - A parameterless async function that will stop/close the server
+   * - `callCount:Function` - A __function(url):Integer__ that takes a URL string and returns the number of times it has been called
    */
   static httpsServer(opts, paramsInputIdPrefix = 'fromServer_', hostname = undefined, port = undefined) {
     return new Promise((resolve, reject) => {
       const sec = selfSignedCert();
-      var url;
+      var url, calls = {};
       const server = Https.createServer({ key: sec.key, cert: sec.cert }, async (req, res) => {
         const topts = opts instanceof TemplateOptsFiles ? opts : new TemplateOptsFiles(opts);
         const isMainTmpl = req.url.endsWith(`${topts.defaultTemplateName}${topts.defaultExtension ? `.${topts.defaultExtension}` : ''}`);
@@ -116,8 +117,10 @@ class Main {
         const baseFilePath = `${PATH_BASE}/${isMainTmpl ? PATH_VIEWS_DIR : isContext ? PATH_HTML_CONTEXT_DIR : PATH_HTML_PARTIALS_DIR}`;
         const mthd = req.method.toUpperCase();
         try {
-          if (logger.info) logger.info(`HTTPS server received: ${url}${req.url}`);
           const urlo = new URL(`${url}${req.url}`), prms = urlo.searchParams, type = prms.get('type');
+          const name = `${urlo.pathname.replace(/^\/+/, '').split('.').shift()}${urlo.search}`;
+          calls[name] = (calls[name] || 0) + 1;
+          if (logger.info) logger.info(`HTTPS server received: ${url}${req.url} (name: ${name}, count: ${calls[name]})`);
           const filePath = urlo.href.replace(urlo.origin, '').replace(urlo.search, '').replace(urlo.hash, '');
           const file = Path.join(baseFilePath, filePath);
           var contents = await Fsp.readFile(file);
@@ -141,11 +144,18 @@ class Main {
         const addy = server.address();
         url = `https://${addy.address === '::' || server.address === '0.0.0.0' ? '127.0.0.1' : addy.includes}:${addy.port}/`;
         if (logger.info) logger.info(`Server running at ${url}`);
-        resolve({ url, close: () => {
-          return new Promise((resolve, reject) => {
-            server.close(err => err ? reject(err) : resolve());
-          });
-        }});
+        resolve({
+          url,
+          close: () => {
+            return new Promise((resolve, reject) => {
+              server.close(err => err ? reject(err) : resolve());
+            });
+          },
+          callCount: (name, params) => {
+            const sprms = params instanceof URLSearchParams ? params : params ? new URLSearchParams(params) : '';
+            return calls[`${name}?${sprms.toString()}`];
+          }
+        });
       });
     });
   }

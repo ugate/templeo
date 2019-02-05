@@ -171,7 +171,7 @@ const rslt = await renderer(contextJSON);
 #### Parameter Passing <sub id="include-params"></sub>
 
 Not only can _includes_ load/`read` template and context at compile-time or render-time, but they can also contain __parameters__ obtained during [interpolation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Template_literals#Expression_interpolation). There are two types of parameters that can be passed into an `include`:
-- [`URLSearchParams`](https://developer.mozilla.org/en-US/docs/Web/API/URLSearchParams) - When an expression being passed into the `include` interpolates into a `URLSearchParams` instance, the parameters are passed into the [`read` operation](Cachier.html#read) in order to fetch a new copy of the raw partial template contents.
+- [`URLSearchParams`](https://developer.mozilla.org/en-US/docs/Web/API/URLSearchParams) - When an expression being passed into the `include` interpolates into a `URLSearchParams` instance, either the partial template content from a prior include with the same parameters/values is used __or__ the parameters are passed into the [`read` operation](Cachier.html#read) in order to fetch a new copy of the raw partial template contents.
 - `JSON` - When an expression interpolates into an ordinary JSON object, the object will be in accessible __only__ within the partial for which it is being included into. Access is made available via the [`options.includesParametersName`](module-templeo_options.html#.Options) alias (defaults to "`params`"). JSON parameters are never passed when fetching/reading partial content.
 
 This makes for some interesting capabilities. `URLSearchParams` can be used to dynamically generate template sources based on parameters being passed, while JSON parameters can dynamically generate template sources within the partial template itself. Consider the following examples.
@@ -186,13 +186,13 @@ engine.registerPartails([
     })
   }
 ], true);
-const renderer = await engine.compile();
+const renderer = await engine.compile(myTemplate);
 const rslt = await renderer({
   my1stParams: {
     param1: 456
   }
 });
-// Assume the following snippets exist in the template being used...
+// Assume the following snippets exist in "myTemplate"...
 
 // 1st include:
 // initiates a read w/o parameters since "first/item" is not registered or has no content
@@ -201,10 +201,10 @@ ${ await include`first/item` }
 // initiates a read with new parameters: { param1: 456 }
 ${ await include`first/item ${ new URLSearchParams(it.my1stParams) }` }
 // 3rd include:
-// uses the last cached "first/item" content from the 2nd include
+// uses the last cached "first/item" content from the 1st include w/o params
 ${ await include`first/item` }
 // 4th include:
-// uses the last cached "first/item" content from the 2nd include
+// uses the last cached "first/item" content from the 1st include w/o params
 // and "params" is accessible only within this include as: ${ params.test === 'TEST' }
 ${ await include`first/item ${ { env: 'TEST' } }` }
 
@@ -215,11 +215,12 @@ ${ await include`second/item` }
 // initiates a read with new parameters: { param2: 789 }
 ${ await include`second/item ${ new URLSearchParams({ param2: 789 }) }` }
 // 3rd include:
-// uses last cached "second/item" content from 2nd include
-${ await include`second/item` }
+// uses last cached "second/item" content from 2nd include with same params/values
+${ await include`second/item ${ new URLSearchParams({ param2: 789 }) }` }
 
 // includes can even be combined
-// Each pair of partial name and parameter expression are handled independently from one another.
+// Each pair of partial name and parameter expression are handled independently from one another
+// e.g. first/item with param1=456 and second/item with env=TEST are independent from one another
 ${ await include`first/item ${ new URLSearchParams(it.my1stParams) } second/item ${ { env: 'TEST' } }` }
 ```
 
