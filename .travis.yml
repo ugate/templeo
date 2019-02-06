@@ -1,0 +1,27 @@
+# When a tagged commit is pushed the documentation pages and npm module are published/deployed:
+# npm version patch -m "%s Release"
+language: node_js
+node_js:
+  - "10"
+branches:
+  only:
+    - master
+    - "/v*/"
+script:
+# - printenv
+  - "npm test"
+deploy:
+  - provider: script
+    skip_cleanup: true
+    script: npm run jsdocp-deploy
+    on:
+      tags: true # only on tagging commit
+      branch:
+        - /v(\d+\.)?(\d+\.)?(\*|\d+)$/
+  - provider: npm
+    email: "ugate.public@gmail.com"
+    api_key: $NPM_TOKEN  # Set in the settings page of your repository, as a secure variable
+    on:
+      tags: true # only on tagging commit
+      branch:
+        - /v(\d+\.)?(\d+\.)?(\*|\d+)$/
