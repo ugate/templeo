@@ -144,73 +144,75 @@ class Tester {
   }
 
   static htmlIncludeSearchParamsHttpsServerRead() {
-    return paramsTest({
+    return Main.paramsTest({
       label: 'Params = Single Search Param',
       template: `<html><body>\${ await include\`text \${ new URLSearchParams(${ JSON.stringify(params) }) }\` }</body></html>`,
       cases: {
         params,
-        search: { name: 'text', paramCount: 1, callCount: 1 },
-        usesIncludeParams: false
+        search: { name: 'text', paramCount: 1, callCount: 1 }
       }
-    });
+    }, null, baseOptions());
   }
 
   static htmlIncludeMultiSameSearchParamsHttpsServerRead() {
-    return paramsTest({
+    return Main.paramsTest({
       label: 'Params = Multiple Same Search Params',
       template: `<html><body>\${ await include\`text \${ new URLSearchParams(${ JSON.stringify(params) }) } text \${ new URLSearchParams(${ JSON.stringify(params) }) }\` }</body></html>`,
       cases: [{
         params,
-        search: { name: 'text', paramCount: 2, callCount: 1 },
-        usesIncludeParams: false
+        search: { name: 'text', paramCount: 2, callCount: 1 }
       },
       {
         params,
         // call count should remain the same for 2nd include since it should be cached
-        search: { name: 'text', paramCount: 2, callCount: 1 },
-        usesIncludeParams: false
+        search: { name: 'text', paramCount: 2, callCount: 1 }
       }]
-    });
+    }, null, baseOptions());
   }
 
   static htmlIncludeMultiDiffSearchParamsHttpsServerRead() {
-    return paramsTest({
+    return Main.paramsTest({
       label: 'Params = Multiple Different Search',
       template: `<html><body>\${ await include\`text \${ new URLSearchParams(${ JSON.stringify(params) }) } text \${ new URLSearchParams(${ JSON.stringify(params2) }) }\` }</body></html>`,
       cases: [{
         params,
-        search: { name: 'text', paramCount: 1, callCount: 1 },
-        usesIncludeParams: false
+        search: { name: 'text', paramCount: 1, callCount: 1 }
       },
       {
         params: params2,
-        search: { name: 'text', paramCount: 1, callCount: 1 },
-        usesIncludeParams: false
+        search: { name: 'text', paramCount: 1, callCount: 1 }
       }]
-    });
+    }, null, baseOptions());
   }
 
   static htmlIncludeOneSearchOneJsonParamsHttpsServerRead() {
-    return paramsTest({
+    return Main.paramsTest({
       label: 'Params = Search + JSON',
       template: `<html><body>\${ await include\`text \${ new URLSearchParams(${ JSON.stringify(params) }) } params \${ ${ JSON.stringify(params2) } }\` }</body></html>`,
       cases: [{
         params,
-        search: { name: 'text', paramCount: 1, callCount: 1 },
-        usesIncludeParams: false
+        search: { name: 'text', paramCount: 1, callCount: 1 }
       },
       {
-        params: params2
+        params: params2,
+        pass: { paramCount: 1 }
       }]
-    });
+    }, null, baseOptions());
   }
 
   static htmlIncludeMultiDiffJsonParamsHttpsServerRead() {
-    return paramsTest({
+    return Main.paramsTest({
       label: 'Params = Multiple Different JSON',
       template: `<html><body>\${ await include\`params\${ ${ JSON.stringify(params) } }params\${ ${ JSON.stringify(params2) } }\` }</body></html>`,
-      cases: [{ params }, { params: params2 }]
-    });
+      cases: [{
+        params,
+        pass: { paramCount: 1 }
+      },
+      {
+        params: params2,
+        pass: { paramCount: 1 }
+      }]
+    }, null, baseOptions());
   }
 }
 
@@ -220,74 +222,6 @@ module.exports = Tester;
 // when not ran in a test runner execute static Tester functions (excluding what's passed into Main.run) 
 if (!Main.usingTestRunner()) {
   (async () => await Main.run(Tester))();
-}
-
-/**
- * Generates test cases to run for `include` parameter detection for both `read`/fetch requests using `URLSearchParams`
- * and scoped resolved parameters that are accessible within the templates themselves
- * @param {Object} test The test metadata
- * @param {String} test.template The template to test
- * @param {Object[]} test.cases One or more test cases that describe the validation that should take place
- * @param {Object} test.cases[].params The parameters that will be checked within the rendered template result. Each
- * property/value in the object represents a key/value pair of parameters to test against
- * @param {Object} [test.cases[].search] The search parmeters to test for. Omit when not using `URLSearchParams`.
- * @param {String} [test.cases[].search.name] The name of the search `include` being tested
- * @param {Integer} [test.cases[].search.paramCount] The number of times that the search parameters should be included
- * in the result
- * @param {Integer} [test.cases[].search.callCount] The number of times the included search should make a request for
- * the content using the provided search parameters
- * @param {Boolean} [test.cases[].usesIncludeParams] Whether or not basic JSON parameters are used
- */
-async function paramsTest(test) {
-  const idPrefix = 'inclParamFromServer_';
-  const opts = baseOptions();
-  // uncomment to debug rendering functions:
-  //opts.debugger = true;
-  const files = await Main.getTemplateFiles();
-  
-  let els, label = test.label;
-  const svr = await Main.httpsServer(opts.compile, idPrefix);
-  try {
-    opts.render.templatePathBase = svr.url;
-    const engine = new Engine(opts.compile, JsFrmt, LOGGER);
-    const renderer = await engine.compile(test.template);
-    const rslt = await renderer(files.htmlContext, opts.render);
-
-    if (LOGGER.info) LOGGER.info(test.template, '\nRESULTS:', rslt);
-    const dom = new JSDOM(rslt);
-    const cases = Array.isArray(test.cases) ? test.cases : [test.cases];
-
-    for (let cased of cases) {
-      if (cased.search && cased.search.name && cased.search.callCount) {
-        expect(svr.callCount(cased.search.name, cased.params),
-          `${label} ${cased.search.name} call count`).to.equal(cased.search.callCount);
-      }
-      for (let name in cased.params) {
-        if (cased.search) {
-          // dynamic parameters generated by the server
-          label += ` "${idPrefix}${name}" include parameter by name DOM`;
-          els = dom.window.document.getElementsByName(`${idPrefix}${name}`);
-          expect(els, label).to.not.be.null();
-          expect(els.length, `${label} # of elements`).to.equal(cased.search.paramCount);
-          for (let ei = 0; ei < cased.search.paramCount; ei++) {
-            expect(els[ei], label).to.not.be.null();
-            expect(els[ei].value, label).to.equal(cased.params[name]);
-          }
-        }
-        if (!cased.hasOwnProperty('usesIncludeParams') || cased.usesIncludeParams) {
-          label += ` "${name}" include parameter by name DOM`;
-          // dynamic parameters generated within the partial template itself
-          // using the scoped "params"
-          els = dom.window.document.getElementsByName(`${name}`);
-          expect(els, label).to.not.be.null();
-          expect(els.length, `${label} # of elements`).to.equal(1);
-          expect(els[0].value, label).to.equal(cased.params[name]);
-        }
-      }
-    }
-  } finally {
-    await svr.close();
-  }
 }
 
 function baseOptions() {

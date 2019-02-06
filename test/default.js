@@ -47,7 +47,7 @@ lab.experiment(plan, () => {
   lab.test(`${plan}: HTML - Include With Multiple Same URLSearchParams From HTTPS Server (render-time)`, { timeout: TEST_TKO }, Tester.htmlIncludeMultiSameSearchParamsHttpsServerRead);
   lab.test(`${plan}: HTML - Include With Multiple Different URLSearchParams From HTTPS Server (render-time)`, { timeout: TEST_TKO }, Tester.htmlIncludeMultiDiffSearchParamsHttpsServerRead);
   lab.test(`${plan}: HTML - Include With One URLSearchParams, One JSON Params From HTTPS Server (render-time)`, { timeout: TEST_TKO }, Tester.htmlIncludeOneSearchOneJsonParamsHttpsServerRead);
-  lab.test(`${plan}: HTML - Include With Multiple JSON Params From HTTPS Server (render-time)`, { timeout: TEST_TKO }, Tester.htmlIncludeMultiDiffJsonParamsHttpsServerRead);
+  lab.test(`${plan}: HTML - Include With Multiple Different JSON Params From HTTPS Server (render-time)`, { timeout: TEST_TKO }, Tester.htmlIncludeMultiDiffJsonParamsHttpsServerRead);
   lab.test(`${plan}: JSON - Engine.create (ERROR not Cachier)`, { timeout: TEST_TKO }, flags => {
     return new Promise(resolve => {
       flags.onUncaughtException = err => {
