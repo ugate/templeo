@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>index.js - Documentation</title>
+
+    <script src="scripts/prettify/prettify.js"></script>
+    <script src="scripts/prettify/lang-css.js"></script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="https://code.ionicframework.com/ionicons/2.0.1/css/ionicons.min.css">
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+  <!-- https://realfavicongenerator.net/ -->
+  
+    <link
+      
+      rel="apple-touch-icon" 
+      
+      sizes="180x180" 
+      
+      href="apple-touch-icon.png" 
+      
+    >
+  
+    <link
+      
+      rel="icon" 
+      
+      type="image/png" 
+      
+      sizes="32x32" 
+      
+      href="favicon-32x32.png" 
+      
+    >
+  
+    <link
+      
+      rel="icon" 
+      
+      type="image/png" 
+      
+      sizes="16x16" 
+      
+      href="favicon-16x16.png" 
+      
+    >
+  
+    <link
+      
+      rel="manifest" 
+      
+      href="site.webmanifest" 
+      
+    >
+  
+    <link
+      
+      rel="mask-icon" 
+      
+      type="image/png" 
+      
+      sizes="16x16" 
+      
+      href="safari-pinned-tab.svg" 
+      
+      color="#ffab40" 
+      
+    >
+  
+    <link
+      
+      type="text/css" 
+      
+      rel="stylesheet" 
+      
+      href="pkg-styles/pkg-style.css" 
+      
+    >
+  
+
+  
+    <meta
+      
+      name="msapplication-TileColor" 
+      
+      content="#ffab40" 
+      
+    >
+  
+    <meta
+      
+      name="theme-color" 
+      
+      content="#bdbdbd" 
+      
+    >
+  
+    <meta
+      
+      name="viewport" 
+      
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" 
+      
+    >
+  
+
+  <link type="text/css" rel="stylesheet" href="jsdocp/styles/index.css"></head>
+<body><div id="jsdocpNav" class="jsdocp-remove-me pkg-menu"
+  data-jsdocp-sm-position="bottom"
+  data-jsdocp-md-position="bottom"
+  data-jsdocp-lg-position="top"
+  data-jsdocp-sm-match-media="(max-width: 480px)"
+  data-jsdocp-md-match-media="(min-width: 481px) and (max-width: 839px)"
+  data-jsdocp-lg-match-media="(min-width: 840px)"
+  data-jsdocp-sm-auto-hide="true"
+  data-jsdocp-md-auto-hide="true"
+  data-jsdocp-lg-auto-hide="false">
+  <a href="index.html" id="jsdocpLogo"
+    title="templeo"
+    class="jsdocp-logo ">
+    <b class="pkg-logo">
+    
+      <?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg viewBox="0 0 64 64" width="64" height="64" version="1.1" xmlns="http://www.w3.org/2000/svg">
+  <g transform="matrix(1.9935723,0,0,2.0019177,0.08877553,-0.18261032)">
+    <g transform="scale(0.96670978,1.0344366)">
+      <path d="m 18.634766,5.4023438 c -1.733459,-10e-8 -3.228867,0.5041519 -4.361328,1.5253906 -1.122892,1.0122398 -1.705079,2.3995654 -1.705079,3.9902346 0,0.759851 0.195452,1.57394 0.558594,2.453125 a 0.65860366,0.65860366 0 0 0 0.0039,0.0059 c 0.1107,0.261137 0.17007,0.433699 0.242188,0.626953 -0.412293,-0.119387 -0.811529,-0.335937 -1.234375,-0.335937 -0.57709,0 -1.150057,0.112763 -1.708984,0.326172 a 0.65860366,0.65860366 0 0 0 -0.0059,0.002 c -1.1883607,0.467219 -2.0975223,1.32863 -2.6171874,2.490234 l 0.00195,0 c -0.2754091,0.612021 -0.4199219,1.244178 -0.4199219,1.878906 0,0.586308 0.1172738,1.166119 0.34375,1.722657 2.469e-4,6.06e-4 -2.472e-4,0.0013 0,0.002 0.4616675,1.174144 1.1678027,2.049935 2.1289062,2.474609 a 0.65860366,0.65860366 0 0 0 0.00781,0.0039 c 0.8286494,0.352413 1.5586814,0.548829 2.2304684,0.548829 0.586313,0 1.170378,-0.116216 1.740235,-0.339844 1.181788,-0.458451 2.082653,-1.322653 2.601562,-2.488282 0.330502,-0.705376 0.488282,-1.498294 0.488282,-2.353515 0,-0.214294 -0.0234,-0.559044 -0.06836,-1.134766 -0.04332,-0.676666 -0.248075,-1.447023 -0.591797,-2.357422 a 0.65860366,0.65860366 0 0 0 -0.0039,-0.01367 c -0.215809,-0.535206 -0.423732,-1.120249 -0.625,-1.75 -0.190291,-0.60397 -0.279297,-1.133312 -0.279297,-1.585938 0,-1.026584 0.278067,-1.7499346 0.820313,-2.3066406 a 0.65860366,0.65860366 0 0 0 0.002,-0.00195 c 0.542177,-0.5638645 1.235121,-0.8457031 2.236328,-0.8457031 1.04226,0 1.792542,0.302684 2.402344,0.9199219 a 0.65860366,0.65860366 0 0 0 0.0039,0.00195 c 0.606572,0.606572 0.90625,1.3689279 0.90625,2.4335939 0,1.572702 -0.589605,3.408904 -1.837891,5.498047 a 0.65860366,0.65860366 0 0 0 -0.002,0 c -1.320121,2.215588 -2.011719,4.290309 -2.011719,6.228515 0,1.135656 0.404802,2.137499 1.199219,2.810547 a 0.65860366,0.65860366 0 0 0 0.0039,0.0039 c 0.75835,0.631956 1.698343,0.957031 2.716797,0.957031 1.227821,0 2.438439,-0.64332 3.644531,-1.773438 a 0.65860366,0.65860366 0 0 0 0.03711,-0.921875 L 24.611328,23.130859 A 0.65860366,0.65860366 0 0 0 23.6875,23.078125 c -0.83238,0.732494 -1.487863,1.012762 -1.851562,1.015625 -0.490025,-0.0128 -0.768941,-0.128804 -0.923829,-0.271484 -0.154694,-0.142502 -0.25969,-0.35908 -0.27539,-0.78711 0.0033,-1.431752 0.595963,-3.259206 1.855469,-5.439453 1.332579,-2.306741 2.033203,-4.364066 2.033203,-6.207031 -10e-7,-1.7094646 -0.553007,-3.1902892 -1.650391,-4.2988282 -1.096122,-1.1162349 -2.559684,-1.6875 -4.240234,-1.6875 z M 12.125,16.433594 c 0.207579,0 0.558685,0.07879 1.007812,0.279297 a 0.65860366,0.65860366 0 0 0 0.0039,0.002 c 0.325823,0.142905 0.588789,0.418207 0.804687,0.976562 a 0.65860366,0.65860366 0 0 0 0.002,0.0059 c 0.09694,0.242349 0.140625,0.469511 0.140625,0.695312 0,0.206742 -0.07961,0.56478 -0.279296,1.021484 -1.7e-4,3.8e-4 -0.0018,-3.79e-4 -0.002,0 -0.141144,0.315308 -0.416373,0.578316 -0.976562,0.794922 -0.255126,0.09921 -0.487088,0.142578 -0.712891,0.142578 -0.211018,0 -0.561402,-0.07771 -1.003906,-0.265624 -0.303312,-0.138564 -0.572345,-0.422337 -0.798828,-0.996094 -0.09779,-0.252742 -0.142578,-0.486321 -0.142578,-0.710938 0,-0.21264 0.07548,-0.556983 0.265625,-0.99414 9.3e-5,-2.15e-4 0.0019,2.15e-4 0.002,0 0.141518,-0.316151 0.419067,-0.583253 0.982422,-0.808594 0.243294,-0.09732 0.47252,-0.142578 0.707031,-0.142578 z" />
+    </g>
+    <g transform="scale(0.805326,1.2417332)">
+      <path d="m 29.052173,23.815766 0.951868,0 q 1.903736,0 2.474857,-0.584719 0.584719,-0.584719 0.584719,-2.529249 l 0,-3.372332 q 0,-2.121306 0.611915,-3.086772 0.611915,-0.965466 2.121306,-1.332615 -1.509391,-0.339953 -2.121306,-1.305419 -0.611915,-0.965466 -0.611915,-3.1003697 l 0,-3.3723321 q 0,-1.9309321 -0.584719,-2.515651 -0.571121,-0.598317 -2.474857,-0.598317 l -0.951868,0 0,-1.9445302 0.856682,0 q 3.38593,0 4.514573,1.0062604 1.142242,0.9926623 1.142242,3.9978453 l 0,3.2635472 q 0,2.0261191 0.734298,2.8148091 0.734298,0.775093 2.66523,0.775093 l 0.843083,0 0,1.94453 -0.843083,0 q -1.930932,0 -2.66523,0.788691 -0.734298,0.78869 -0.734298,2.842005 l 0,3.249949 q 0,3.005183 -1.142242,4.011444 -1.128643,1.00626 -4.514573,1.00626 l -0.856682,0 0,-1.958128 z" />
+    </g>
+    <g transform="scale(0.80532598,1.2417332)">
+      <path d="m 10.700812,23.861077 0,1.958128 -0.8430829,0 q -3.3859302,0 -4.5417698,-1.00626 -1.1422415,-1.006261 -1.1422415,-4.011444 l 0,-3.249949 q 0,-2.053315 -0.7342981,-2.842005 -0.7342982,-0.788691 -2.66523025,-0.788691 l -0.82948492,0 0,-1.94453 0.82948492,0 q 1.94453025,0 2.66523025,-0.775093 0.7342981,-0.78869 0.7342981,-2.8148091 l 0,-3.2635472 q 0,-3.0051831 1.1422415,-3.9978453 1.1558396,-1.00626042 4.5417698,-1.00626042 l 0.8430829,0 0,1.94453022 -0.9246715,0 q -1.917334,0 -2.5020529,0.598317 -0.5847189,0.598317 -0.5847189,2.5156509 l 0,3.3723321 q 0,2.1349038 -0.6255132,3.1003698 -0.6119151,0.965466 -2.1077075,1.305419 1.5093905,0.367149 2.1213056,1.332615 0.6119151,0.965466 0.6119151,3.086772 l 0,3.372332 q 0,1.917334 0.5847189,2.515651 0.5847189,0.598317 2.5020529,0.598317 l 0.9246715,0 z" />
+    </g>
+  </g>
+</svg>
+
+    
+    </b>
+    <b id="jsdocpPkgName">templeo</b>
+    <b>|</b>
+    <hr/>
+  </a>
+  <a href="https://www.npmjs.com/package/templeo" id="jsdocpModule"
+    title="npm"
+    class="jsdocp-icon ">
+    
+    <svg version="1.1" preserveAspectRatio="xMidYMid meet" viewBox="0 0 24 24" height="24" width="24" xmlns="http://www.w3.org/2000/svg">
+      <g class="jsdocp-icon-svg-el pkg-icons" stroke="none" transform="translate(0,24) scale(0.1,-0.1)">
+        <path d="M 0,120 0,0 l 120,0 120,0 0,120 0,120 -120,0 -120,0 z m 200,0 c 0,-73 0.23256,-80 0.23256,-80 0,0 -27.97435,0.741211 -40.61273,0.707427 C 159.61983,67.551504 160,70.949947 160,100 c 0,53 -2,60 -20,60 -18,0 -20,-7 -20,-60 l 0,-60 -40,0 -40,0 0,80 0,80 80,0 80,0 z"/>
+      </g>
+    </svg>
+    
+  </a>
+  <a href="CHANGELOG.html" id="jsdocpChangelog" data-jsdocp-root-href="https://github.com/ugate/templeo/CHANGELOG.html"
+    title="Changelog"
+    class="jsdocp-icon ">
+    
+    <svg version="1.1" viewBox="0 0 64 64" height="64" width="64" xmlns="http://www.w3.org/2000/svg">
+      <path class="jsdocp-icon-svg-el pkg-icons" stroke="none" fill-rule="nonzero"
+        d="M 29.896194,0.97873581 C 13.435048,0.97873581 1.1072664e-7,15.139296 0,32.489368 0,49.839439 13.435048,64 29.896194,64 46.357339,64 59.792385,49.839438 59.792388,32.489368 a 4.2273908,4.4556761 0 1 0 -8.453721,0 c -10e-7,12.534501 -9.550175,22.600399 -21.442473,22.600399 -11.892299,0 -21.4424739,-10.065899 -21.4424739,-22.600399 0,-12.5345 9.5501749,-22.6003988 21.4424739,-22.6003988 a 4.2273908,4.4556761 0 1 0 0,-8.91023339 z" />
+      <path class="jsdocp-icon-svg-el pkg-icons" stroke="none" fill-rule="nonzero"
+        d="m 55.529412,24.680907 -8.470588,10.142582 16.941176,0 z"/>
+      <rect class="jsdocp-icon-svg-el pkg-icons" stroke="none" fill-rule="nonzero"
+        transform="matrix(0.6882785,0.72544656,-0.6882785,0.72544656,0,0)" y="-38.592953" x="38.592953" height="39.814472" width="11.375563" />
+      <path class="jsdocp-icon-svg-el pkg-icons" stroke="none" fill-rule="nonzero"
+        d="m 23.705056,39.295314 8.338477,-1.11407 -7.281487,-7.674698 z"/>
+    </svg>
+    
+  </a>
+  <a href="https://github.com/ugate/templeo#readme" id="jsdocpSourceCode"
+    title="Source Code"
+    class="jsdocp-icon ">
+    
+    <svg version="1.1" viewBox="0 0 10 16" width="24" height="24" xmlns="http://www.w3.org/2000/svg" id="jsdocpSourceIcon">
+      <path class="jsdocp-icon-svg-el pkg-icons" stroke="none" fill-rule="evenodd"
+        d="M8 1a1.993 1.993 0 0 0-1 3.72V6L5 8 3 6V4.72A1.993 1.993 0 0 0 2 1a1.993 1.993 0 0 0-1 3.72V6.5l3 3v1.78A1.993 1.993 0 0 0 5 15a1.993 1.993 0 0 0 1-3.72V9.5l3-3V4.72A1.993 1.993 0 0 0 8 1zM2 4.2C1.34 4.2.8 3.65.8 3c0-.65.55-1.2 1.2-1.2.65 0 1.2.55 1.2 1.2 0 .65-.55 1.2-1.2 1.2zm3 10c-.66 0-1.2-.55-1.2-1.2 0-.65.55-1.2 1.2-1.2.65 0 1.2.55 1.2 1.2 0 .65-.55 1.2-1.2 1.2zm3-10c-.66 0-1.2-.55-1.2-1.2 0-.65.55-1.2 1.2-1.2.65 0 1.2.55 1.2 1.2 0 .65-.55 1.2-1.2 1.2z"></path>
+    </svg>
+    <!-- GitHub icon -->
+    <svg version="1.1" viewBox="0 0 16 16" height="24" width="24" xmlns="http://www.w3.org/2000/svg" class="jsdocp-remove-me" id="jsdocpGithubIcon">
+      <path class="jsdocp-icon-svg-el pkg-icons" stroke="none"  fill-rule="evenodd"
+        d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0 0 16 8c0-4.42-3.58-8-8-8z"/>
+    </svg>
+    
+  </a>
+  <!-- versions.json should point to the latest list -->
+  <a id="jsdocpVersionsIcon"
+    class="jsdocp-icon ">
+    
+    <svg version="1.1" viewBox="0 0 64 64" height="24" width="24" xmlns="http://www.w3.org/2000/svg">
+      <path class="jsdocp-icon-svg-el pkg-icons" stroke="none" fill-rule="nonzero"
+        d="m 63.999999,25.315556 -24.108295,0 9.74288,-10.026667 C 39.927261,5.6888885 24.210644,5.3333335 14.503322,14.933333 c -9.7073234,9.635555 -9.7073234,25.173334 0,34.808888 9.707322,9.635556 25.423939,9.635556 35.131262,0 4.835883,-4.764443 7.253823,-10.346666 7.253823,-17.386666 l 7.111592,0 c 0,7.039999 -3.1291,16.177777 -9.387301,22.364444 -12.480844,12.373334 -32.748879,12.373334 -45.2297224,0 -12.445286,-12.337778 -12.55196,-32.39111 -0.071116,-44.7288881 12.4808434,-12.3377774 32.4999734,-12.3377774 44.9808174,0 L 64,-5e-7 64,25.315556 Z" />
+      <path class="jsdocp-icon-svg-el pkg-icons" stroke="none" fill-rule="nonzero"
+        d="m 33.775734,17.777777 0,15.111111 12.445286,7.395556 -2.560173,4.302222 -15.218806,-9.031112 0,-17.777777 5.333693,0 z" />
+    </svg>
+    
+  </a>
+  <select id="jsdocpVersions"
+    title="v0.1.0"
+    data-jsdocp-version-base="/templeo"
+    data-jsdocp-json-url="/templeo/versions.json"
+    data-jsdocp-type=""
+    data-jsdocp-from="1.0.0"
+    data-jsdocp-version="0.1.0">
+  </select>
+</div>
+
+<input type="checkbox" id="nav-trigger" class="nav-trigger" />
+<label for="nav-trigger" class="navicon-button x">
+  <div class="navicon"></div>
+</label>
+
+<label for="nav-trigger" class="overlay"></label>
+
+<nav>
+    <li class="nav-link nav-home-link"><a href="index.html">Home</a></li><li class="nav-heading">Tutorials</li><li class="nav-item"><a href="tutorial-1-basics.html">The Basics</a></li><li class="nav-item"><a href="tutorial-2-cache.html">Cache</a></li><li class="nav-item"><a href="tutorial-3-examples.html">Examples</a></li><li class="nav-heading">Classes</li><li class="nav-heading"><span class="nav-item-type type-class">C</span><span class="nav-item-name"><a href="Cachier.html">Cachier</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Cachier.html#clear">clear</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Cachier.html#compile">compile</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Cachier.html#modularize">modularize</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Cachier.html#read">read</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Cachier.html#registerHelper">registerHelper</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Cachier.html#registerPartial">registerPartial</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Cachier.html#registerPartials">registerPartials</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Cachier.html#unregister">unregister</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Cachier.html#write">write</a></span></li><li class="nav-heading"><span class="nav-item-type type-class">C</span><span class="nav-item-name"><a href="CachierDB.html">CachierDB</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="CachierDB.html#clear">clear</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="CachierDB.html#read">read</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="CachierDB.html#registerPartials">registerPartials</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="CachierDB.html#write">write</a></span></li><li class="nav-heading"><span class="nav-item-type type-class">C</span><span class="nav-item-name"><a href="CachierFiles.html">CachierFiles</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="CachierFiles.html#clear">clear</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="CachierFiles.html#modularize">modularize</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="CachierFiles.html#read">read</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="CachierFiles.html#registerPartials">registerPartials</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="CachierFiles.html#write">write</a></span></li><li class="nav-heading"><span class="nav-item-type type-class">C</span><span class="nav-item-name"><a href="module-templeo.Engine.html">Engine</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="module-templeo.Engine.html#.create">create</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="module-templeo.Engine.html#clearCache">clearCache</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="module-templeo.Engine.html#compile">compile</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="module-templeo.Engine.html#registerHelper">registerHelper</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="module-templeo.Engine.html#registerPartial">registerPartial</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="module-templeo.Engine.html#registerPartials">registerPartials</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="module-templeo.Engine.html#renderPartial">renderPartial</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="module-templeo.Engine.html#renderPartialGenerate">renderPartialGenerate</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="module-templeo.Engine.html#unregister">unregister</a></span></li><li class="nav-heading"><span class="nav-item-type type-class">C</span><span class="nav-item-name"><a href="module-templeo_options-TemplateOpts.html">TemplateOpts</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="module-templeo_options-TemplateOpts.html#build">build</a></span></li><li class="nav-heading"><span class="nav-item-type type-class">C</span><span class="nav-item-name"><a href="TemplateFileOpts.html">TemplateFileOpts</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="TemplateFileOpts.html#build">build</a></span></li><li class="nav-heading">Modules</li><li class="nav-heading"><span class="nav-item-type type-module">M</span><span class="nav-item-name"><a href="module-templeo.html">templeo</a></span></li><li class="nav-heading"><span class="nav-item-type type-module">M</span><span class="nav-item-name"><a href="module-templeo_options.html">templeo/options</a></span></li><li class="nav-heading"><a href="global.html">Globals</a></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="global.html#newCache">newCache</a></span></li>
+</nav>
+
+<div id="main">
+    
+    <h1 class="page-title">index.js</h1>
+    
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>'use strict';
+
+const TemplateOpts = require('./lib/template-options');
+const Cachier = require('./lib/cachier');
+const Sandbox = require('./lib/sandbox');
+// TODO : ESM remove the following lines...
+exports.TemplateOpts = TemplateOpts;
+exports.Cachier = Cachier;
+exports.Sandbox = Sandbox;
+// TODO : ESM uncomment the following lines...
+// TODO : import * as TemplateOpts from './lib/template-options.mjs';
+// TODO : import * as Cachier from './lib/cachier.mjs';
+// TODO : import * as Sandbox from './lib/sandbox.mjs';
+// TODO : export * as TemplateOpts from TemplateOpts;
+// TODO : export * as Cachier from Cachier;
+// TODO : export * as Sandbox from Sandbox;
+
+//const includeMatch = /include`([\s\S]+?)(?&lt;!\\)`/mg;
+
+/**
+ * Micro rendering template engine
+ * @module templeo
+ * @example
+ * // Basic example in browser
+ * const { Engine } = require('templeo');
+ * const htmlEngine = new Engine();
+ * @example
+ * // Hapi.js example:
+ * const Hapi = require('hapi');
+ * const Vision = require('vision');
+ * const JsFrmt = require('js-beautify').js;
+ * const { Engine } = require('templeo');
+ * const econf = {
+ *   templatePathBase: '.',
+ *   viewsPath: 'views',
+ *   partialsPath: 'views/partials',
+ *   defaultExtension: 'html' // can be HTML, JSON, etc.
+ * };
+ * const cachier = new CachierFiles(econf, JsFrmt);
+ * const htmlEngine = new Engine(cachier);
+ * // use the following instead if compiled templates don't need to be stored in files
+ * // const htmlEngine = new Engine(econf, JsFrmt);
+ * const server = Hapi.Server({});
+ * await server.register(Vision);
+ * server.views({
+ *  compileMode: 'async',
+ *  relativeTo: econf.templatePathBase,
+ *  path: econf.viewsPath,
+ *  partialsPath: econf.partialsPath,
+ *  defaultExtension: econf.defaultExtension,
+ *  layoutPath: 'views/layout',
+ *  layout: true,
+ *  helpersPath: 'views/helpers',
+ *  engines: {
+ *    html: htmlEngine,
+ *    json: new JsonEngine()
+ *  }
+ * });
+ * // optionally set a partial function that can be accessed in the routes for
+ * // instances where partials need to be generated, but not rendered to clients
+ * server.app.htmlPartial = htmlEngine.genPartialFunc();
+ * await server.start();
+ * // it's a good practice to clear files after the server shuts down
+ * server.events.on('stop', async () => {
+ *  await htmlEngine.clearCache();
+ * });
+ */
+exports.Engine = class Engine {
+// TODO : ESM use... export class Engine {
+
+  /**
+   * Creates a template literal engine
+   * @param {TemplateOpts} [opts] The {@link TemplateOpts} to use
+   * @param {Function} [formatFunc] The `function(string, formatOptions)` that will return a formatted string for a specified code block,
+   * passing the formatting options from `opts.formatOptions` (e.g. minification and/or beautifying)
+   * @param {Object} [logger] The logger for handling logging output
+   * @param {Function} [logger.debug] A function that will accept __debug__ level logging messages (i.e. `debug('some message to log')`)
+   * @param {Function} [logger.info] A function that will accept __info__ level logging messages (i.e. `info('some message to log')`)
+   * @param {Function} [logger.warn] A function that will accept __warning__ level logging messages (i.e. `warn('some message to log')`)
+   * @param {Function} [logger.error] A function that will accept __error__ level logging messages (i.e. `error('some message to log')`)
+   */
+  constructor(opts, formatFunc, logger) {
+    const ns = internal(this);
+    const isCachier = opts instanceof Cachier;
+    ns.at.cache = isCachier ? opts : new Cachier(opts, formatFunc, true, logger);
+    ns.at.isInit = false;
+    ns.at.prts = {};
+    ns.at.prtlFuncs = {};
+  }
+
+  /**
+   * Creates a new {@link Engine} from a {@link Cachier} instance
+   * @param {Cachier} cachier The {@link Cachier} to use for persistence management
+   * @returns {Engine} The generated {@link Engine}
+   */
+  static create(cachier) {
+    if (!(cachier instanceof Cachier)) throw new Error(`cachier must be an instance of ${Cachier.name}, not ${cachier ? cachier.constructor.name : cachier}`);
+    return new Engine(cachier);
+  }
+
+  /**
+   * Compiles a template and returns a function that renders the template results using the passed `context` object
+   * @param {String} content The raw template content
+   * @param {Object} [opts] The options sent for compilation (omit to use the options set on the {@link Engine})
+   * @param {Function} [callback] Optional _callback style_ support __for LEGACY-ONLY APIs__:  
+   * `compile(content, opts, (error, (ctx, opts, cb) => cb(error, results)) => {})` or omit to run via
+   * `await compile(content, opts)`. __Omission will return the normal stand-alone renderer that can be serialized/deserialized.
+   * When a _callback function_ is specified, serialization/deserialization of the rendering function will not be possible!__
+   * @returns {function} The rendering `function(context)` that returns a template result string based upon the provided context
+   */
+  async compile(content, opts, callback) { // ensures partials are included in the compilation
+    const ns = internal(this);
+    opts = opts || {};
+    var fn, error;
+    if (callback) {
+      if (ns.at.cache.logger.info) {
+        ns.at.cache.logger.info('Compiling template w/callback style conventions');
+      }
+      try {
+        fn = await compile(ns, content, ns.at.cache.options, opts, null, ns.at.cache);
+      } catch (err) {
+        error = err;
+      }
+      // legacy callback-style rendering :(
+      callback(error, async (ctx, opts, cb) => {
+        try {
+          // opts.constructor.isPrototypeOf(ns.at.cache.options.constructor)
+          if (!opts || !Object.getOwnPropertyNames(opts).length) {
+            opts = ns.at.legacyRenderOptions;
+          } else if (!(opts instanceof TemplateOpts)) opts = new ns.at.cache.options.constructor(opts);
+          cb(null, await fn(ctx, opts));
+        } catch (err) {
+          cb(err);
+        }
+      });
+    } else fn = compile(ns, content, ns.at.cache.options, opts, null, ns.at.cache);
+    return fn;
+  }
+
+  /**
+   * @returns {TemplateOpts} The __LEGACY-ONLY API__ {@link TemplateOpts} to use when no rendering options
+   * are passed (or are empty) into the rendering function __and a callback function__ is specified when
+   * calling {@link Engine.compile}
+   * See {@link Engine.compile} for more details.
+   */
+  get legacyRenderOptions() {
+    const ns = internal(this);
+    return ns.at.legacyRenderOptions;
+  }
+
+  /**
+   * The __LEGACY-ONLY API__ {@link TemplateOpts} to use when no rendering options
+   * are passed (or are empty) into the rendering function __and a callback function__ is specified when
+   * calling {@link Engine.compile}
+   * @param {*} opts The options to set
+   */
+  set legacyRenderOptions(opts) {
+    const ns = internal(this);
+    ns.at.legacyRenderOptions = opts instanceof TemplateOpts ? opts : new ns.at.cache.options.constructor(opts);
+  }
+
+  /**
+   * Registers a _directive_ function that can be used within template
+   * [interpolations](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Template_literals#Expression_interpolation)
+   * @param {Function} func A __named__ `function` that has no external scope dependencies/closures other than those exposed
+   * via templates during rendering
+   */
+  registerHelper(func) {
+    const ns = internal(this);
+    return ns.at.cache.registerHelper(func);
+  }
+
+  /**
+   * Unregisters a partial template from cache
+   * @param {String} name The template name that uniquely identifies the template content
+   */
+  unregister(name) {
+    const ns = internal(this);
+    return ns.at.cache.unregister(name);
+  }
+
+  /**
+   * Registers and caches a partial template
+   * @param {String} name The template name that uniquely identifies the template content
+   * @param {(String | URLSearchParams)} contentOrParams Either the partial template content __string__ to register _or_ the
+   * `URLSearchParams` that will be passed during the content `read`
+   * @param {String} [extension=options.defaultExtension] Optional override for a file extension designation for the partial
+   * @returns {String} The partial content
+   */
+  registerPartial(name, contentOrParams, extension) {
+    const ns = internal(this);
+    return ns.at.cache.registerPartial(name, contentOrParams, extension);
+  }
+
+  /**
+   * Registers and caches partial compile-time partial templates
+   * @async
+   * @param {Object[]} [partials] The partials to register
+   * @param {String} partials[].name The template name that uniquely identifies the template content
+   * @@param {String} [partials[].content] The partial template content to register. Omit when `read === true` to read content from cache
+   * @param {URLSearchParams} [partials[].params] The `URLSearchParams` that will be passed during the content `read`
+   * (__ignored when `content` is specified__)
+   * @param {String} [partials[].extension] Optional override for a file extension designation for the partial
+   * @param {Boolean} [read=true] When `true`, an attempt will be made to also _read_ any partials that do not have a `content` property
+   * @returns {Object} An object that contains the registration results:
+   * 
+   * - `partials` The `partials` object that contains the fragments that have been registered
+   *   - `name` The template name that uniquely identifies the template content
+   *   - `content` The template content
+   *   - `extension` The template file extension designation
+   *   - `params` The URLSearchParams passed during the __initial__ content read
+   *   - `fromRead` A flag that indicates that the 
+   * - `dirs` Present __only__ when {@link Engine.filesEngine} was used. Contains the directories/sub-directories that were created
+   */
+  registerPartials(partials, read) {
+    const ns = internal(this);
+    return ns.at.cache.registerPartials(partials, read);
+  }
+
+  /**
+   * @returns {Function} A reference safe `async` function to {@link Engine.renderPartial} that can be safely passed into other functions
+   */
+  renderPartialGenerate() {
+    const ns = internal(this);
+    return async (name, content) => ns.this.renderPartial(name, content);
+  }
+
+  /**
+   * On-Demand compilation of a registered template
+   * @param {String} name The name of the registered tempalte
+   * @param {Object} [context={}] The object that contains contextual data used in the template
+   * @returns {String} The compiled template
+   */
+  async renderPartial(name, context, renderOptions) {
+    const ns = internal(this);
+    const func = await ns.at.cache.compile(name);
+    return func(context, renderOptions);
+  }
+
+  /**
+   * Clears the underlying cache
+   * @async
+   * @param {Boolean} [all=false] `true` to clear __ALL unassociated cache instances__ when possible as well as any partials
+   * that have been registered
+   */
+  clearCache(all = false) {
+    const ns = internal(this);
+    return ns.at.cache.clear(all);
+  }
+
+  /**
+   * @returns {TemplateOpts} The engine options
+   */
+  get options() {
+    const ns = internal(this);
+    return ns.at.cache.options;
+  }
+};
+
+/**
+ * Compiles a templated segment and returns a redering function (__assumes partials are already transpiled- see {@link compile} for partial support__)
+ * @private
+ * @param {Object} ns The namespace of the template engine
+ * @param {String} content The raw template content
+ * @param {TemplateOpts} [options] The options that overrides the default engine options
+ * @param {Object} [ropts] The object definition to be used in the template
+ * @param {String} [ropts.filename] When the template name is omitted, an attempt will be made to extract a name from the `filename` using `options.filename`
+ * regular expression
+ * @param {String} [tname] Name to be given to the template (omit to use the one from `options.filename` or an auto generated name)
+ * @param {Cachier} [cache] The {@link Cachier} instance that will handle the {@link Cachier.write} of the compiled template code. Defaults to in-memory
+ * cache.
+ * @returns {Function} The rendering `function(context)` that returns a template result string based upon the provided context
+ */
+async function compile(ns, content, options, ropts, tname, cache) {
+  const opts = options instanceof TemplateOpts ? options : new TemplateOpts(options);
+  if (!ropts) ropts = opts; // use definitions from the options when none are supplied
+  cache = cache instanceof Cachier ? cache : new Cachier(opts);
+  const parts = ropts &amp;&amp; ropts.filename &amp;&amp; ropts.filename.match &amp;&amp; ropts.filename.match(opts.filename);
+  const tnm = tname || (parts &amp;&amp; parts[2]) || (ropts &amp;&amp; ropts.defaultTemplateName)
+    || opts.defaultTemplateName || `template_${Sandbox.guid(null, false)}`;
+  try {
+    return await cache.compile(tnm, content, parts &amp;&amp; parts[3]); // await in order to catch errors
+  } catch (e) {
+    if (ns.at.cache.logger.error) ns.at.cache.logger.error(`Could not compile template ${tnm} (ERROR: ${e.message}): ${content}`);
+    throw e;
+  }
+}
+
+// private mapping substitute until the following is adopted: https://github.com/tc39/proposal-class-fields#private-fields
+let map = new WeakMap();
+let internal = function(object) {
+  if (!map.has(object)) {
+    if (object.module &amp;&amp; map.has(object.module)) object = object.module;
+    else map.set(object, {});
+  }
+  return {
+    at: map.get(object),
+    this: object
+  };
+};</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<br class="clear">
+
+<footer>
+    Generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.5.5</a> using the Minami theme.
+</footer>
+
+<script>prettyPrint();</script>
+<script src="scripts/linenumber.js"></script>
+<div id="jsdocpChangelogContent" data-title="CHANGELOG v0.1.0">
+  <svg class="jsdocp-close" id="jsdocpChangelogClose" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+    <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+    <path d="M0 0h24v24H0z" fill="none"/>
+  </svg>
+  <h2><a href="https://github.com/ugate/templeo/tree/v0.1.0">0.1.0</a> (2019-02-06)</h2><p><a href="https://github.com/ugate/templeo/compare/v0.1.0...v0.1.0">Full Changelog</a></p>
+<p><strong>Features:</strong></p>
+<ul>
+<li><a href="https://github.com/ugate/templeo/commit/4e6402051e665ca8718a30ac116c91115e56fb8d">[FEATURE]: Cached includes will only read a partial with the same name and URLSearchParams once. Any partial with the same name, but different URLSearchParams will be read multiple times.</a></li>
+<li><a href="https://github.com/ugate/templeo/commit/690bfeeae899d0fe4ce2c063ed9b13f70ca3effd">[FEATURE]: Helper directives/functions can be registered via Engine.registerHelper and will be compiled along with the built-in directives</a></li>
+<li><a href="https://github.com/ugate/templeo/commit/3c8c14cdfe96de29b1f042f309a7f2908b8afb30">[FEATURE]: Debugger option sets a standard debugger statement into each rendered template. Metadata accessibility from within templates.</a></li>
+<li><a href="https://github.com/ugate/templeo/commit/643fe36e2798a879ab02956566e6f1d640a03a5c">[FEATURE]: Include parameters can be set to either URLSearchParams to initiate a read or JSON to add the parameters to the partial scope</a></li>
+<li><a href="https://github.com/ugate/templeo/commit/affac39a7e8de3f8f0ea8baa63c9d64c61b04225">[FEATURE]: Passing parameters to the include directive for use on the server and/or within the partial template itself using the options.includesParametersName</a></li>
+<li><a href="https://github.com/ugate/templeo/commit/127f8b2028c23988f9065bae27ed821061bc4f8a">[FEATURE]: options.defaultBaseTemplateName added to allow naming of the template being compiled</a></li>
+<li><a href="https://github.com/ugate/templeo/commit/c88303bdcfdd651e329508b0f4745c301962f6a8">[FEATURE]: Assignments can be made that are outside the primary context passed into the rendering function (i.e. &quot;it&quot;). Templates can designate something like {{ myVarName = 'Some value' }} which can later be retrieved via {{ myVarName }}. This is a static namespace for use during compilation rather than during rendering (e.g. renderFunction({ myVarName: 'Some value' }) with the template using {{ it.myVarName }}).</a></li>
+</ul>
+</div>
+
+
+
+<script src="jsdocp/scripts/index.js"></script></body>
+</html>

@@ -1,0 +1,768 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>lib/cachier-files.js - Documentation</title>
+
+    <script src="scripts/prettify/prettify.js"></script>
+    <script src="scripts/prettify/lang-css.js"></script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="https://code.ionicframework.com/ionicons/2.0.1/css/ionicons.min.css">
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+  <!-- https://realfavicongenerator.net/ -->
+  
+    <link
+      
+      rel="apple-touch-icon" 
+      
+      sizes="180x180" 
+      
+      href="apple-touch-icon.png" 
+      
+    >
+  
+    <link
+      
+      rel="icon" 
+      
+      type="image/png" 
+      
+      sizes="32x32" 
+      
+      href="favicon-32x32.png" 
+      
+    >
+  
+    <link
+      
+      rel="icon" 
+      
+      type="image/png" 
+      
+      sizes="16x16" 
+      
+      href="favicon-16x16.png" 
+      
+    >
+  
+    <link
+      
+      rel="manifest" 
+      
+      href="site.webmanifest" 
+      
+    >
+  
+    <link
+      
+      rel="mask-icon" 
+      
+      type="image/png" 
+      
+      sizes="16x16" 
+      
+      href="safari-pinned-tab.svg" 
+      
+      color="#ffab40" 
+      
+    >
+  
+    <link
+      
+      type="text/css" 
+      
+      rel="stylesheet" 
+      
+      href="pkg-styles/pkg-style.css" 
+      
+    >
+  
+
+  
+    <meta
+      
+      name="msapplication-TileColor" 
+      
+      content="#ffab40" 
+      
+    >
+  
+    <meta
+      
+      name="theme-color" 
+      
+      content="#bdbdbd" 
+      
+    >
+  
+    <meta
+      
+      name="viewport" 
+      
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" 
+      
+    >
+  
+
+  <link type="text/css" rel="stylesheet" href="jsdocp/styles/index.css"></head>
+<body><div id="jsdocpNav" class="jsdocp-remove-me pkg-menu"
+  data-jsdocp-sm-position="bottom"
+  data-jsdocp-md-position="bottom"
+  data-jsdocp-lg-position="top"
+  data-jsdocp-sm-match-media="(max-width: 480px)"
+  data-jsdocp-md-match-media="(min-width: 481px) and (max-width: 839px)"
+  data-jsdocp-lg-match-media="(min-width: 840px)"
+  data-jsdocp-sm-auto-hide="true"
+  data-jsdocp-md-auto-hide="true"
+  data-jsdocp-lg-auto-hide="false">
+  <a href="index.html" id="jsdocpLogo"
+    title="templeo"
+    class="jsdocp-logo ">
+    <b class="pkg-logo">
+    
+      <?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg viewBox="0 0 64 64" width="64" height="64" version="1.1" xmlns="http://www.w3.org/2000/svg">
+  <g transform="matrix(1.9935723,0,0,2.0019177,0.08877553,-0.18261032)">
+    <g transform="scale(0.96670978,1.0344366)">
+      <path d="m 18.634766,5.4023438 c -1.733459,-10e-8 -3.228867,0.5041519 -4.361328,1.5253906 -1.122892,1.0122398 -1.705079,2.3995654 -1.705079,3.9902346 0,0.759851 0.195452,1.57394 0.558594,2.453125 a 0.65860366,0.65860366 0 0 0 0.0039,0.0059 c 0.1107,0.261137 0.17007,0.433699 0.242188,0.626953 -0.412293,-0.119387 -0.811529,-0.335937 -1.234375,-0.335937 -0.57709,0 -1.150057,0.112763 -1.708984,0.326172 a 0.65860366,0.65860366 0 0 0 -0.0059,0.002 c -1.1883607,0.467219 -2.0975223,1.32863 -2.6171874,2.490234 l 0.00195,0 c -0.2754091,0.612021 -0.4199219,1.244178 -0.4199219,1.878906 0,0.586308 0.1172738,1.166119 0.34375,1.722657 2.469e-4,6.06e-4 -2.472e-4,0.0013 0,0.002 0.4616675,1.174144 1.1678027,2.049935 2.1289062,2.474609 a 0.65860366,0.65860366 0 0 0 0.00781,0.0039 c 0.8286494,0.352413 1.5586814,0.548829 2.2304684,0.548829 0.586313,0 1.170378,-0.116216 1.740235,-0.339844 1.181788,-0.458451 2.082653,-1.322653 2.601562,-2.488282 0.330502,-0.705376 0.488282,-1.498294 0.488282,-2.353515 0,-0.214294 -0.0234,-0.559044 -0.06836,-1.134766 -0.04332,-0.676666 -0.248075,-1.447023 -0.591797,-2.357422 a 0.65860366,0.65860366 0 0 0 -0.0039,-0.01367 c -0.215809,-0.535206 -0.423732,-1.120249 -0.625,-1.75 -0.190291,-0.60397 -0.279297,-1.133312 -0.279297,-1.585938 0,-1.026584 0.278067,-1.7499346 0.820313,-2.3066406 a 0.65860366,0.65860366 0 0 0 0.002,-0.00195 c 0.542177,-0.5638645 1.235121,-0.8457031 2.236328,-0.8457031 1.04226,0 1.792542,0.302684 2.402344,0.9199219 a 0.65860366,0.65860366 0 0 0 0.0039,0.00195 c 0.606572,0.606572 0.90625,1.3689279 0.90625,2.4335939 0,1.572702 -0.589605,3.408904 -1.837891,5.498047 a 0.65860366,0.65860366 0 0 0 -0.002,0 c -1.320121,2.215588 -2.011719,4.290309 -2.011719,6.228515 0,1.135656 0.404802,2.137499 1.199219,2.810547 a 0.65860366,0.65860366 0 0 0 0.0039,0.0039 c 0.75835,0.631956 1.698343,0.957031 2.716797,0.957031 1.227821,0 2.438439,-0.64332 3.644531,-1.773438 a 0.65860366,0.65860366 0 0 0 0.03711,-0.921875 L 24.611328,23.130859 A 0.65860366,0.65860366 0 0 0 23.6875,23.078125 c -0.83238,0.732494 -1.487863,1.012762 -1.851562,1.015625 -0.490025,-0.0128 -0.768941,-0.128804 -0.923829,-0.271484 -0.154694,-0.142502 -0.25969,-0.35908 -0.27539,-0.78711 0.0033,-1.431752 0.595963,-3.259206 1.855469,-5.439453 1.332579,-2.306741 2.033203,-4.364066 2.033203,-6.207031 -10e-7,-1.7094646 -0.553007,-3.1902892 -1.650391,-4.2988282 -1.096122,-1.1162349 -2.559684,-1.6875 -4.240234,-1.6875 z M 12.125,16.433594 c 0.207579,0 0.558685,0.07879 1.007812,0.279297 a 0.65860366,0.65860366 0 0 0 0.0039,0.002 c 0.325823,0.142905 0.588789,0.418207 0.804687,0.976562 a 0.65860366,0.65860366 0 0 0 0.002,0.0059 c 0.09694,0.242349 0.140625,0.469511 0.140625,0.695312 0,0.206742 -0.07961,0.56478 -0.279296,1.021484 -1.7e-4,3.8e-4 -0.0018,-3.79e-4 -0.002,0 -0.141144,0.315308 -0.416373,0.578316 -0.976562,0.794922 -0.255126,0.09921 -0.487088,0.142578 -0.712891,0.142578 -0.211018,0 -0.561402,-0.07771 -1.003906,-0.265624 -0.303312,-0.138564 -0.572345,-0.422337 -0.798828,-0.996094 -0.09779,-0.252742 -0.142578,-0.486321 -0.142578,-0.710938 0,-0.21264 0.07548,-0.556983 0.265625,-0.99414 9.3e-5,-2.15e-4 0.0019,2.15e-4 0.002,0 0.141518,-0.316151 0.419067,-0.583253 0.982422,-0.808594 0.243294,-0.09732 0.47252,-0.142578 0.707031,-0.142578 z" />
+    </g>
+    <g transform="scale(0.805326,1.2417332)">
+      <path d="m 29.052173,23.815766 0.951868,0 q 1.903736,0 2.474857,-0.584719 0.584719,-0.584719 0.584719,-2.529249 l 0,-3.372332 q 0,-2.121306 0.611915,-3.086772 0.611915,-0.965466 2.121306,-1.332615 -1.509391,-0.339953 -2.121306,-1.305419 -0.611915,-0.965466 -0.611915,-3.1003697 l 0,-3.3723321 q 0,-1.9309321 -0.584719,-2.515651 -0.571121,-0.598317 -2.474857,-0.598317 l -0.951868,0 0,-1.9445302 0.856682,0 q 3.38593,0 4.514573,1.0062604 1.142242,0.9926623 1.142242,3.9978453 l 0,3.2635472 q 0,2.0261191 0.734298,2.8148091 0.734298,0.775093 2.66523,0.775093 l 0.843083,0 0,1.94453 -0.843083,0 q -1.930932,0 -2.66523,0.788691 -0.734298,0.78869 -0.734298,2.842005 l 0,3.249949 q 0,3.005183 -1.142242,4.011444 -1.128643,1.00626 -4.514573,1.00626 l -0.856682,0 0,-1.958128 z" />
+    </g>
+    <g transform="scale(0.80532598,1.2417332)">
+      <path d="m 10.700812,23.861077 0,1.958128 -0.8430829,0 q -3.3859302,0 -4.5417698,-1.00626 -1.1422415,-1.006261 -1.1422415,-4.011444 l 0,-3.249949 q 0,-2.053315 -0.7342981,-2.842005 -0.7342982,-0.788691 -2.66523025,-0.788691 l -0.82948492,0 0,-1.94453 0.82948492,0 q 1.94453025,0 2.66523025,-0.775093 0.7342981,-0.78869 0.7342981,-2.8148091 l 0,-3.2635472 q 0,-3.0051831 1.1422415,-3.9978453 1.1558396,-1.00626042 4.5417698,-1.00626042 l 0.8430829,0 0,1.94453022 -0.9246715,0 q -1.917334,0 -2.5020529,0.598317 -0.5847189,0.598317 -0.5847189,2.5156509 l 0,3.3723321 q 0,2.1349038 -0.6255132,3.1003698 -0.6119151,0.965466 -2.1077075,1.305419 1.5093905,0.367149 2.1213056,1.332615 0.6119151,0.965466 0.6119151,3.086772 l 0,3.372332 q 0,1.917334 0.5847189,2.515651 0.5847189,0.598317 2.5020529,0.598317 l 0.9246715,0 z" />
+    </g>
+  </g>
+</svg>
+
+    
+    </b>
+    <b id="jsdocpPkgName">templeo</b>
+    <b>|</b>
+    <hr/>
+  </a>
+  <a href="https://www.npmjs.com/package/templeo" id="jsdocpModule"
+    title="npm"
+    class="jsdocp-icon ">
+    
+    <svg version="1.1" preserveAspectRatio="xMidYMid meet" viewBox="0 0 24 24" height="24" width="24" xmlns="http://www.w3.org/2000/svg">
+      <g class="jsdocp-icon-svg-el pkg-icons" stroke="none" transform="translate(0,24) scale(0.1,-0.1)">
+        <path d="M 0,120 0,0 l 120,0 120,0 0,120 0,120 -120,0 -120,0 z m 200,0 c 0,-73 0.23256,-80 0.23256,-80 0,0 -27.97435,0.741211 -40.61273,0.707427 C 159.61983,67.551504 160,70.949947 160,100 c 0,53 -2,60 -20,60 -18,0 -20,-7 -20,-60 l 0,-60 -40,0 -40,0 0,80 0,80 80,0 80,0 z"/>
+      </g>
+    </svg>
+    
+  </a>
+  <a href="CHANGELOG.html" id="jsdocpChangelog" data-jsdocp-root-href="https://github.com/ugate/templeo/CHANGELOG.html"
+    title="Changelog"
+    class="jsdocp-icon ">
+    
+    <svg version="1.1" viewBox="0 0 64 64" height="64" width="64" xmlns="http://www.w3.org/2000/svg">
+      <path class="jsdocp-icon-svg-el pkg-icons" stroke="none" fill-rule="nonzero"
+        d="M 29.896194,0.97873581 C 13.435048,0.97873581 1.1072664e-7,15.139296 0,32.489368 0,49.839439 13.435048,64 29.896194,64 46.357339,64 59.792385,49.839438 59.792388,32.489368 a 4.2273908,4.4556761 0 1 0 -8.453721,0 c -10e-7,12.534501 -9.550175,22.600399 -21.442473,22.600399 -11.892299,0 -21.4424739,-10.065899 -21.4424739,-22.600399 0,-12.5345 9.5501749,-22.6003988 21.4424739,-22.6003988 a 4.2273908,4.4556761 0 1 0 0,-8.91023339 z" />
+      <path class="jsdocp-icon-svg-el pkg-icons" stroke="none" fill-rule="nonzero"
+        d="m 55.529412,24.680907 -8.470588,10.142582 16.941176,0 z"/>
+      <rect class="jsdocp-icon-svg-el pkg-icons" stroke="none" fill-rule="nonzero"
+        transform="matrix(0.6882785,0.72544656,-0.6882785,0.72544656,0,0)" y="-38.592953" x="38.592953" height="39.814472" width="11.375563" />
+      <path class="jsdocp-icon-svg-el pkg-icons" stroke="none" fill-rule="nonzero"
+        d="m 23.705056,39.295314 8.338477,-1.11407 -7.281487,-7.674698 z"/>
+    </svg>
+    
+  </a>
+  <a href="https://github.com/ugate/templeo#readme" id="jsdocpSourceCode"
+    title="Source Code"
+    class="jsdocp-icon ">
+    
+    <svg version="1.1" viewBox="0 0 10 16" width="24" height="24" xmlns="http://www.w3.org/2000/svg" id="jsdocpSourceIcon">
+      <path class="jsdocp-icon-svg-el pkg-icons" stroke="none" fill-rule="evenodd"
+        d="M8 1a1.993 1.993 0 0 0-1 3.72V6L5 8 3 6V4.72A1.993 1.993 0 0 0 2 1a1.993 1.993 0 0 0-1 3.72V6.5l3 3v1.78A1.993 1.993 0 0 0 5 15a1.993 1.993 0 0 0 1-3.72V9.5l3-3V4.72A1.993 1.993 0 0 0 8 1zM2 4.2C1.34 4.2.8 3.65.8 3c0-.65.55-1.2 1.2-1.2.65 0 1.2.55 1.2 1.2 0 .65-.55 1.2-1.2 1.2zm3 10c-.66 0-1.2-.55-1.2-1.2 0-.65.55-1.2 1.2-1.2.65 0 1.2.55 1.2 1.2 0 .65-.55 1.2-1.2 1.2zm3-10c-.66 0-1.2-.55-1.2-1.2 0-.65.55-1.2 1.2-1.2.65 0 1.2.55 1.2 1.2 0 .65-.55 1.2-1.2 1.2z"></path>
+    </svg>
+    <!-- GitHub icon -->
+    <svg version="1.1" viewBox="0 0 16 16" height="24" width="24" xmlns="http://www.w3.org/2000/svg" class="jsdocp-remove-me" id="jsdocpGithubIcon">
+      <path class="jsdocp-icon-svg-el pkg-icons" stroke="none"  fill-rule="evenodd"
+        d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0 0 16 8c0-4.42-3.58-8-8-8z"/>
+    </svg>
+    
+  </a>
+  <!-- versions.json should point to the latest list -->
+  <a id="jsdocpVersionsIcon"
+    class="jsdocp-icon ">
+    
+    <svg version="1.1" viewBox="0 0 64 64" height="24" width="24" xmlns="http://www.w3.org/2000/svg">
+      <path class="jsdocp-icon-svg-el pkg-icons" stroke="none" fill-rule="nonzero"
+        d="m 63.999999,25.315556 -24.108295,0 9.74288,-10.026667 C 39.927261,5.6888885 24.210644,5.3333335 14.503322,14.933333 c -9.7073234,9.635555 -9.7073234,25.173334 0,34.808888 9.707322,9.635556 25.423939,9.635556 35.131262,0 4.835883,-4.764443 7.253823,-10.346666 7.253823,-17.386666 l 7.111592,0 c 0,7.039999 -3.1291,16.177777 -9.387301,22.364444 -12.480844,12.373334 -32.748879,12.373334 -45.2297224,0 -12.445286,-12.337778 -12.55196,-32.39111 -0.071116,-44.7288881 12.4808434,-12.3377774 32.4999734,-12.3377774 44.9808174,0 L 64,-5e-7 64,25.315556 Z" />
+      <path class="jsdocp-icon-svg-el pkg-icons" stroke="none" fill-rule="nonzero"
+        d="m 33.775734,17.777777 0,15.111111 12.445286,7.395556 -2.560173,4.302222 -15.218806,-9.031112 0,-17.777777 5.333693,0 z" />
+    </svg>
+    
+  </a>
+  <select id="jsdocpVersions"
+    title="v0.1.0"
+    data-jsdocp-version-base="/templeo"
+    data-jsdocp-json-url="/templeo/versions.json"
+    data-jsdocp-type=""
+    data-jsdocp-from="1.0.0"
+    data-jsdocp-version="0.1.0">
+  </select>
+</div>
+
+<input type="checkbox" id="nav-trigger" class="nav-trigger" />
+<label for="nav-trigger" class="navicon-button x">
+  <div class="navicon"></div>
+</label>
+
+<label for="nav-trigger" class="overlay"></label>
+
+<nav>
+    <li class="nav-link nav-home-link"><a href="index.html">Home</a></li><li class="nav-heading">Tutorials</li><li class="nav-item"><a href="tutorial-1-basics.html">The Basics</a></li><li class="nav-item"><a href="tutorial-2-cache.html">Cache</a></li><li class="nav-item"><a href="tutorial-3-examples.html">Examples</a></li><li class="nav-heading">Classes</li><li class="nav-heading"><span class="nav-item-type type-class">C</span><span class="nav-item-name"><a href="Cachier.html">Cachier</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Cachier.html#clear">clear</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Cachier.html#compile">compile</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Cachier.html#modularize">modularize</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Cachier.html#read">read</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Cachier.html#registerHelper">registerHelper</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Cachier.html#registerPartial">registerPartial</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Cachier.html#registerPartials">registerPartials</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Cachier.html#unregister">unregister</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Cachier.html#write">write</a></span></li><li class="nav-heading"><span class="nav-item-type type-class">C</span><span class="nav-item-name"><a href="CachierDB.html">CachierDB</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="CachierDB.html#clear">clear</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="CachierDB.html#read">read</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="CachierDB.html#registerPartials">registerPartials</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="CachierDB.html#write">write</a></span></li><li class="nav-heading"><span class="nav-item-type type-class">C</span><span class="nav-item-name"><a href="CachierFiles.html">CachierFiles</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="CachierFiles.html#clear">clear</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="CachierFiles.html#modularize">modularize</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="CachierFiles.html#read">read</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="CachierFiles.html#registerPartials">registerPartials</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="CachierFiles.html#write">write</a></span></li><li class="nav-heading"><span class="nav-item-type type-class">C</span><span class="nav-item-name"><a href="module-templeo.Engine.html">Engine</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="module-templeo.Engine.html#.create">create</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="module-templeo.Engine.html#clearCache">clearCache</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="module-templeo.Engine.html#compile">compile</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="module-templeo.Engine.html#registerHelper">registerHelper</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="module-templeo.Engine.html#registerPartial">registerPartial</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="module-templeo.Engine.html#registerPartials">registerPartials</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="module-templeo.Engine.html#renderPartial">renderPartial</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="module-templeo.Engine.html#renderPartialGenerate">renderPartialGenerate</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="module-templeo.Engine.html#unregister">unregister</a></span></li><li class="nav-heading"><span class="nav-item-type type-class">C</span><span class="nav-item-name"><a href="module-templeo_options-TemplateOpts.html">TemplateOpts</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="module-templeo_options-TemplateOpts.html#build">build</a></span></li><li class="nav-heading"><span class="nav-item-type type-class">C</span><span class="nav-item-name"><a href="TemplateFileOpts.html">TemplateFileOpts</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="TemplateFileOpts.html#build">build</a></span></li><li class="nav-heading">Modules</li><li class="nav-heading"><span class="nav-item-type type-module">M</span><span class="nav-item-name"><a href="module-templeo.html">templeo</a></span></li><li class="nav-heading"><span class="nav-item-type type-module">M</span><span class="nav-item-name"><a href="module-templeo_options.html">templeo/options</a></span></li><li class="nav-heading"><a href="global.html">Globals</a></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="global.html#newCache">newCache</a></span></li>
+</nav>
+
+<div id="main">
+    
+    <h1 class="page-title">lib/cachier-files.js</h1>
+    
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>'use strict';
+
+const TemplateFileOpts = require('./template-file-options');
+const Cachier = require('./cachier');
+const Sandbox = require('./sandbox');
+const Os = require('os');
+const Fs = require('fs');
+const Path = require('path');
+// TODO : ESM uncomment the following lines...
+// TODO : import * as TemplateFileOpts from './template-file-options.mjs';
+// TODO : import * as Cachier from './cachier.mjs';
+// TODO : import * as Sandbox from './sandbox.mjs';
+// TODO : import * as Os from 'os';
+// TODO : import * as Fs from 'fs';
+// TODO : import * as Path from 'path';
+
+const Fsp = Fs.promises;
+const TMP_PREFIX = 'templeo-cache-files-';
+
+/**
+ * Node.js [file]{@link https://nodejs.org/api/fs.html} persistence manager that uses the file system for improved debugging/caching
+ * capabilities
+ */
+class CachierFiles extends Cachier {
+// TODO : ESM use... export class CachierFiles extends Cachier {
+
+  /**
+   * Constructor
+   * @param {TemplateFileOpts} [opts] The {@link TemplateFileOpts}
+   * @param {Function} [formatFunc] The `function(string, formatOptions)` that will return a formatted string when __writting__
+   * data using the `formatOptions` from {@link TemplateFileOpts} as the formatting options.
+   * @param {Object} [logger] The logger for handling logging output
+   * @param {Function} [logger.debug] A function that will accept __debug__ level logging messages (i.e. `debug('some message to log')`)
+   * @param {Function} [logger.info] A function that will accept __info__ level logging messages (i.e. `info('some message to log')`)
+   * @param {Function} [logger.warn] A function that will accept __warning__ level logging messages (i.e. `warn('some message to log')`)
+   * @param {Function} [logger.error] A function that will accept __error__ level logging messages (i.e. `error('some message to log')`)
+   */
+  constructor(opts, formatFunc, logger) {
+    super(opts, formatFunc, false);
+    const ns = internal(this);
+    ns.at.options = opts instanceof TemplateFileOpts ? opts : new TemplateFileOpts(opts);
+    ns.at.logger = logger || {};
+    ns.at.partialsPath = Path.resolve(ns.at.options.partialsPath);
+    if (ns.at.options.watchRegistrationSourcePaths) ns.at.watchers = [];
+    ns.at.createdDirs = [];
+    const dest = ns.this.outputPath;
+    if (ns.at.logger.info) ns.at.logger.info(`Template destination set to: "${dest}"`);
+  }
+
+  /**
+   * Registers and caches one or more partial templates within the internal file system. Also creates any missing
+   * directories/sub-directories within the {@link TemplateFileOpts} `outputPath` directory from `sourcePath`
+   * sub-directories.
+   * @override
+   * @param {Object[]} partials The partials to register
+   * @param {String} partials[].name The template name that uniquely identifies the template content
+   * @param {String} partials[].content The partial template content to register
+   * @param {String} [partials[].extension] Optional override for a file extension designation for the partial
+   * @param {Object} [includes[].params] The JSON parameters that will be added to scope as `options.includesParametersName` when
+   * the template is parsed
+   * @param {Boolean} [read] When `true`, an attempt will be made to also _read_ any partials using option parameter
+   * @returns {Object} An object that contains the registration results:
+   * 
+   * The returned registration results object that contains the following properties:
+   * - `partials` The partials object that contains the template fragments that have been registered
+   *   - `name` The template name that uniquely identifies the template content
+   *   - `content` The template content
+   *   - `extension` The template file extension designation
+   *   - `params` The JSON template parameters added to the partial's scope
+   *   - `read` A flag that indicates if the partial is from a read operation
+   *   - `overrideFromFileRead` A flag that indicates if the passed partial content was overridden by content from a file read
+   * - `dirs` The directories/sub-directories that were created within the `outputPath` directory
+   */
+  async registerPartials(partials, read) {
+    const ns = internal(this), src = ns.at.options.sourcePath, dest = ns.this.outputPath;
+    const srtn = await super.registerPartials(partials, false), hasSuperPrtls = srtn &amp;&amp; srtn.partials &amp;&amp; srtn.partials.length;
+    var mkrtn;
+    if (src &amp;&amp; dest) {
+      const prtlPrefix = ns.at.options.partialsPath || '';
+      mkrtn = mkdirpMirror(ns, read, src, dest, prtlPrefix, true);
+      if (hasSuperPrtls) mkrtn = await mkrtn;
+      else return mkrtn;
+    } else if (ns.at.logger.info) {
+      ns.at.logger.info('Partials file read not performed since "sourcePath" and/or "outputPath" options have not been set'
+        + ` (sourcePath = "${src}" outputPath = "${dest})"`);
+    }
+    if (mkrtn &amp;&amp; hasSuperPrtls) { // partials from file reads should always override any partials with the same name
+      sloop:
+      for (let prtl of srtn.partials) {
+        for (let mprtl of mkrtn.partials) {
+          if (mprtl.name === prtl.name) {
+            prtl.overrideFromFileRead = true;
+            if (ns.at.logger.warn) {
+              ns.at.logger.warn(`The template partial for "${prtl.name}" is overridden by the file read`);
+            }
+            continue sloop;
+          }
+        }
+        mkrtn.partials.push(prtl);
+      }
+    } else return mkrtn || srtn;
+  }
+
+  /**
+   * @override
+   * @inheritdoc
+   */
+  async read(name, forContent, extension) {
+    const ns = internal(this), fpth = readWriteName(ns, name, forContent, extension);
+    if (ns.at.logger.debug) {
+      ns.at.logger.debug(`Reading template ${forContent ? 'partial' : 'code'} for "${name}" (name)`
+        + ` from file "${fpth}"`);
+    }
+    const rtn = { name, extension };
+    if (forContent) {
+      rtn.content = (await Fsp.readFile(fpth, ns.at.options)).toString(ns.at.options.encoding);
+      ns.this.registerPartial(rtn.name, rtn.content, rtn.extension);
+    } else {
+      rtn.func = await ns.this.modularize(fpth, true);
+    }
+    return rtn;
+  }
+
+  /**
+   * @override
+   * @inheritdoc
+   */
+  async write(name, data, forContent, extension) {
+    if (!this.isWritable) return;
+    const ns = internal(this), fpth = readWriteName(ns, name, forContent, extension);
+    if (!forContent) await createPath(ns, fpth);
+    if (ns.at.logger.debug) {
+      ns.at.logger.debug(`${forContent ? 'Skipping write on' : 'Writting'} template ${forContent ? 'partial' : 'code'}`
+        + ` for "${name}" (name)${extension ? ` "${extension}" (extension)` : ''} to file "${fpth}":${Os.EOL}${data}`);
+    }
+    if (forContent) return; // partials are coming from the file system, no need to overwrite them
+
+    const dataType = typeof data;
+    var writable = dataType === 'function' ? Sandbox.serialzeFunction(data) : null;
+    if (writable &amp;&amp; !ns.at.isFormatOnRead &amp;&amp; ns.at.formatter) {
+      writable = ns.at.formatter(writable, ns.at.options.formatOptions);
+    }
+
+    if (!writable &amp;&amp; dataType !== 'string') {
+      if (ns.at.logger.debug) {
+        ns.at.logger.debug(`Skipping write for unsupported type=${dataType} on template ${forContent ? 'partial' : 'code'}`
+          + ` for "${name}" (name) to file "${fpth}":${Os.EOL}${data}`);
+      }
+      return;
+    }
+
+    data = writable || data;
+    if (!forContent) data = `${ns.at.options.useCommonJs ? 'module.exports=' : 'export '}${data}`;
+    return Fsp.writeFile(fpth, data, ns.at.options);
+  }
+
+  /**
+   * @override
+   * @inheritdoc
+   */
+  get isWritable() {
+    return !!this.outputPath &amp;&amp; super.isWritable;
+  }
+
+  /**
+   * Clears the output directories and any file watchers
+   * @override
+   * @param {Boolean} [all=false] `true` to clear all temporary directories created over multiple instances
+   */
+  async clear(all = false) {
+    const ns = internal(this);
+    if (ns.at.watchers) {
+      for (let watcher of ns.at.watchers) {
+        watcher.close();
+      }
+      ns.at.watchers.length = 0;
+    }
+    if (all) {
+      if (ns.at.logger.info) {
+        ns.at.logger.info(`Clearing ALL temporary dirs that start with "${TMP_PREFIX}"`);
+      }
+      await cleanTempOutput(TMP_PREFIX);
+    }
+    if (ns.this.outputPath) {
+      if (ns.at.logger.info) {
+        ns.at.logger.info(`Clearing "${ns.this.outputPath}"`);
+      }
+      await rmrf(ns.this.outputPath);
+      ns.at.outputPath = null;
+    }
+  }
+
+  /**
+   * @override
+   * @inheritdoc
+   */
+  async modularize(id, clear) {
+    const ns = internal(this);
+    if (clear) clearModule(ns, id);
+    return ns.at.options.useCommonJs ? require(id) : /* TODO : ESM use... await import(id)*/null;
+  }
+
+  /**
+   * @returns {String} The destination path where files will be written to (typically during a {@link registerPartials},
+   * but also can occur during {@link write})
+   */
+  get outputPath() {
+    const ns = internal(this);
+    ns.at.outputPath = ns.at.outputPath || ns.at.options.outputPath;
+    if (!ns.at.outputPath) {
+      const tpth = Fs.mkdtempSync(Path.join(Os.tmpdir(), TMP_PREFIX));
+      ns.at.outputPath = tpth;
+      ns.at.createdDirs.push(Path.join(tpth, Path.sep));
+    }
+    return ns.at.outputPath;
+  }
+}
+
+// TODO : ESM remove the following lines...
+module.exports = CachierFiles;
+
+/**
+ * Creates any missing directories/sub-directories within an output directory from all input sub-directories
+ * @private
+ * @ignore
+ * @param {Object} ns The {@link CachierFiles} namespace
+ * @param {Boolean} read When `true`, an attempt to read parials will be made
+ * @param {String} idir The input directory that contains the directories/sub-directories that will be built within the output directories
+ * @param {String} odir Then output directory where directories/sub-directories will be created
+ * @param {String} [partialPrefix] A prefix path that will be excluded from the name of any partials discovered
+ * @param {Boolean} [cleanOutput=false] The flag that indicates that the specified __output__ directory (along with any __sub__ directories) will be
+ * __removed__ within the output (if not present)
+ * @param {Boolean} [createOutput=true] The flag that indicates that the specified __input__ directory (along with any __parent__ directories) will be
+ * __created__ within the output (if not present)
+ * @returns {Object} An object that contains: `{ partials: [{ name: String, content: String, read: String }], dirs: String[] }` where
+ * `partials` are the fragments that have been registered and `dirs` are all the
+ * directories/sub-directories that are created within the output directory.
+ */
+async function mkdirpMirror(ns, read, idir, odir, partialPrefix, cleanOutput = false, createOutput = true) {
+  if (cleanOutput) await rmrf(odir);
+  const sdirs = await Fsp.readdir(idir), prtls = [], rtn = { partials: [], dirs: [] }, logger = ns.at.logger;
+  if (cleanOutput || createOutput) {
+    await mkdir(ns, odir);
+    rtn.dirs.push(odir);
+  }
+  const watch = ns.at.options.watchRegistrationSourcePaths;
+  if (watch) watchPartialDir(ns, idir, partialPrefix);
+  let prtl;
+  for (let sdir of sdirs) {
+    const indirx = Path.join(idir, sdir), indir = Path.resolve(ns.at.options.templatePathBase, idir, sdir);
+    const stat = await Fsp.stat(indir);
+    if (stat.isDirectory()) {
+      const outdir = Path.resolve(odir, sdir);
+      var hasOut = false;
+      try {
+        hasOut = ns.at.createdDirs.includes(Path.join(outdir, Path.sep)) || (await Fsp.stat(outdir)).isDirectory();
+      } catch (e) {
+        hasOut = false;
+      }
+      if (!hasOut) {
+        await mkdir(ns, outdir);
+        rtn.dirs.push(outdir);
+        if (logger.info) logger.info(`Created template directory: ${outdir}`);
+      }
+      const rtnd = await mkdirpMirror(ns, read, indirx, outdir, partialPrefix, false, false);
+      rtn.partials = rtnd.partials &amp;&amp; rtnd.partials.length ? rtn.partials.concat(rtnd.partials) : rtn.partials;
+      rtn.dirs = rtnd.dirs &amp;&amp; rtnd.dirs.length ? rtn.dirs.concat(rtnd.dirs) : rtn.dirs;
+      if (watch) watchPartialDir(ns, indir, partialPrefix);
+    } else if (stat.isFile()) {
+      if (read) {
+        prtl = readPartial(ns, indir, indirx, partialPrefix);
+        prtl.read = true;
+        prtls.push(prtl);
+      } else {
+        prtl = extractNameParts(ns, indirx, partialPrefix);
+        prtl.path = indirx;
+        prtl.read = false;
+        rtn.partials.push(prtl);
+      }
+    }
+  }
+  for (let prtl of prtls) {
+    prtl = await prtl;
+    rtn.partials.push(prtl);
+    if (logger.info) logger.info(`Registering template partial "${prtl.name}"`);
+    ns.this.registerPartial(prtl.name, prtl.content);
+  }
+  return rtn;
+}
+
+/**
+ * Calls `Fs.mkdir` when the directory hasn't already been created
+ * @private
+ * @ignore
+ * @param {Object} ns The {@link CachierFiles} namespace
+ * @param {String} dir The directory to make when missing
+ */
+async function mkdir(ns, dir) {
+  const fdir = Path.join(dir, Path.sep); // always w/trailing separator
+  if (!ns.at.createdDirs.includes(fdir)) {
+    await Fsp.mkdir(dir, { recursive: true });
+    ns.at.createdDirs.push(fdir);
+  }
+}
+
+/**
+ * Extracts the partial name from a given path and initiates a {@link CachierFiles.read} on the partial
+ * @private
+ * @ignore
+ * @param {Object} ns The {@link CachierFiles} namespace
+ * @param {String} dir The directory path where the partial resides
+ * @param {String} path The path to the partial
+ * @param {String} [partialPrefix] A prefix path that will be excluded from the name of the partial
+ * @returns {Promise} The promise from {@link CachierFiles.read}
+ */
+function readPartial(ns, dir, path, partialPrefix) {
+  const { name, extension } = extractNameParts(ns, path, partialPrefix), logger = ns.at.logger;
+  if (logger.debug) logger.debug(`Reading template partial "${name}" from: ${dir}`);
+  return ns.this.read(name, true, extension);
+}
+
+/**
+ * Extracts a partial name from a partial path
+ * @private
+ * @ignore
+ * @param {Object} ns The {@link CachierFiles} namespace
+ * @param {String} path The path to the partial
+ * @param {String} [partialPrefix] A prefix path that will be excluded from the name of the partial
+ * @returns {Object} The parts `{ name:String, extension:String }`
+ */
+function extractNameParts(ns, path, partialPrefix) {
+  let name = Path.parse(path), ppx = partialPrefix ? partialPrefix.replace(/\\/g, '/') : '';
+  let extension = name.ext;
+  name = (extension ? path.replace(extension, '') : path).replace(/\\/g, '/');
+  name = ppx ? name.substring(name.indexOf(ppx) + ppx.length).replace(/^\\|\//, '') : name;
+  return { name, extension };
+}
+
+/**
+ * Watches a partial directory for file adds, deletions, etc. and registers or unregisters the
+ * partial accordingly
+ * @private
+ * @ignore
+ * @param {Object} ns The {@link CachierFiles} namespace
+ * @param {String} dir The directory that will be watched
+ * @param {String} [partialPrefix] A prefix path that will be excluded from the name of the partial
+ * @returns {Function} The listener function used in the watch
+ */
+function watchPartialDir(ns, dir, partialPrefix) {
+  const files = {}, logger = ns.at.logger;
+  const partialWatchListener = async (type, filename) => {
+    if (!filename) return;
+    if (files[filename] &amp;&amp; files[filename][type] &amp;&amp; files[filename][type].wait) return;
+    files[filename] = files[filename] || {};
+    files[filename][type] = files[filename][type] || {};
+    files[filename][type].wait = setTimeout(() => files[filename][type].wait = false, 100);
+    var stat, path = Path.join(dir, filename);
+    try {
+      stat = await Fsp.stat(path);
+      if (!stat.isFile()) stat = null;
+    } catch (err) {
+      stat = null;
+    }
+    if (!stat &amp;&amp; type === 'rename') {
+      const { name, extension } = extractNameParts(ns, path, partialPrefix);
+      if (logger.info) {
+        const extTxt = extension ? ` (extension: "${extension}")` : '';
+        logger.info(`Unregistering watched "${type}" template partial "${name}"${extTxt} from: ${path}`);
+      }
+      ns.this.unregister(name);
+    } else if (stat) {
+      files[filename][type].wait = true;
+      const prtl = await readPartial(ns, dir, path, partialPrefix);
+      files[filename][type].wait = false;
+      if (logger.info) logger.info(`Registering watched "${type}" template partial "${prtl.name}" from: ${path}`);
+      ns.this.registerPartial(prtl.name, prtl.content);
+    }
+  };
+  const watcher = Fs.watch(dir, partialWatchListener);
+  if (ns.at.watchers) ns.at.watchers.push(watcher);
+  if (logger.info) logger.info(`Watching template partial directory "${dir}"`);
+  return partialWatchListener;
+}
+
+/**
+ * Cleans any temporary directories that were previously generated by {@link CachierFiles}
+ * @private
+ * @ignore
+ * @param {String} prefix The directory prefix used to designate that the temprorary directory was generated by {@link CachierFiles}
+ */
+async function cleanTempOutput(prefix) {
+  if (!prefix) return;
+  const tmp = Os.tmpdir(), tdirs = await Fsp.readdir(tmp), rmProms = [];
+  for (let tdir of tdirs) {
+    if (tdir.includes(prefix)) rmProms.push(rmrf(Path.join(tmp, tdir)));
+  }
+  return Promise.all(rmProms);
+}
+
+/**
+ * Removes a directory and any sub directories/files (i.e. `rmdir -rf`)
+ * @private
+ * @ignore
+ * @param {String} path the directory that will be removed along with any sub-directories/files
+ */
+async function rmrf(path) {
+  var stats, subx;
+  try {
+    stats = await Fsp.stat(path);
+  } catch (e) {
+    stats = null;
+  }
+  if (stats &amp;&amp; stats.isDirectory()) {
+    for (let sub of await Fsp.readdir(path)) {
+      subx = Path.resolve(path, sub);
+      stats = await Fsp.stat(subx);
+      if (stats.isDirectory()) await rmrf(subx);
+      else if (stats.isFile() || stats.isSymbolicLink()) await Fsp.unlink(subx);
+    }
+    await Fsp.rmdir(path); // dir path should be empty
+  } else if (stats &amp;&amp; (stats.isFile() || stats.isSymbolicLink())) await Fsp.unlink(path);
+}
+
+/**
+ * Generates a path from an partial template name
+ * @private
+ * @ignore
+ * @param {Object} ns The {@link CachierFiles} namespace
+ * @param {String} name The template name that uniquely identifies the template content
+ * @param {Boolean} [forContent] `true` to load a template content, `false` to load the template module
+ * @param {Boolean} [create] `true` to create the output directory path when not already created
+ */
+async function createPath(ns, path) {
+  const fprts = Path.parse(path);
+  if (fprts.ext) fprts.base = fprts.ext = fprts.name = null;
+  const fdir = Path.format(fprts);
+  if (!ns.at.createdDirs.includes(fdir)) {
+    if (ns.at.logger.info) ns.at.logger.info(`Creating template directory: ${fdir}`);
+    await Fsp.mkdir(fdir, { recursive: true });
+    ns.at.createdDirs.push(Path.join(fdir, Path.sep)); // always w/trailing separator
+  }
+}
+
+/**
+ * Clears a module from cache
+ * @private
+ * @ignore
+ * @param {Object} ns The {@link CachierFiles} namespace
+ * @param {String} path The path to a module that will be removed
+ */
+function clearModule(ns, path) {
+  if (ns.at.dbx[ns.this.names.rndrs][path]) delete ns.at.dbx[ns.this.names.rndrs][path];
+  if (!ns.at.options.useCommonJs) return;
+  const rpth = require.resolve(path);
+  if (require.cache[rpth] &amp;&amp; require.cache[rpth].parent) {
+    let i = require.cache[rpth].parent.children.length;
+    while (i--) {
+      if (require.cache[rpth].parent.children[i].id === rpth) {
+        require.cache[rpth].parent.children.splice(i, 1);
+      }
+    }
+  }
+  delete require.cache[rpth];
+}
+
+/**
+ * Generates the full name path for a given template name (__internal use only__).
+ * @private
+ * @ignore
+ * @param {Object} ns The {@link CachierFiles} namespace
+ * @param {String} fpth The template path that uniquely identifies the template content
+ * @param {Boolean} [forContent] `true` to read a template content, `false` to read the template source code
+ * @param {String} [extension] The file extension designation for the template
+ * @returns {String} The full template path
+ */
+function readWriteName(ns, name, forContent, extension) {
+  const fpth = ns.this.readWriteName(name, ns.at.options, forContent, extension);
+  if (Path.isAbsolute(fpth)) return fpth;
+  const pths = [];
+  const base = forContent ? ns.at.options.templatePathBase : ns.at.outputPath;
+  const prtl = forContent &amp;&amp; fpth.indexOf(ns.at.options.partialsPath) &lt; 0 &amp;&amp; ns.at.options.partialsPath;
+  if (base) pths.push(base);
+  if (prtl) pths.push(prtl);
+  pths.push(fpth);
+  return Path.join(...pths);
+}
+
+// private mapping substitute until the following is adopted: https://github.com/tc39/proposal-class-fields#private-fields
+let map = new WeakMap();
+let internal = function(object, parent) {
+  if (!map.has(object)) map.set(object, {});
+  return {
+    at: map.get(object),
+    this: object
+  };
+};</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<br class="clear">
+
+<footer>
+    Generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.5.5</a> using the Minami theme.
+</footer>
+
+<script>prettyPrint();</script>
+<script src="scripts/linenumber.js"></script>
+<div id="jsdocpChangelogContent" data-title="CHANGELOG v0.1.0">
+  <svg class="jsdocp-close" id="jsdocpChangelogClose" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+    <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+    <path d="M0 0h24v24H0z" fill="none"/>
+  </svg>
+  <h2><a href="https://github.com/ugate/templeo/tree/v0.1.0">0.1.0</a> (2019-02-06)</h2><p><a href="https://github.com/ugate/templeo/compare/v0.1.0...v0.1.0">Full Changelog</a></p>
+<p><strong>Features:</strong></p>
+<ul>
+<li><a href="https://github.com/ugate/templeo/commit/4e6402051e665ca8718a30ac116c91115e56fb8d">[FEATURE]: Cached includes will only read a partial with the same name and URLSearchParams once. Any partial with the same name, but different URLSearchParams will be read multiple times.</a></li>
+<li><a href="https://github.com/ugate/templeo/commit/690bfeeae899d0fe4ce2c063ed9b13f70ca3effd">[FEATURE]: Helper directives/functions can be registered via Engine.registerHelper and will be compiled along with the built-in directives</a></li>
+<li><a href="https://github.com/ugate/templeo/commit/3c8c14cdfe96de29b1f042f309a7f2908b8afb30">[FEATURE]: Debugger option sets a standard debugger statement into each rendered template. Metadata accessibility from within templates.</a></li>
+<li><a href="https://github.com/ugate/templeo/commit/643fe36e2798a879ab02956566e6f1d640a03a5c">[FEATURE]: Include parameters can be set to either URLSearchParams to initiate a read or JSON to add the parameters to the partial scope</a></li>
+<li><a href="https://github.com/ugate/templeo/commit/affac39a7e8de3f8f0ea8baa63c9d64c61b04225">[FEATURE]: Passing parameters to the include directive for use on the server and/or within the partial template itself using the options.includesParametersName</a></li>
+<li><a href="https://github.com/ugate/templeo/commit/127f8b2028c23988f9065bae27ed821061bc4f8a">[FEATURE]: options.defaultBaseTemplateName added to allow naming of the template being compiled</a></li>
+<li><a href="https://github.com/ugate/templeo/commit/c88303bdcfdd651e329508b0f4745c301962f6a8">[FEATURE]: Assignments can be made that are outside the primary context passed into the rendering function (i.e. &quot;it&quot;). Templates can designate something like {{ myVarName = 'Some value' }} which can later be retrieved via {{ myVarName }}. This is a static namespace for use during compilation rather than during rendering (e.g. renderFunction({ myVarName: 'Some value' }) with the template using {{ it.myVarName }}).</a></li>
+</ul>
+</div>
+
+
+
+<script src="jsdocp/scripts/index.js"></script></body>
+</html>

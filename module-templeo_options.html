@@ -1,0 +1,1572 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>templeo/options - Documentation</title>
+
+    <script src="scripts/prettify/prettify.js"></script>
+    <script src="scripts/prettify/lang-css.js"></script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="https://code.ionicframework.com/ionicons/2.0.1/css/ionicons.min.css">
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+  <!-- https://realfavicongenerator.net/ -->
+  
+    <link
+      
+      rel="apple-touch-icon" 
+      
+      sizes="180x180" 
+      
+      href="apple-touch-icon.png" 
+      
+    >
+  
+    <link
+      
+      rel="icon" 
+      
+      type="image/png" 
+      
+      sizes="32x32" 
+      
+      href="favicon-32x32.png" 
+      
+    >
+  
+    <link
+      
+      rel="icon" 
+      
+      type="image/png" 
+      
+      sizes="16x16" 
+      
+      href="favicon-16x16.png" 
+      
+    >
+  
+    <link
+      
+      rel="manifest" 
+      
+      href="site.webmanifest" 
+      
+    >
+  
+    <link
+      
+      rel="mask-icon" 
+      
+      type="image/png" 
+      
+      sizes="16x16" 
+      
+      href="safari-pinned-tab.svg" 
+      
+      color="#ffab40" 
+      
+    >
+  
+    <link
+      
+      type="text/css" 
+      
+      rel="stylesheet" 
+      
+      href="pkg-styles/pkg-style.css" 
+      
+    >
+  
+
+  
+    <meta
+      
+      name="msapplication-TileColor" 
+      
+      content="#ffab40" 
+      
+    >
+  
+    <meta
+      
+      name="theme-color" 
+      
+      content="#bdbdbd" 
+      
+    >
+  
+    <meta
+      
+      name="viewport" 
+      
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" 
+      
+    >
+  
+
+  <link type="text/css" rel="stylesheet" href="jsdocp/styles/index.css"></head>
+<body><div id="jsdocpNav" class="jsdocp-remove-me pkg-menu"
+  data-jsdocp-sm-position="bottom"
+  data-jsdocp-md-position="bottom"
+  data-jsdocp-lg-position="top"
+  data-jsdocp-sm-match-media="(max-width: 480px)"
+  data-jsdocp-md-match-media="(min-width: 481px) and (max-width: 839px)"
+  data-jsdocp-lg-match-media="(min-width: 840px)"
+  data-jsdocp-sm-auto-hide="true"
+  data-jsdocp-md-auto-hide="true"
+  data-jsdocp-lg-auto-hide="false">
+  <a href="index.html" id="jsdocpLogo"
+    title="templeo"
+    class="jsdocp-logo ">
+    <b class="pkg-logo">
+    
+      <?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg viewBox="0 0 64 64" width="64" height="64" version="1.1" xmlns="http://www.w3.org/2000/svg">
+  <g transform="matrix(1.9935723,0,0,2.0019177,0.08877553,-0.18261032)">
+    <g transform="scale(0.96670978,1.0344366)">
+      <path d="m 18.634766,5.4023438 c -1.733459,-10e-8 -3.228867,0.5041519 -4.361328,1.5253906 -1.122892,1.0122398 -1.705079,2.3995654 -1.705079,3.9902346 0,0.759851 0.195452,1.57394 0.558594,2.453125 a 0.65860366,0.65860366 0 0 0 0.0039,0.0059 c 0.1107,0.261137 0.17007,0.433699 0.242188,0.626953 -0.412293,-0.119387 -0.811529,-0.335937 -1.234375,-0.335937 -0.57709,0 -1.150057,0.112763 -1.708984,0.326172 a 0.65860366,0.65860366 0 0 0 -0.0059,0.002 c -1.1883607,0.467219 -2.0975223,1.32863 -2.6171874,2.490234 l 0.00195,0 c -0.2754091,0.612021 -0.4199219,1.244178 -0.4199219,1.878906 0,0.586308 0.1172738,1.166119 0.34375,1.722657 2.469e-4,6.06e-4 -2.472e-4,0.0013 0,0.002 0.4616675,1.174144 1.1678027,2.049935 2.1289062,2.474609 a 0.65860366,0.65860366 0 0 0 0.00781,0.0039 c 0.8286494,0.352413 1.5586814,0.548829 2.2304684,0.548829 0.586313,0 1.170378,-0.116216 1.740235,-0.339844 1.181788,-0.458451 2.082653,-1.322653 2.601562,-2.488282 0.330502,-0.705376 0.488282,-1.498294 0.488282,-2.353515 0,-0.214294 -0.0234,-0.559044 -0.06836,-1.134766 -0.04332,-0.676666 -0.248075,-1.447023 -0.591797,-2.357422 a 0.65860366,0.65860366 0 0 0 -0.0039,-0.01367 c -0.215809,-0.535206 -0.423732,-1.120249 -0.625,-1.75 -0.190291,-0.60397 -0.279297,-1.133312 -0.279297,-1.585938 0,-1.026584 0.278067,-1.7499346 0.820313,-2.3066406 a 0.65860366,0.65860366 0 0 0 0.002,-0.00195 c 0.542177,-0.5638645 1.235121,-0.8457031 2.236328,-0.8457031 1.04226,0 1.792542,0.302684 2.402344,0.9199219 a 0.65860366,0.65860366 0 0 0 0.0039,0.00195 c 0.606572,0.606572 0.90625,1.3689279 0.90625,2.4335939 0,1.572702 -0.589605,3.408904 -1.837891,5.498047 a 0.65860366,0.65860366 0 0 0 -0.002,0 c -1.320121,2.215588 -2.011719,4.290309 -2.011719,6.228515 0,1.135656 0.404802,2.137499 1.199219,2.810547 a 0.65860366,0.65860366 0 0 0 0.0039,0.0039 c 0.75835,0.631956 1.698343,0.957031 2.716797,0.957031 1.227821,0 2.438439,-0.64332 3.644531,-1.773438 a 0.65860366,0.65860366 0 0 0 0.03711,-0.921875 L 24.611328,23.130859 A 0.65860366,0.65860366 0 0 0 23.6875,23.078125 c -0.83238,0.732494 -1.487863,1.012762 -1.851562,1.015625 -0.490025,-0.0128 -0.768941,-0.128804 -0.923829,-0.271484 -0.154694,-0.142502 -0.25969,-0.35908 -0.27539,-0.78711 0.0033,-1.431752 0.595963,-3.259206 1.855469,-5.439453 1.332579,-2.306741 2.033203,-4.364066 2.033203,-6.207031 -10e-7,-1.7094646 -0.553007,-3.1902892 -1.650391,-4.2988282 -1.096122,-1.1162349 -2.559684,-1.6875 -4.240234,-1.6875 z M 12.125,16.433594 c 0.207579,0 0.558685,0.07879 1.007812,0.279297 a 0.65860366,0.65860366 0 0 0 0.0039,0.002 c 0.325823,0.142905 0.588789,0.418207 0.804687,0.976562 a 0.65860366,0.65860366 0 0 0 0.002,0.0059 c 0.09694,0.242349 0.140625,0.469511 0.140625,0.695312 0,0.206742 -0.07961,0.56478 -0.279296,1.021484 -1.7e-4,3.8e-4 -0.0018,-3.79e-4 -0.002,0 -0.141144,0.315308 -0.416373,0.578316 -0.976562,0.794922 -0.255126,0.09921 -0.487088,0.142578 -0.712891,0.142578 -0.211018,0 -0.561402,-0.07771 -1.003906,-0.265624 -0.303312,-0.138564 -0.572345,-0.422337 -0.798828,-0.996094 -0.09779,-0.252742 -0.142578,-0.486321 -0.142578,-0.710938 0,-0.21264 0.07548,-0.556983 0.265625,-0.99414 9.3e-5,-2.15e-4 0.0019,2.15e-4 0.002,0 0.141518,-0.316151 0.419067,-0.583253 0.982422,-0.808594 0.243294,-0.09732 0.47252,-0.142578 0.707031,-0.142578 z" />
+    </g>
+    <g transform="scale(0.805326,1.2417332)">
+      <path d="m 29.052173,23.815766 0.951868,0 q 1.903736,0 2.474857,-0.584719 0.584719,-0.584719 0.584719,-2.529249 l 0,-3.372332 q 0,-2.121306 0.611915,-3.086772 0.611915,-0.965466 2.121306,-1.332615 -1.509391,-0.339953 -2.121306,-1.305419 -0.611915,-0.965466 -0.611915,-3.1003697 l 0,-3.3723321 q 0,-1.9309321 -0.584719,-2.515651 -0.571121,-0.598317 -2.474857,-0.598317 l -0.951868,0 0,-1.9445302 0.856682,0 q 3.38593,0 4.514573,1.0062604 1.142242,0.9926623 1.142242,3.9978453 l 0,3.2635472 q 0,2.0261191 0.734298,2.8148091 0.734298,0.775093 2.66523,0.775093 l 0.843083,0 0,1.94453 -0.843083,0 q -1.930932,0 -2.66523,0.788691 -0.734298,0.78869 -0.734298,2.842005 l 0,3.249949 q 0,3.005183 -1.142242,4.011444 -1.128643,1.00626 -4.514573,1.00626 l -0.856682,0 0,-1.958128 z" />
+    </g>
+    <g transform="scale(0.80532598,1.2417332)">
+      <path d="m 10.700812,23.861077 0,1.958128 -0.8430829,0 q -3.3859302,0 -4.5417698,-1.00626 -1.1422415,-1.006261 -1.1422415,-4.011444 l 0,-3.249949 q 0,-2.053315 -0.7342981,-2.842005 -0.7342982,-0.788691 -2.66523025,-0.788691 l -0.82948492,0 0,-1.94453 0.82948492,0 q 1.94453025,0 2.66523025,-0.775093 0.7342981,-0.78869 0.7342981,-2.8148091 l 0,-3.2635472 q 0,-3.0051831 1.1422415,-3.9978453 1.1558396,-1.00626042 4.5417698,-1.00626042 l 0.8430829,0 0,1.94453022 -0.9246715,0 q -1.917334,0 -2.5020529,0.598317 -0.5847189,0.598317 -0.5847189,2.5156509 l 0,3.3723321 q 0,2.1349038 -0.6255132,3.1003698 -0.6119151,0.965466 -2.1077075,1.305419 1.5093905,0.367149 2.1213056,1.332615 0.6119151,0.965466 0.6119151,3.086772 l 0,3.372332 q 0,1.917334 0.5847189,2.515651 0.5847189,0.598317 2.5020529,0.598317 l 0.9246715,0 z" />
+    </g>
+  </g>
+</svg>
+
+    
+    </b>
+    <b id="jsdocpPkgName">templeo</b>
+    <b>|</b>
+    <hr/>
+  </a>
+  <a href="https://www.npmjs.com/package/templeo" id="jsdocpModule"
+    title="npm"
+    class="jsdocp-icon ">
+    
+    <svg version="1.1" preserveAspectRatio="xMidYMid meet" viewBox="0 0 24 24" height="24" width="24" xmlns="http://www.w3.org/2000/svg">
+      <g class="jsdocp-icon-svg-el pkg-icons" stroke="none" transform="translate(0,24) scale(0.1,-0.1)">
+        <path d="M 0,120 0,0 l 120,0 120,0 0,120 0,120 -120,0 -120,0 z m 200,0 c 0,-73 0.23256,-80 0.23256,-80 0,0 -27.97435,0.741211 -40.61273,0.707427 C 159.61983,67.551504 160,70.949947 160,100 c 0,53 -2,60 -20,60 -18,0 -20,-7 -20,-60 l 0,-60 -40,0 -40,0 0,80 0,80 80,0 80,0 z"/>
+      </g>
+    </svg>
+    
+  </a>
+  <a href="CHANGELOG.html" id="jsdocpChangelog" data-jsdocp-root-href="https://github.com/ugate/templeo/CHANGELOG.html"
+    title="Changelog"
+    class="jsdocp-icon ">
+    
+    <svg version="1.1" viewBox="0 0 64 64" height="64" width="64" xmlns="http://www.w3.org/2000/svg">
+      <path class="jsdocp-icon-svg-el pkg-icons" stroke="none" fill-rule="nonzero"
+        d="M 29.896194,0.97873581 C 13.435048,0.97873581 1.1072664e-7,15.139296 0,32.489368 0,49.839439 13.435048,64 29.896194,64 46.357339,64 59.792385,49.839438 59.792388,32.489368 a 4.2273908,4.4556761 0 1 0 -8.453721,0 c -10e-7,12.534501 -9.550175,22.600399 -21.442473,22.600399 -11.892299,0 -21.4424739,-10.065899 -21.4424739,-22.600399 0,-12.5345 9.5501749,-22.6003988 21.4424739,-22.6003988 a 4.2273908,4.4556761 0 1 0 0,-8.91023339 z" />
+      <path class="jsdocp-icon-svg-el pkg-icons" stroke="none" fill-rule="nonzero"
+        d="m 55.529412,24.680907 -8.470588,10.142582 16.941176,0 z"/>
+      <rect class="jsdocp-icon-svg-el pkg-icons" stroke="none" fill-rule="nonzero"
+        transform="matrix(0.6882785,0.72544656,-0.6882785,0.72544656,0,0)" y="-38.592953" x="38.592953" height="39.814472" width="11.375563" />
+      <path class="jsdocp-icon-svg-el pkg-icons" stroke="none" fill-rule="nonzero"
+        d="m 23.705056,39.295314 8.338477,-1.11407 -7.281487,-7.674698 z"/>
+    </svg>
+    
+  </a>
+  <a href="https://github.com/ugate/templeo#readme" id="jsdocpSourceCode"
+    title="Source Code"
+    class="jsdocp-icon ">
+    
+    <svg version="1.1" viewBox="0 0 10 16" width="24" height="24" xmlns="http://www.w3.org/2000/svg" id="jsdocpSourceIcon">
+      <path class="jsdocp-icon-svg-el pkg-icons" stroke="none" fill-rule="evenodd"
+        d="M8 1a1.993 1.993 0 0 0-1 3.72V6L5 8 3 6V4.72A1.993 1.993 0 0 0 2 1a1.993 1.993 0 0 0-1 3.72V6.5l3 3v1.78A1.993 1.993 0 0 0 5 15a1.993 1.993 0 0 0 1-3.72V9.5l3-3V4.72A1.993 1.993 0 0 0 8 1zM2 4.2C1.34 4.2.8 3.65.8 3c0-.65.55-1.2 1.2-1.2.65 0 1.2.55 1.2 1.2 0 .65-.55 1.2-1.2 1.2zm3 10c-.66 0-1.2-.55-1.2-1.2 0-.65.55-1.2 1.2-1.2.65 0 1.2.55 1.2 1.2 0 .65-.55 1.2-1.2 1.2zm3-10c-.66 0-1.2-.55-1.2-1.2 0-.65.55-1.2 1.2-1.2.65 0 1.2.55 1.2 1.2 0 .65-.55 1.2-1.2 1.2z"></path>
+    </svg>
+    <!-- GitHub icon -->
+    <svg version="1.1" viewBox="0 0 16 16" height="24" width="24" xmlns="http://www.w3.org/2000/svg" class="jsdocp-remove-me" id="jsdocpGithubIcon">
+      <path class="jsdocp-icon-svg-el pkg-icons" stroke="none"  fill-rule="evenodd"
+        d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0 0 16 8c0-4.42-3.58-8-8-8z"/>
+    </svg>
+    
+  </a>
+  <!-- versions.json should point to the latest list -->
+  <a id="jsdocpVersionsIcon"
+    class="jsdocp-icon ">
+    
+    <svg version="1.1" viewBox="0 0 64 64" height="24" width="24" xmlns="http://www.w3.org/2000/svg">
+      <path class="jsdocp-icon-svg-el pkg-icons" stroke="none" fill-rule="nonzero"
+        d="m 63.999999,25.315556 -24.108295,0 9.74288,-10.026667 C 39.927261,5.6888885 24.210644,5.3333335 14.503322,14.933333 c -9.7073234,9.635555 -9.7073234,25.173334 0,34.808888 9.707322,9.635556 25.423939,9.635556 35.131262,0 4.835883,-4.764443 7.253823,-10.346666 7.253823,-17.386666 l 7.111592,0 c 0,7.039999 -3.1291,16.177777 -9.387301,22.364444 -12.480844,12.373334 -32.748879,12.373334 -45.2297224,0 -12.445286,-12.337778 -12.55196,-32.39111 -0.071116,-44.7288881 12.4808434,-12.3377774 32.4999734,-12.3377774 44.9808174,0 L 64,-5e-7 64,25.315556 Z" />
+      <path class="jsdocp-icon-svg-el pkg-icons" stroke="none" fill-rule="nonzero"
+        d="m 33.775734,17.777777 0,15.111111 12.445286,7.395556 -2.560173,4.302222 -15.218806,-9.031112 0,-17.777777 5.333693,0 z" />
+    </svg>
+    
+  </a>
+  <select id="jsdocpVersions"
+    title="v0.1.0"
+    data-jsdocp-version-base="/templeo"
+    data-jsdocp-json-url="/templeo/versions.json"
+    data-jsdocp-type=""
+    data-jsdocp-from="1.0.0"
+    data-jsdocp-version="0.1.0">
+  </select>
+</div>
+
+<input type="checkbox" id="nav-trigger" class="nav-trigger" />
+<label for="nav-trigger" class="navicon-button x">
+  <div class="navicon"></div>
+</label>
+
+<label for="nav-trigger" class="overlay"></label>
+
+<nav>
+    <li class="nav-link nav-home-link"><a href="index.html">Home</a></li><li class="nav-heading">Tutorials</li><li class="nav-item"><a href="tutorial-1-basics.html">The Basics</a></li><li class="nav-item"><a href="tutorial-2-cache.html">Cache</a></li><li class="nav-item"><a href="tutorial-3-examples.html">Examples</a></li><li class="nav-heading">Classes</li><li class="nav-heading"><span class="nav-item-type type-class">C</span><span class="nav-item-name"><a href="Cachier.html">Cachier</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Cachier.html#clear">clear</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Cachier.html#compile">compile</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Cachier.html#modularize">modularize</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Cachier.html#read">read</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Cachier.html#registerHelper">registerHelper</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Cachier.html#registerPartial">registerPartial</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Cachier.html#registerPartials">registerPartials</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Cachier.html#unregister">unregister</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="Cachier.html#write">write</a></span></li><li class="nav-heading"><span class="nav-item-type type-class">C</span><span class="nav-item-name"><a href="CachierDB.html">CachierDB</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="CachierDB.html#clear">clear</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="CachierDB.html#read">read</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="CachierDB.html#registerPartials">registerPartials</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="CachierDB.html#write">write</a></span></li><li class="nav-heading"><span class="nav-item-type type-class">C</span><span class="nav-item-name"><a href="CachierFiles.html">CachierFiles</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="CachierFiles.html#clear">clear</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="CachierFiles.html#modularize">modularize</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="CachierFiles.html#read">read</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="CachierFiles.html#registerPartials">registerPartials</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="CachierFiles.html#write">write</a></span></li><li class="nav-heading"><span class="nav-item-type type-class">C</span><span class="nav-item-name"><a href="module-templeo.Engine.html">Engine</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="module-templeo.Engine.html#.create">create</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="module-templeo.Engine.html#clearCache">clearCache</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="module-templeo.Engine.html#compile">compile</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="module-templeo.Engine.html#registerHelper">registerHelper</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="module-templeo.Engine.html#registerPartial">registerPartial</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="module-templeo.Engine.html#registerPartials">registerPartials</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="module-templeo.Engine.html#renderPartial">renderPartial</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="module-templeo.Engine.html#renderPartialGenerate">renderPartialGenerate</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="module-templeo.Engine.html#unregister">unregister</a></span></li><li class="nav-heading"><span class="nav-item-type type-class">C</span><span class="nav-item-name"><a href="module-templeo_options-TemplateOpts.html">TemplateOpts</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="module-templeo_options-TemplateOpts.html#build">build</a></span></li><li class="nav-heading"><span class="nav-item-type type-class">C</span><span class="nav-item-name"><a href="TemplateFileOpts.html">TemplateFileOpts</a></span></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="TemplateFileOpts.html#build">build</a></span></li><li class="nav-heading">Modules</li><li class="nav-heading"><span class="nav-item-type type-module">M</span><span class="nav-item-name"><a href="module-templeo.html">templeo</a></span></li><li class="nav-heading"><span class="nav-item-type type-module">M</span><span class="nav-item-name"><a href="module-templeo_options.html">templeo/options</a></span></li><li class="nav-heading"><a href="global.html">Globals</a></li><li class="nav-item"><span class="nav-item-type type-function">F</span><span class="nav-item-name"><a href="global.html#newCache">newCache</a></span></li>
+</nav>
+
+<div id="main">
+    
+    <h1 class="page-title">templeo/options</h1>
+    
+
+    
+
+
+
+
+<section>
+
+<header>
+    
+        
+            
+        
+    
+</header>
+
+<article>
+    <div class="container-overview">
+    
+        
+            <div class="description"><p><code>templeo</code> options module</p></div>
+        
+
+        
+            
+<div class="section-method">
+
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="lib_template-options.js.html">lib/template-options.js</a>, <a href="lib_template-options.js.html#line3">line 3</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</div>
+        
+    
+    </div>
+
+    
+
+    
+
+    
+        <h3 class="subsection-title">Classes</h3>
+
+        <dl>
+            <dt><a href="module-templeo_options-TemplateOpts.html">TemplateOpts</a></dt>
+            <dd></dd>
+        </dl>
+    
+
+     
+
+    
+
+    
+
+    
+
+    
+        <h3 class="subsection-title">Type Definitions</h3>
+
+        
+                
+<div class="section-members">
+<h4 class="name" id=".FileOptions">FileOptions</h4>
+
+
+
+
+<div class="description">
+    <p>Template compilation options for a file/system back-end. All file options inherit from <a href="module-templeo_options.html#.Options"><code>TemplateOpts</code></a>.</p>
+</div>
+
+
+
+
+
+    <h5 class="subsection-title">Properties:</h5>
+
+    
+
+<table class="props">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+        <th>Attributes</th>
+        
+
+        
+        <th>Default</th>
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>viewsPath</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type"><code>String</code></span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                    'views'
+                
+                </td>
+            
+
+            <td class="description last"><p>The <strong>relative</strong> path where views are located/identified</p></td>
+        </tr>
+
+        
+
+    
+
+        <tr>
+            
+                <td class="name"><code>partialsPath</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type"><code>String</code></span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                    'views/partials'
+                
+                </td>
+            
+
+            <td class="description last"><p>The <strong>relative</strong> path to the <code>templatePathBase</code> where partials are located/identified.
+Partials are small segments of template code that can be nested and reused throughout other templates. The path is used during <code>read</code>/<code>write</code>
+oprtations in conjunction with the <code>templatePathBase</code> for prefixing file paths. The path will also be used when <em>reading</em> templates.</p></td>
+        </tr>
+
+        
+
+    
+
+        <tr>
+            
+                <td class="name"><code>sourcePath</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type"><code>String</code></span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                </td>
+            
+
+            <td class="description last"><p>When defined, will be used as the directory structure that will be generated within the <code>outputPath</code> when <em>reading</em>
+templates. It will also be used for file discovery when registering partials from a <code>read</code> operation. When not defined, no directory structure is
+initialized.</p></td>
+        </tr>
+
+        
+
+    
+
+        <tr>
+            
+                <td class="name"><code>watchRegistrationSourcePaths</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type"><code>Boolean</code></span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                </td>
+            
+
+            <td class="description last"><p>When true, any directory discovered when registering partials from a <code>read</code> operation will be
+watched by the underlying operating system for file changes, adds, etc. When a change occurs the template partial will be registered/re-registered
+accordingly. <strong>NOTE: All watched files will continue to be watched until <code>engine.clearCache</code> is called.</strong></p></td>
+        </tr>
+
+        
+
+    
+
+        <tr>
+            
+                <td class="name"><code>outputPath</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type"><code>String</code></span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                </td>
+            
+
+            <td class="description last"><p>When defined, compiled template code will be written to the the path within the file system. Omit to use the operating
+system's temporary directory.</p></td>
+        </tr>
+
+        
+
+    
+    </tbody>
+</table>
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="lib_template-file-options.js.html">lib/template-file-options.js</a>, <a href="lib_template-file-options.js.html#line3">line 3</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+    <h5>Type:</h5>
+    <ul>
+        <li>
+            
+<span class="param-type"><code><a href="module-templeo_options.html#.Options">module:templeo/options.Options</a></code></span>
+
+
+        </li>
+    </ul>
+
+
+
+
+
+</div>
+
+            
+                
+<div class="section-members">
+<h4 class="name" id=".Options">Options</h4>
+
+
+
+
+<div class="description">
+    <p>Template compilation options</p>
+</div>
+
+
+
+
+
+    <h5 class="subsection-title">Properties:</h5>
+
+    
+
+<table class="props">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+        <th>Attributes</th>
+        
+
+        
+        <th>Default</th>
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>useCommonJs</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type"><code>Boolean</code></span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                    true
+                
+                </td>
+            
+
+            <td class="description last"><p>When true, <strong>CommonJS Module</strong> semantics will be used. When false, <strong>ECMAScript Module</strong> semantics
+will be used.</p></td>
+        </tr>
+
+        
+
+    
+
+        <tr>
+            
+                <td class="name"><code>templatePathBase</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type"><code>String</code></span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                    ''
+                
+                </td>
+            
+
+            <td class="description last"><p>A base path used as prefix for template <code>read</code>/<code>write</code> operations. The path format may vary
+depending on the cache implementation used (i.e. URL, file system, etc.). See the cache <code>read</code>/<code>write</code> operations for more details</p></td>
+        </tr>
+
+        
+
+    
+
+        <tr>
+            
+                <td class="name"><code>templatePathBaseBypass</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type"><code>RegExp</code></span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                    /^https?:\/?\/?[^:\/\s]+/i
+                
+                </td>
+            
+
+            <td class="description last"><p>An expression that will tested against template names to determine
+if the template name will be prefixed with the <code>templatePathBase</code> during <code>read</code>/<code>write</code> operations. Any matches will <strong>not</strong> be prefixed.</p></td>
+        </tr>
+
+        
+
+    
+
+        <tr>
+            
+                <td class="name"><code>contextPathBase</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type"><code>String</code></span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                    ''
+                
+                </td>
+            
+
+            <td class="description last"><p>A base path used as prefix for context <code>read</code>/<code>write</code> operations. The path format may vary
+depending on the cache implementation used (i.e. URL, file system, etc.). See the cache <code>read</code>/<code>write</code> operations for more details</p></td>
+        </tr>
+
+        
+
+    
+
+        <tr>
+            
+                <td class="name"><code>contextPathBaseBypass</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type"><code>RegExp</code></span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                    /^https?:\/?\/?[^:\/\s]+/i
+                
+                </td>
+            
+
+            <td class="description last"><p>An expression that will tested against context names to determine
+if the context name will be prefixed with the <code>contextPathBase</code> during <code>read</code>/<code>write</code> operations. Any matches will <strong>not</strong> be prefixed.</p></td>
+        </tr>
+
+        
+
+    
+
+        <tr>
+            
+                <td class="name"><code>defaultExtension</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type"><code>String</code></span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                    'html'
+                
+                </td>
+            
+
+            <td class="description last"><p>The default extension name to append to template names when performing <code>read</code>/<code>write</code>
+operations and an explicit extension is not already provided for a given template name</p></td>
+        </tr>
+
+        
+
+    
+
+        <tr>
+            
+                <td class="name"><code>defaultTemplateName</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type"><code>String</code></span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                    'template'
+                
+                </td>
+            
+
+            <td class="description last"><p>The name assigned to the primary template content passed into <code>Engine.compile</code>,
+similar to the name assignment when calling <code>Engine.registerPartial</code>. Set to a <em>falsy</em> value to generate the name.</p></td>
+        </tr>
+
+        
+
+    
+
+        <tr>
+            
+                <td class="name"><code>defaultContextName</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type"><code>String</code></span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                    'context'
+                
+                </td>
+            
+
+            <td class="description last"><p>The name assigned to the context when executing a rendering funtion without passing a
+context <em>object</em>. The name will be used to <code>read</code> the context immediately prior to rendering.</p></td>
+        </tr>
+
+        
+
+    
+
+        <tr>
+            
+                <td class="name"><code>defaultContextExtension</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type"><code>String</code></span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                    'json'
+                
+                </td>
+            
+
+            <td class="description last"><p>The default extension name to append to the context name when performing <code>read</code>/<code>write</code>
+operations and an explicit extension is not already provided for a given context name</p></td>
+        </tr>
+
+        
+
+    
+
+        <tr>
+            
+                <td class="name"><code>defaultPartialContent</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type"><code>RegExp</code></span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                    '&amp;nbsp;'
+                
+                </td>
+            
+
+            <td class="description last"><p>The value to use for a partial when a partial returns a non-string value</p></td>
+        </tr>
+
+        
+
+    
+
+        <tr>
+            
+                <td class="name"><code>includesParametersName</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type"><code>String</code></span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                    'params'
+                
+                </td>
+            
+
+            <td class="description last"><p>The name that will be added to each partial template scope that will contain any
+parameters passed into the <code>include</code> where the partial was added. For example, <code>${ await include`somePartName${ { param: 123 } }` }</code>
+would cause <code>${ params.param1 }</code> to equal <code>123</code> within the <code>somePartName</code> partial, but <strong>not</strong> in it's parent where the <code>include</code> was added.</p></td>
+        </tr>
+
+        
+
+    
+
+        <tr>
+            
+                <td class="name"><code>renderTimeIncludeReads</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type"><code>Boolean</code></span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                    true
+                
+                </td>
+            
+
+            <td class="description last"><p>When <code>true</code>, any <code>include</code> defined in a template that is not found during compiling the
+template will cause an attempt to read the partial content when encountered during <strong>rendering</strong>. When <code>false</code> <strong>only</strong> partials that are
+set before compiling a template will be available to <code>include</code> and any that are not found will cause render-time errors.</p></td>
+        </tr>
+
+        
+
+    
+
+        <tr>
+            
+                <td class="name"><code>readFetchRequestOptions</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type"><code>Object</code></span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                    true
+                
+                </td>
+            
+
+            <td class="description last"><p>The JSON options that will be used when making <code>read</code> requests to capture partial content.
+Depending upon the <code>Cachier</code> being used on the <code>Engine</code>, the options will be passed into <code>window.fetch</code>, <code>https.request</code> or some other <code>read</code>
+operation.</p></td>
+        </tr>
+
+        
+
+    
+
+        <tr>
+            
+                <td class="name"><code>formatOptions</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type"><code>Object</code></span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                </td>
+            
+
+            <td class="description last"><p>The formatting options passed into an optional <em>format function</em> passed to the engine that will format
+the compiled template code. For example, when generated template code is generated during compilation and the desired code should be
+formatted using the <code>js-beautify</code> or <code>uglify-js</code> module, the <code>formatOptions</code> would be passed into the module as the <code>js-beautify</code> or
+<code>uglify-js</code> options.</p></td>
+        </tr>
+
+        
+
+    
+
+        <tr>
+            
+                <td class="name"><code>encoding</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type"><code>String</code></span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                    'utf8'
+                
+                </td>
+            
+
+            <td class="description last"><p>The text encoding used by the templates during reads
+<a href="https://developer.mozilla.org/en-US/docs/Glossary/Falsy">falsy</a> value or a partial is <em>included</em> that cannot be resolved. Wwhen partial
+content is empty or cannot be found errors may be thrown when the template engine is used within an external template plugin.</p></td>
+        </tr>
+
+        
+
+    
+
+        <tr>
+            
+                <td class="name"><code>varName</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type"><code>String</code></span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                    'it'
+                
+                </td>
+            
+
+            <td class="description last"><p>The variable name of passed context objects that will be accessible by reference within template expressions
+(e.g. it.somePassedVal)</p></td>
+        </tr>
+
+        
+
+    
+
+        <tr>
+            
+                <td class="name"><code>filename</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type"><code>RegExp</code></span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                    /^(.*[\\\/]|^)([^\.]*)(.*)$/
+                
+                </td>
+            
+
+            <td class="description last"><p>Expression that will be used to capture template names from passed definition
+<strong>pseudo</strong> filenames when a template name hasn't been passed</p>
+<p><strong> NOTE: Should contain 3 capture groups:</strong></p>
+<ol>
+<li>Full <strong>pseudo</strong> path excluding final <strong>pseudo</strong> filename w/o extension</li>
+<li><strong>Pseudo</strong> file name w/o extension</li>
+<li>Extension with preceding <code>.</code></li>
+</ol></td>
+        </tr>
+
+        
+
+    
+
+        <tr>
+            
+                <td class="name"><code>cacheRawTemplates</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type"><code>Boolean</code></span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                    true
+                
+                </td>
+            
+
+            <td class="description last"><p>If set to <code>false</code>, raw template content will not be cached (thus will perform a <em>read</em> on every use-
+<strong>NOT FOR PRODUCTION USE!</strong>)</p></td>
+        </tr>
+
+        
+
+    
+
+        <tr>
+            
+                <td class="name"><code>debugger</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type"><code>Boolean</code></span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                    false
+                
+                </td>
+            
+
+            <td class="description last"><p>When <code>true</code>, a <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/debugger"><code>debugger</code></a>
+statement will be inserted into each compiled template rendering function at the <strong>end</strong> of execution (compile-time options only)</p></td>
+        </tr>
+
+        
+
+    
+    </tbody>
+</table>
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="lib_template-options.js.html">lib/template-options.js</a>, <a href="lib_template-options.js.html#line7">line 7</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+    <h5>Type:</h5>
+    <ul>
+        <li>
+            
+<span class="param-type"><code>Object</code></span>
+
+
+        </li>
+    </ul>
+
+
+
+
+
+</div>
+
+            
+    
+
+    
+</article>
+
+</section>
+
+
+
+
+</div>
+
+<br class="clear">
+
+<footer>
+    Generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.5.5</a> using the Minami theme.
+</footer>
+
+<script>prettyPrint();</script>
+<script src="scripts/linenumber.js"></script>
+<div id="jsdocpChangelogContent" data-title="CHANGELOG v0.1.0">
+  <svg class="jsdocp-close" id="jsdocpChangelogClose" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+    <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+    <path d="M0 0h24v24H0z" fill="none"/>
+  </svg>
+  <h2><a href="https://github.com/ugate/templeo/tree/v0.1.0">0.1.0</a> (2019-02-06)</h2><p><a href="https://github.com/ugate/templeo/compare/v0.1.0...v0.1.0">Full Changelog</a></p>
+<p><strong>Features:</strong></p>
+<ul>
+<li><a href="https://github.com/ugate/templeo/commit/4e6402051e665ca8718a30ac116c91115e56fb8d">[FEATURE]: Cached includes will only read a partial with the same name and URLSearchParams once. Any partial with the same name, but different URLSearchParams will be read multiple times.</a></li>
+<li><a href="https://github.com/ugate/templeo/commit/690bfeeae899d0fe4ce2c063ed9b13f70ca3effd">[FEATURE]: Helper directives/functions can be registered via Engine.registerHelper and will be compiled along with the built-in directives</a></li>
+<li><a href="https://github.com/ugate/templeo/commit/3c8c14cdfe96de29b1f042f309a7f2908b8afb30">[FEATURE]: Debugger option sets a standard debugger statement into each rendered template. Metadata accessibility from within templates.</a></li>
+<li><a href="https://github.com/ugate/templeo/commit/643fe36e2798a879ab02956566e6f1d640a03a5c">[FEATURE]: Include parameters can be set to either URLSearchParams to initiate a read or JSON to add the parameters to the partial scope</a></li>
+<li><a href="https://github.com/ugate/templeo/commit/affac39a7e8de3f8f0ea8baa63c9d64c61b04225">[FEATURE]: Passing parameters to the include directive for use on the server and/or within the partial template itself using the options.includesParametersName</a></li>
+<li><a href="https://github.com/ugate/templeo/commit/127f8b2028c23988f9065bae27ed821061bc4f8a">[FEATURE]: options.defaultBaseTemplateName added to allow naming of the template being compiled</a></li>
+<li><a href="https://github.com/ugate/templeo/commit/c88303bdcfdd651e329508b0f4745c301962f6a8">[FEATURE]: Assignments can be made that are outside the primary context passed into the rendering function (i.e. &quot;it&quot;). Templates can designate something like {{ myVarName = 'Some value' }} which can later be retrieved via {{ myVarName }}. This is a static namespace for use during compilation rather than during rendering (e.g. renderFunction({ myVarName: 'Some value' }) with the template using {{ it.myVarName }}).</a></li>
+</ul>
+</div>
+
+
+
+<script src="jsdocp/scripts/index.js"></script></body>
+</html>
