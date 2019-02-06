@@ -6,12 +6,14 @@ const Sandbox = require('./lib/sandbox');
 // TODO : ESM remove the following lines...
 exports.TemplateOpts = TemplateOpts;
 exports.Cachier = Cachier;
+exports.Sandbox = Sandbox;
 // TODO : ESM uncomment the following lines...
 // TODO : import * as TemplateOpts from './lib/template-options.mjs';
 // TODO : import * as Cachier from './lib/cachier.mjs';
 // TODO : import * as Sandbox from './lib/sandbox.mjs';
 // TODO : export * as TemplateOpts from TemplateOpts;
 // TODO : export * as Cachier from Cachier;
+// TODO : export * as Sandbox from Sandbox;
 
 //const includeMatch = /include`([\s\S]+?)(?<!\\)`/mg;
 
