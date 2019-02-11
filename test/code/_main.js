@@ -32,7 +32,8 @@ const { JSDOM } = require('jsdom');
 exports.JSDOM = JSDOM;
 const Level = require('level');
 exports.Level = Level;
-const { Engine, TemplateOpts } = require('../../index.js');
+const Engine = require('../../index.js');
+const TemplateOpts = require('../../lib/template-options.js');
 exports.Engine = Engine;
 exports.PLAN = 'Template Engine';
 exports.TASK_DELAY = 500;
@@ -60,7 +61,8 @@ exports.LOGGER = logger;
 // export * as JSDOM from JSDOM;
 // TODO : import * as Level from 'level';
 // export * as Level from Level;
-// TODO : import { Engine, TemplateOpts } from '../index.mjs';
+// TODO : import * as Engine from '../../index.mjs';
+// TODO : import * as TemplateOpts from '../../lib/template-options.mjs';
 // export * as Engine from Engine;
 // export const PLAN = 'Template Engine';
 // export const TASK_DELAY = 500;
@@ -102,7 +104,8 @@ class Main {
    * @returns {Object} An object containing:
    * - `url:String` - The created server's URL
    * - `close:Function` - A parameterless async function that will stop/close the server
-   * - `callCount:Function` - A __function(url):Integer__ that takes a URL string and returns the number of times it has been called
+   * - `callCount:Function` - A __function(url:String[, params:(URLSearchParams | Object)]):Integer__ that takes a URL string and optionally
+   * JSON or `URLSearchParams` and returns the number of times it has been called
    */
   static httpsServer(opts, paramsInputIdPrefix = 'fromServer_', hostname = undefined, port = undefined) {
     return new Promise((resolve, reject) => {
@@ -151,7 +154,7 @@ class Main {
           },
           callCount: (name, params) => {
             const sprms = params instanceof URLSearchParams ? params : params ? new URLSearchParams(params) : '';
-            return calls[`${name}?${sprms.toString()}`];
+            return calls[`${name}${sprms ? `?${sprms.toString()}` : ''}`];
           }
         });
       });
@@ -373,6 +376,9 @@ class Main {
       expect(el.name).to.equal(arr[i].name);
       expect(el.getAttribute('content')).to.equal(arr[i].content);
     }
+
+    const doubles = dom.window.document.getElementsByName('doubles');
+    expect(doubles.length).to.equal(2);
   
     // object property iteration test
     var el, hasSel;

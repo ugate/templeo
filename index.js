@@ -1,35 +1,27 @@
 'use strict';
 
+// TODO : ESM remove the following lines...
 const TemplateOpts = require('./lib/template-options');
 const Cachier = require('./lib/cachier');
 const Sandbox = require('./lib/sandbox');
-// TODO : ESM remove the following lines...
-exports.TemplateOpts = TemplateOpts;
-exports.Cachier = Cachier;
-exports.Sandbox = Sandbox;
 // TODO : ESM uncomment the following lines...
 // TODO : import * as TemplateOpts from './lib/template-options.mjs';
 // TODO : import * as Cachier from './lib/cachier.mjs';
 // TODO : import * as Sandbox from './lib/sandbox.mjs';
-// TODO : export * as TemplateOpts from TemplateOpts;
-// TODO : export * as Cachier from Cachier;
-// TODO : export * as Sandbox from Sandbox;
-
-//const includeMatch = /include`([\s\S]+?)(?<!\\)`/mg;
 
 /**
  * Micro rendering template engine
  * @module templeo
  * @example
  * // Basic example in browser
- * const { Engine } = require('templeo');
+ * const Engine = require('templeo');
  * const htmlEngine = new Engine();
  * @example
  * // Hapi.js example:
  * const Hapi = require('hapi');
  * const Vision = require('vision');
  * const JsFrmt = require('js-beautify').js;
- * const { Engine } = require('templeo');
+ * const Engine = require('templeo');
  * const econf = {
  *   templatePathBase: '.',
  *   viewsPath: 'views',
@@ -65,7 +57,7 @@ exports.Sandbox = Sandbox;
  *  await htmlEngine.clearCache();
  * });
  */
-exports.Engine = class Engine {
+class Engine {
 // TODO : ESM use... export class Engine {
 
   /**
@@ -255,7 +247,10 @@ exports.Engine = class Engine {
     const ns = internal(this);
     return ns.at.cache.options;
   }
-};
+}
+
+// TODO : ESM remove the following lines...
+module.exports = Engine;
 
 /**
  * Compiles a templated segment and returns a redering function (__assumes partials are already transpiled- see {@link compile} for partial support__)

@@ -21,6 +21,8 @@
   `)}
 </head>
 <body data-message="${ it.message || '' }">
+  ${ await include`double` }
+  ${ await include`double` }
   <select id="state">
     ${ comment` This is a comment. The following uses for...in syntax` }
     ${ repeat(it.globals.states, (abbr, state) => `

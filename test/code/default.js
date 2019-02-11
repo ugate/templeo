@@ -134,10 +134,15 @@ class Tester {
 
       const engine = new Engine(opts.compile);
       const renderer = await engine.compile();
-      const rslt = await renderer();
-
       const files = await Main.getTemplateFiles();
-      Main.expectDOM(rslt, files.htmlContext);
+      const rslt1 = await renderer();
+      Main.expectDOM(rslt1, files.htmlContext);
+      const rslt2 = await renderer();
+      Main.expectDOM(rslt2, files.htmlContext);
+
+      // ensure the double include is only called 2x
+      // (1x for each render, since the 2nd occurance should be in the renderer's cache)
+      expect(svr.callCount('double'), `Render 2x for double, partial server call count`).to.equal(2);
     } finally {
       await svr.close();
     }
