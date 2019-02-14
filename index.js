@@ -193,7 +193,8 @@ class Engine {
    * @param {URLSearchParams} [partials[].params] The `URLSearchParams` that will be passed during the content `read`
    * (__ignored when `content` is specified__)
    * @param {String} [partials[].extension] Optional override for a file extension designation for the partial
-   * @param {Boolean} [read=true] When `true`, an attempt will be made to also _read_ any partials that do not have a `content` property
+   * @param {Boolean} [read] When `true`, an attempt will be made to also {@link Cachier.read} any partials that __do not have__ a `content` property set
+   * @param {Boolean} [write] When `true`, an attempt will be made to also {@link Cachier.write} any partials that __have__ a `content` property set
    * @returns {Object} An object that contains the registration results:
    * 
    * - `partials` The `partials` object that contains the fragments that have been registered
@@ -204,9 +205,9 @@ class Engine {
    *   - `fromRead` A flag that indicates that the 
    * - `dirs` Present __only__ when {@link Engine.filesEngine} was used. Contains the directories/sub-directories that were created
    */
-  registerPartials(partials, read) {
+  registerPartials(partials, read, write) {
     const ns = internal(this);
-    return ns.at.cache.registerPartials(partials, read);
+    return ns.at.cache.registerPartials(partials, read, write);
   }
 
   /**

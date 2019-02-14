@@ -6,7 +6,7 @@ const CachierDB = require('../../lib/cachier-db.js');
 // TODO : import { expect, LOGGER, Engine, JsFrmt, Main } from './_main.mjs';
 // TODO : import * as CachierDB from '../../lib/cachier-db.mjs';
 
-var db, engine;
+var opts, engine, testCount = 0;
 
 // DEBUGGING:
 // Use the following:
@@ -17,31 +17,25 @@ var db, engine;
 class Tester {
 
   static async before() {
-    return db = await Main.openIndexedDB();
+    opts = baseOptions(await Main.initDB());
   }
 
-  static async after() {
-    if (!db) return;
-    const rtn = await Main.closeIndexedDB(db, engine);
-    db = null;
-    engine = null;
-    return rtn;
+  static async afterEach() {
+    return Main.clearDB(engine, ++testCount >= 2);
   }
 
   static async levelDbFromRegisterPartials() {
-    const opts = baseOptions();
-    const cachier = new CachierDB(opts.compile, db.indexedDB, JsFrmt, LOGGER);
+    const cachier = new CachierDB(opts.compile, JsFrmt, LOGGER);
     engine = Engine.create(cachier);
     const partials = await Main.getFiles(Main.PATH_HTML_PARTIALS_DIR);
-    return Main.baseTest(opts.compile, engine, partials, true, opts.render);
+    return Main.baseTest(opts.compile, engine, partials, true, true, opts.render);
   }
 
   static async levelDbFromPartialsInDb() {
     // partials should still be cached from previous test w/registerPartials
-    const opts = baseOptions();
-    const cachier = new CachierDB(opts.compile, db.indexedDB, JsFrmt, LOGGER);
+    const cachier = new CachierDB(opts.compile, JsFrmt, LOGGER);
     engine = Engine.create(cachier);
-    return Main.baseTest(opts.compile, engine, null, true, opts.render);
+    return Main.baseTest(opts.compile, engine, null, true, false, opts.render);
   }
 }
 
@@ -53,9 +47,15 @@ if (!Main.usingTestRunner()) {
   (async () => await Main.run(Tester))();
 }
 
-function baseOptions() {
+function baseOptions(meta) {
   return {
-    compile: {},
-    render: {}
+    compile: {
+      dbTypeName: meta.type,
+      dbLocName: meta.loc
+    },
+    render: {
+      dbTypeName: meta.type,
+      dbLocName: meta.loc
+    }
   };
 }

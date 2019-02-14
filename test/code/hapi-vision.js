@@ -51,11 +51,13 @@ class Tester {
 
   static async levelDbEngine() {
     const opts = baseOptions();
-    const db = await Main.openIndexedDB();
-    const cachier = new CachierDB(opts.compile, db.indexedDB, JsFrmt, LOGGER);
+    const meta = await Main.initDB();
+    opts.compile.dbTypeName = opts.render.dbTypeName = meta.type;
+    opts.compile.dbLocName = opts.render.dbLocName = meta.loc;
+    const cachier = new CachierDB(opts.compile, JsFrmt, LOGGER);
     const engine = Engine.create(cachier);
     await reqAndValidate(engine, opts.compile);
-    return Main.closeIndexedDB(db, engine);
+    return Main.clearDB(engine);
   }
 
   static async filesEngine() {

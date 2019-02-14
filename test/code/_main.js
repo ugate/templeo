@@ -231,6 +231,7 @@ class Main {
    * @param {Engine} [engine] The `Engine` to use when calling {@link Main.init}
    * @param {Object} [partials] The partials to pass into {@link Engine.registerPartials}
    * @param {Boolean} [readPartials] The read flag to pass into {@link Engine.registerPartials}
+   * @param {Boolean} [writePartials] The write flag to pass into {@link Engine.registerPartials}
    * @param {Object} [renderOpts] The options to pass into the rendering function generated from {@link Engine.compile}
    * @param {Object} [extraContext] Key/value pairs to add to the extracted context JSON
    * @returns {Object} The test object parameters that contain property/values from {@link Main.init} as well as the following:
@@ -238,12 +239,12 @@ class Main {
    * - `fn` - The rendering funtion returned from {@link Engine.compile}
    * - `result` - The rendered result from calling the rendering function
    */
-  static async baseTest(compileOpts, engine, partials, readPartials, renderOpts, extraContext) {
+  static async baseTest(compileOpts, engine, partials, readPartials, writePartials, renderOpts, extraContext) {
     const test = await Main.init(compileOpts, engine);
     const opts = test.engine.options;
     if (!/^html$|^json$/.test(opts.defaultExtension)) throw new Error(`Invalid TEST compileOpts.defaultExtension -> ${opts.defaultExtension}`);
     const isJSON = opts.defaultExtension === 'json';
-    test.registerPartialsResult = partials || readPartials ? await test.engine.registerPartials(partials, readPartials) : null;
+    test.registerPartialsResult = partials || readPartials ? await test.engine.registerPartials(partials, readPartials, writePartials) : null;
     test.fn = await test.engine.compile(isJSON ? test.json : test.html);
     expect(test.fn).to.be.function();
 
@@ -299,33 +300,34 @@ class Main {
   }
 
   /**
-   * Opens an IndexedDB instance
-   * @param {String} [locPrefix] The IndexedDB location prefix to use
-   * @returns {Object} A metadata object containing `{ locPrefix:String, loc:String, indexedDB:IndexedDB }`
+   * Initializes a test location for a LevelDB connection
+   * @param {String} [locPrefix='templeo-test-indexedDB-'] The DB location prefix to use
+   * @returns {Object} A metadata object containing `{ locPrefix:String, loc:String }`
    */
-  static async openIndexedDB(locPrefix = 'templeo-test-indexedDB-') {
+  static async initDB(locPrefix = 'templeo-test-db-') {
     if (DB[locPrefix]) return DB[locPrefix];
     const loc = await Fs.promises.mkdtemp(Path.join(Os.tmpdir(), locPrefix));
-    DB[locPrefix] = { locPrefix, loc, indexedDB: Level(loc) };
-    if (logger.info) logger.info(`Using LevelDB @ ${loc}`);
+    DB[locPrefix] = { locPrefix, loc, type: 'level' };
+    if (logger.info) logger.info(`Using LevelDB location @ ${loc}`);
     return DB[locPrefix];
   }
 
   /**
-   * Closes any resources associated with an IndexedDB instance
-   * @param {Object} db An object generated from a prior call to {@link Main.openIndexedDB}
+   * Clears any resources associated with an LevelDB instance
    * @param {Engine} engine The engine being used
+   * @param {Boolean} [all=true] The flag passed into {@link Engine.clearCache}. Also, when `true`, the DB resources will be __wiped__
+   * @param {String} [locPrefix='templeo-test-indexedDB-'] The DB location prefix to use (set to `null` to leave DB intact)
    */
-  static async closeIndexedDB(db, engine) {
+  static async clearDB(engine, all = true, locPrefix = 'templeo-test-db-') {
+    const meta = DB[locPrefix];
     if (engine) {
-      if (logger.debug) logger.debug(`Clearing cache for LevelDB @ ${db.loc}`);
-      await engine.clearCache(true);
+      if (logger.info) logger.info(`Clearing ${all ? 'all' : 'DB connection(s) from'} cache for LevelDB @ ${meta.loc}`);
+      await engine.clearCache(all);
     }
-    if (logger.debug) logger.debug(`Cloasing LevelDB @ ${db.loc}`);
-    await db.indexedDB.close();
-    if (logger.info) logger.info(`Removing LevelDB @ ${db.loc}`);
-    if (DB[db.locPrefix]) delete DB[db.locPrefix];
-    return Main.rmrf(db.loc);
+    if (!all) return;
+    if (logger.info) logger.info(`Removing LevelDB files @ ${meta.loc}`);
+    delete DB[locPrefix];
+    return Main.rmrf(meta.loc);
   }
 
   /**
@@ -526,27 +528,34 @@ class Main {
     }
 
     if (execr['before']) {
-      if (logger.info) logger.info(`Executing: ${Clazz.name}.before(${args.join(',')})`);
+      if (logger.info) logger.info(`\nExecuting: ${Clazz.name}.before(${args.join(',')})`);
       rtn['before'] = await execr['before'](...args);
     }
+    let error;
     for (let prop of prps) {
+      if (typeof Clazz[prop] !== 'function' || (excludes && excludes.includes(prop)) || excls.includes(prop)) continue;
       if (execr['beforeEach']) {
-        if (logger.info) logger.info(`Executing: ${Clazz.name}.beforeEach(${args.join(',')})`);
+        if (logger.info) logger.info(`\nExecuting: ${Clazz.name}.beforeEach(${args.join(',')})`);
         rtn['beforeEach'] = await execr['beforeEach'](...args);
       }
-      if (typeof Clazz[prop] === 'function' && (!excludes || !excludes.includes(prop)) && !excls.includes(prop)) {
-        if (logger.info) logger.info(`Executing: await ${Clazz.name}.${prop}(${args.join(',')})`);
+      error = null;
+      try {
+        if (logger.info) logger.info(`\nExecuting: await ${Clazz.name}.${prop}(${args.join(',')})`);
         rtn[prop] = await Clazz[prop](...args);
+      } catch (err) {
+        error = err;
       }
       if (execr['afterEach']) {
-        if (logger.info) logger.info(`Executing: ${Clazz.name}.afterEach(${args.join(',')})`);
+        if (logger.info) logger.info(`\nExecuting: ${Clazz.name}.afterEach(${args.join(',')})`);
         rtn['afterEach'] = await execr['afterEach'](...args);
       }
+      if (error) break;
     }
     if (execr['after']) {
-      if (logger.info) logger.info(`Executing: ${Clazz.name}.after(${args.join(',')})`);
+      if (logger.info) logger.info(`\nExecuting: ${Clazz.name}.after(${args.join(',')})`);
       rtn['after'] = await execr['after'](...args);
     }
+    if (error) throw error;
 
     return rtn;
   }

@@ -52,12 +52,12 @@ For simplicity's sake we'll use some basic in-line templates to demonstrate usin
 
 ```js
 const Engine = require('templeo'), Cachier = require('templeo/lib/cachier-db');
-const cachier = new CachierDB({}, 'my-indexed-db-name');
+const cachier = new CachierDB({ dbLocName: 'my-indexed-db-name' } );
 const engine = Engine.create(cachier);
-// reads "template" from from IndexedDB "templeo"
+// reads "template" from from IndexedDB "my-indexed-db-name"
 const renderer = await engine.compile();
-// reads "context" from IndexedDB "templeo"
-// reads any included partials by name from IndexedDB "templeo"
+// reads "context" from IndexedDB "my-indexed-db-name"
+// reads any included partials by name from IndexedDB "my-indexed-db-name"
 const rslt = await renderer();
 ```
 
