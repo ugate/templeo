@@ -21,21 +21,32 @@ class Tester {
   }
 
   static async afterEach() {
-    return Main.clearDB(engine, ++testCount >= 2);
+    // close DB connection(s) and clear files on last test
+    return Main.clearDB(engine, ++testCount >= 3);
   }
 
-  static async levelDbFromRegisterPartials() {
+  static async levelDbFromRegisterPartialsComileTimeWrite() {
     const cachier = new CachierDB(opts.compile, JsFrmt, LOGGER);
     engine = Engine.create(cachier);
     const partials = await Main.getFiles(Main.PATH_HTML_PARTIALS_DIR);
-    return Main.baseTest(opts.compile, engine, partials, true, true, opts.render);
+    // write partials to DB at compile-time
+    return Main.baseTest(opts.compile, engine, partials, false, true, opts.render);
   }
 
-  static async levelDbFromPartialsInDb() {
+  static async levelDbFromPartialsInDbCompileTimeRead() {
     // partials should still be cached from previous test w/registerPartials
     const cachier = new CachierDB(opts.compile, JsFrmt, LOGGER);
     engine = Engine.create(cachier);
+    // read partials from DB at compile-time
     return Main.baseTest(opts.compile, engine, null, true, false, opts.render);
+  }
+
+  static async levelDbFromPartialsInDbRenderTimeRead() {
+    // partials should still be cached from previous test w/registerPartials
+    const cachier = new CachierDB(opts.compile, JsFrmt, LOGGER);
+    engine = Engine.create(cachier);
+    // read partials from DB at render-time
+    return Main.baseTest(opts.compile, engine, null, false, false, opts.render);
   }
 }
 

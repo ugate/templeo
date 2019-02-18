@@ -7,8 +7,8 @@
 
 const TEST_FILES = {};
 const DB = {};
-const logger = {};
-//const logger = { info: console.info, warn: console.warn, error: console.error };
+//const logger = {};
+const logger = { info: console.info, warn: console.warn, error: console.error };
 //const logger = console;
 
 const Forge = require('node-forge');
@@ -533,12 +533,12 @@ class Main {
     }
     let error;
     for (let prop of prps) {
+      error = null;
       if (typeof Clazz[prop] !== 'function' || (excludes && excludes.includes(prop)) || excls.includes(prop)) continue;
       if (execr['beforeEach']) {
         if (logger.info) logger.info(`\nExecuting: ${Clazz.name}.beforeEach(${args.join(',')})`);
         rtn['beforeEach'] = await execr['beforeEach'](...args);
       }
-      error = null;
       try {
         if (logger.info) logger.info(`\nExecuting: await ${Clazz.name}.${prop}(${args.join(',')})`);
         rtn[prop] = await Clazz[prop](...args);
@@ -547,13 +547,23 @@ class Main {
       }
       if (execr['afterEach']) {
         if (logger.info) logger.info(`\nExecuting: ${Clazz.name}.afterEach(${args.join(',')})`);
-        rtn['afterEach'] = await execr['afterEach'](...args);
+        try {
+          rtn['afterEach'] = await execr['afterEach'](...args);
+        } catch (err) {
+          if (error && logger.error) logger.error(err);
+          if (!error) throw err;
+        }
       }
       if (error) break;
     }
     if (execr['after']) {
       if (logger.info) logger.info(`\nExecuting: ${Clazz.name}.after(${args.join(',')})`);
-      rtn['after'] = await execr['after'](...args);
+      try {
+        rtn['after'] = await execr['after'](...args);
+      } catch (err) {
+        if (error && logger.error) logger.error(err);
+        if (!error) throw err;
+      }
     }
     if (error) throw error;
 

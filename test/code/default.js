@@ -106,7 +106,7 @@ class Tester {
       opts.render.templatePathBase = svr.url; // partials will be served from this URL during render-time
       const engine = new Engine(opts.compile, JsFrmt, LOGGER);
       // partials should be fetched via the HTTPS server when includes are encountered during rendering
-      await Main.baseTest(opts.compile, engine, null, false, opts.render, context); // false to prevent compile-time registerPartials
+      await Main.baseTest(opts.compile, engine, null, false, false, opts.render, context); // false to prevent compile-time registerPartials
     } finally {
       await svr.close();
     }

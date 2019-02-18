@@ -18,7 +18,7 @@ lab.experiment(plan, async () => {
   lab.before(Tester.before);
   lab.afterEach(Tester.afterEach);
 
-  lab.test(`${plan}: HTML/LevelDB from registerPartials`, { timeout: TEST_TKO }, Tester.levelDbFromRegisterPartials);
-  // partials should still be cached from previous test w/registerPartials
-  lab.test(`${plan}: HTML/LevelDB from partials in DB`, { timeout: TEST_TKO }, Tester.levelDbFromPartialsInDb);
+  lab.test(`${plan}: HTML/LevelDB from registerPartials (compile-time write)`, { timeout: TEST_TKO }, Tester.levelDbFromRegisterPartialsComileTimeWrite);
+  lab.test(`${plan}: HTML/LevelDB from partials in DB (compile-time read)`, { timeout: TEST_TKO }, Tester.levelDbFromPartialsInDbCompileTimeRead);
+  lab.test(`${plan}: HTML/LevelDB from partials in DB (render-time read)`, { timeout: TEST_TKO }, Tester.levelDbFromPartialsInDbRenderTimeRead);
 });
