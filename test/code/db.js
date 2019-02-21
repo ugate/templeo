@@ -62,11 +62,13 @@ function baseOptions(meta) {
   return {
     compile: {
       dbTypeName: meta.type,
-      dbLocName: meta.loc
+      dbLocName: meta.loc/*,
+      renderTimeReadPolicy: 'read-and-close'*/
     },
     render: {
       dbTypeName: meta.type,
-      dbLocName: meta.loc
+      dbLocName: meta.loc/*,
+      renderTimeReadPolicy: 'read-and-close'*/
     }
   };
 }

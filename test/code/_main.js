@@ -245,8 +245,9 @@ class Main {
     if (!/^html$|^json$/.test(opts.defaultExtension)) throw new Error(`Invalid TEST compileOpts.defaultExtension -> ${opts.defaultExtension}`);
     const isJSON = opts.defaultExtension === 'json';
     test.registerPartialsResult = partials || readPartials ? await test.engine.registerPartials(partials, readPartials, writePartials) : null;
-    if (logger.info) logger.info(`Compiling ${isJSON ? 'JSON' : 'HTML'} template...`);
+    if (logger.info) logger.info(`>> Compiling the "${engine.options.defaultTemplateName}" ${isJSON ? 'JSON' : 'HTML'} template...`);
     test.fn = await test.engine.compile(isJSON ? test.json : test.html);
+    if (logger.info) logger.info(`<< Compiling of the "${engine.options.defaultTemplateName}" ${isJSON ? 'JSON' : 'HTML'} template complete!`);
     expect(test.fn).to.be.function();
 
     var context;
@@ -259,8 +260,9 @@ class Main {
       }
     }
 
-    if (logger.info) logger.info(`Rendering ${isJSON ? 'JSON' : 'HTML'} template...`);
+    if (logger.info) logger.info(`>> Rendering the "${engine.options.defaultTemplateName}" ${isJSON ? 'JSON' : 'HTML'} template...`);
     test.result = await test.fn(context, renderOpts);
+    if (logger.info) logger.info(`<< Rendering of the "${engine.options.defaultTemplateName}" ${isJSON ? 'JSON' : 'HTML'} template complete!`);
     if (logger.debug) logger.debug(test.result);//logger.debug(JsFrmt(test.result, compileOpts.formatOptions));
     if (isJSON) Main.expectJSON(test.result, context);
     else Main.expectDOM(test.result, context);
