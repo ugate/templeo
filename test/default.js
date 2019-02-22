@@ -34,7 +34,7 @@ lab.experiment(plan, () => {
   lab.test(`${plan}: HTML - Partials Fetch From HTTPS Server (render-time ERROR missing "options.templatePathBase")`, { timeout: TEST_TKO }, flags => {
     return new Promise(resolve => {
       flags.onUnhandledRejection = err => {
-        if (LOGGER.info) LOGGER.info(`Expected error message received for: ${err.message}`, err);
+        if (LOGGER.info) LOGGER.info(`Expected error message received for (code ${err.code}): ${err.message}`, err);
         expect(err).to.be.error();
         expect(err.code).to.equal('ERR_INVALID_URL');
         resolve();

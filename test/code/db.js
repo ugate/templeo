@@ -6,7 +6,7 @@ const CachierDB = require('../../lib/cachier-db.js');
 // TODO : import { expect, LOGGER, Engine, JsFrmt, Main } from './_main.mjs';
 // TODO : import * as CachierDB from '../../lib/cachier-db.mjs';
 
-var opts, engine, testCount = 0;
+var meta, engine;
 
 // DEBUGGING:
 // Use the following:
@@ -17,15 +17,16 @@ var opts, engine, testCount = 0;
 class Tester {
 
   static async before() {
-    opts = baseOptions(await Main.initDB());
+    meta = await Main.initDB();
   }
 
-  static async afterEach() {
+  static async after() {
     // close DB connection(s) and clear files on last test
-    return Main.clearDB(engine, ++testCount >= 3);
+    return Main.clearDB(engine, true);
   }
 
   static async levelDbFromRegisterPartialsComileTimeWrite() {
+    const opts = baseOptions(meta);
     const cachier = new CachierDB(opts.compile, JsFrmt, LOGGER);
     engine = Engine.create(cachier);
     const partials = await Main.getFiles(Main.PATH_HTML_PARTIALS_DIR);
@@ -34,6 +35,7 @@ class Tester {
   }
 
   static async levelDbFromPartialsInDbCompileTimeRead() {
+    const opts = baseOptions(meta);
     // partials should still be cached from previous test w/registerPartials
     const cachier = new CachierDB(opts.compile, JsFrmt, LOGGER);
     engine = Engine.create(cachier);
@@ -42,6 +44,17 @@ class Tester {
   }
 
   static async levelDbFromPartialsInDbRenderTimeRead() {
+    const opts = baseOptions(meta);
+    // partials should still be cached from previous test w/registerPartials
+    const cachier = new CachierDB(opts.compile, JsFrmt, LOGGER);
+    engine = Engine.create(cachier);
+    // read partials from DB at render-time
+    return Main.baseTest(opts.compile, engine, null, false, false, opts.render);
+  }
+
+  static async levelDbFromPartialsInDbRenderTimeReadAndClose() {
+    const opts = baseOptions(meta);
+    opts.render.renderTimeReadPolicy = 'read-and-close';
     // partials should still be cached from previous test w/registerPartials
     const cachier = new CachierDB(opts.compile, JsFrmt, LOGGER);
     engine = Engine.create(cachier);
@@ -62,13 +75,11 @@ function baseOptions(meta) {
   return {
     compile: {
       dbTypeName: meta.type,
-      dbLocName: meta.loc/*,
-      renderTimeReadPolicy: 'read-and-close'*/
+      dbLocName: meta.loc
     },
     render: {
       dbTypeName: meta.type,
-      dbLocName: meta.loc/*,
-      renderTimeReadPolicy: 'read-and-close'*/
+      dbLocName: meta.loc
     }
   };
 }

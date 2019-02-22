@@ -16,9 +16,11 @@ const plan = `${PLAN} IndexedDB`;
 lab.experiment(plan, async () => {
 
   lab.before(Tester.before);
-  lab.afterEach(Tester.afterEach);
+  lab.after(Tester.after);
 
   lab.test(`${plan}: HTML/LevelDB from registerPartials (compile-time write)`, { timeout: TEST_TKO }, Tester.levelDbFromRegisterPartialsComileTimeWrite);
   lab.test(`${plan}: HTML/LevelDB from partials in DB (compile-time read)`, { timeout: TEST_TKO }, Tester.levelDbFromPartialsInDbCompileTimeRead);
-  lab.test(`${plan}: HTML/LevelDB from partials in DB (render-time read)`, { timeout: TEST_TKO }, Tester.levelDbFromPartialsInDbRenderTimeRead);
+  lab.test(`${plan}: HTML/LevelDB from partials in DB default policy (render-time read)`, { timeout: TEST_TKO }, Tester.levelDbFromPartialsInDbRenderTimeRead);
+  lab.test(`${plan}: HTML/LevelDB from partials in DB "read-and-close" policy (render-time read)`,
+    { timeout: TEST_TKO }, Tester.levelDbFromPartialsInDbRenderTimeReadAndClose);
 });

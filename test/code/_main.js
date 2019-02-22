@@ -7,8 +7,8 @@
 
 const TEST_FILES = {};
 const DB = {};
-//const logger = {};
-const logger = { info: console.info, warn: console.warn, error: console.error };
+const logger = {};
+//const logger = { info: console.info, warn: console.warn, error: console.error };
 //const logger = console;
 
 const Forge = require('node-forge');
@@ -133,7 +133,10 @@ class Main {
           res.statusCode = 200;
           res.setHeader('Content-Type', type || (isContext ? 'application/json' : 'text/html'));
           res.end(contents);
-          if (logger.debug) logger.debug(`HTTPS server processed ${url}${req.url} with contents:`, contents);
+          if (logger.info || logger.debug) {
+            (logger.debug || logger.info)(`HTTPS server processed ${url}${req.url} from "${file}" with contents:`,
+              logger.debug ? `\n${contents.toString()}` : !!contents);
+          }
         } catch (err) {
           if (logger.error) logger.error(err);
           res.statusCode = 400;
