@@ -7,9 +7,9 @@
 
 const TEST_FILES = {};
 const DB = {};
-const logger = {};
-//const logger = { info: console.info, warn: console.warn, error: console.error };
-//const logger = console;
+//const log = {};
+const log = { info: console.info, warn: console.warn, error: console.error };
+//const log = console;
 
 const Forge = require('node-forge');
 const Http = require('http');
@@ -38,7 +38,7 @@ exports.Engine = Engine;
 exports.PLAN = 'Template Engine';
 exports.TASK_DELAY = 500;
 exports.TEST_TKO = 20000;
-exports.LOGGER = logger;
+exports.LOGGER = log;
 // TODO : ESM uncomment the following lines...
 // TODO : import * as Forge from 'node-forge';
 // TODO : import * as http from 'https';
@@ -67,7 +67,7 @@ exports.LOGGER = logger;
 // export const PLAN = 'Template Engine';
 // export const TASK_DELAY = 500;
 // export const TEST_TKO = 20000;
-// export const LOGGER = logger;
+// export const LOGGER = log;
 
 const Fsp = Fs.promises;
 const PATH_BASE = '.';
@@ -121,7 +121,7 @@ class Main {
           const urlo = new URL(`${url}${req.url}`), prms = urlo.searchParams, type = prms.get('type');
           const name = `${urlo.pathname.replace(/^\/+/, '').split('.').shift()}${urlo.search}`;
           calls[name] = (calls[name] || 0) + 1;
-          if (logger.info) logger.info(`HTTPS server received: ${url}${req.url} (name: ${name}, count: ${calls[name]})`);
+          if (log.info) log.info(`HTTPS server received: ${url}${req.url} (name: ${name}, count: ${calls[name]})`);
           const filePath = urlo.href.replace(urlo.origin, '').replace(urlo.search, '').replace(urlo.hash, '');
           const file = Path.join(baseFilePath, filePath);
           var contents = await Fsp.readFile(file);
@@ -133,12 +133,12 @@ class Main {
           res.statusCode = 200;
           res.setHeader('Content-Type', type || (isContext ? 'application/json' : 'text/html'));
           res.end(contents);
-          if (logger.info || logger.debug) {
-            (logger.debug || logger.info)(`HTTPS server processed ${url}${req.url} from "${file}" with contents:`,
-              logger.debug ? `\n${contents.toString()}` : !!contents);
+          if (log.info || log.debug) {
+            (log.debug || log.info)(`HTTPS server processed ${url}${req.url} from "${file}" with contents:`,
+              log.debug ? `\n${contents.toString()}` : !!contents);
           }
         } catch (err) {
-          if (logger.error) logger.error(err);
+          if (log.error) log.error(err);
           res.statusCode = 400;
           res.setHeader('Content-Type', 'text/html');
           res.end(`Failed to ${mthd} for: ${url}${req.url}, ERROR: ${err.message} STACK: ${err.stack}`);
@@ -147,7 +147,7 @@ class Main {
       server.listen(port, hostname, () => {
         const addy = server.address();
         url = `https://${addy.address === '::' || server.address === '0.0.0.0' ? '127.0.0.1' : addy.includes}:${addy.port}/`;
-        if (logger.info) logger.info(`Server running at ${url}`);
+        if (log.info) log.info(`Server running at ${url}`);
         resolve({
           url,
           close: () => {
@@ -248,9 +248,9 @@ class Main {
     if (!/^html$|^json$/.test(opts.defaultExtension)) throw new Error(`Invalid TEST compileOpts.defaultExtension -> ${opts.defaultExtension}`);
     const isJSON = opts.defaultExtension === 'json';
     test.registerPartialsResult = partials || readPartials ? await test.engine.registerPartials(partials, readPartials, writePartials) : null;
-    if (logger.info) logger.info(`>> Compiling the "${engine.options.defaultTemplateName}" ${isJSON ? 'JSON' : 'HTML'} template...`);
+    if (log.info) log.info(`>> Compiling the "${engine.options.defaultTemplateName}" ${isJSON ? 'JSON' : 'HTML'} template...`);
     test.fn = await test.engine.compile(isJSON ? test.json : test.html);
-    if (logger.info) logger.info(`<< Compiling of the "${engine.options.defaultTemplateName}" ${isJSON ? 'JSON' : 'HTML'} template complete!`);
+    if (log.info) log.info(`<< Compiling of the "${engine.options.defaultTemplateName}" ${isJSON ? 'JSON' : 'HTML'} template complete!`);
     expect(test.fn).to.be.function();
 
     var context;
@@ -263,10 +263,13 @@ class Main {
       }
     }
 
-    if (logger.info) logger.info(`>> Rendering the "${engine.options.defaultTemplateName}" ${isJSON ? 'JSON' : 'HTML'} template...`);
+    if (log.info) log.info(`>> Rendering the "${engine.options.defaultTemplateName}" ${isJSON ? 'JSON' : 'HTML'} template...`);
     test.result = await test.fn(context, renderOpts);
-    if (logger.info) logger.info(`<< Rendering of the "${engine.options.defaultTemplateName}" ${isJSON ? 'JSON' : 'HTML'} template complete!`);
-    if (logger.debug) logger.debug(test.result);//logger.debug(JsFrmt(test.result, compileOpts.formatOptions));
+    if (log.info || log.debug) {
+      (log.debug || log.info)(`<< Rendering of the "${engine.options.defaultTemplateName}" ${isJSON ? 'JSON' : 'HTML'} template complete!`
+      + (log.debug ? ` result:\n${test.result}` : ''));
+      //log.debug(JsFrmt(test.result, compileOpts.formatOptions));
+    }
     if (isJSON) Main.expectJSON(test.result, context);
     else Main.expectDOM(test.result, context);
     return test;
@@ -315,7 +318,7 @@ class Main {
     if (DB[locPrefix]) return DB[locPrefix];
     const loc = await Fs.promises.mkdtemp(Path.join(Os.tmpdir(), locPrefix));
     DB[locPrefix] = { locPrefix, loc, type: 'level' };
-    if (logger.info) logger.info(`Using LevelDB location @ ${loc}`);
+    if (log.info) log.info(`Using LevelDB location @ ${loc}`);
     return DB[locPrefix];
   }
 
@@ -328,11 +331,11 @@ class Main {
   static async clearDB(engine, all = true, locPrefix = 'templeo-test-db-') {
     const meta = DB[locPrefix];
     if (engine) {
-      if (logger.info) logger.info(`Clearing ${all ? 'all' : 'DB connection(s) from'} cache for LevelDB @ ${meta.loc}`);
+      if (log.info) log.info(`Clearing ${all ? 'all' : 'DB connection(s) from'} cache for LevelDB @ ${meta.loc}`);
       await engine.clearCache(all);
     }
     if (!all) return;
-    if (logger.info) logger.info(`Removing LevelDB files @ ${meta.loc}`);
+    if (log.info) log.info(`Removing LevelDB files @ ${meta.loc}`);
     delete DB[locPrefix];
     return Main.rmrf(meta.loc);
   }
@@ -345,7 +348,7 @@ class Main {
    */
   static async init(opts, engine) {
     const rtn = await Main.getTemplateFiles();
-    rtn.engine = engine || new Engine(opts, JsFrmt, logger);
+    rtn.engine = engine || new Engine(opts, JsFrmt, log);
     rtn.opts = opts;
     return rtn;
   }
@@ -419,7 +422,7 @@ class Main {
       expect(dynInclURL.innerHTML).to.match(/[\n\r\s]*Test simple text inclusion[\n\r\s]*/);
     }
   
-    //if (logger.debug) logger.debug(fn, rslt);
+    //if (log.debug) log.debug(fn, rslt);
     return dom;
   }
 
@@ -452,33 +455,39 @@ class Main {
    * included template content for the given `search.name`
    * @param {Object} [test.cases[].pass] Whether or not basic JSON parameters are used
    * @param {Integer} [test.cases[].pass.paramCount] The number of times that include parameters that should be present in the result
-   * @param {Object[]} [partials] Any partials to register at compile-time
-   * @param {Object} [opts] The options
+   * @param {Object} [opts] The options passed into the {@link TemplateOpts} constructor
    * @param {TemplateOpts} [opts.compileOpts] The compile options
    * @param {TemplateOpts} [opts.renderOpts] The render options
+   * @param {Object[]} [partials] Partials passed into {@link Engine.registerPartials}
+   * @param {Boolean} [readPartials] Passes the `read` flag into {@link Engine.registerPartials}
+   * @param {Boolean} [writePartials] Passes the `write` flag into {@link Engine.registerPartials}
+   * @param {Cachier} [cachier] A {@link Cachier} that will be passed into {@link Engine.create}
+   * @param {Boolean} [useServer] `true` to serve partials via {@link Main.httpsServer} and validate the call count
    */
-  static async paramsTest(test, partials, opts) {
+  static async paramsTest(test, opts, partials, readPartials, writePartials, cachier, useServer = true) {
     const idPrefix = 'inclParamFromServer_';
     opts = opts || { render: {} };
     const files = await Main.getTemplateFiles();
     
     let els, label = test.label;
-    const svr = await Main.httpsServer(opts.compile, idPrefix);
+    const svr = useServer ? await Main.httpsServer(opts.compile, idPrefix) : null;
     try {
-      opts.render.templatePathBase = svr.url;
-      const engine = new Engine(opts.compile, JsFrmt, logger);
-      if (partials) {
-        engine.registerPartials(partials);
+      if (svr) opts.render.templatePathBase = svr.url;
+      const engine = cachier ? Engine.create(cachier) : new Engine(opts.compile, JsFrmt, log);
+      if (partials || readPartials) {
+        engine.registerPartials(partials, readPartials, writePartials);
       }
       const renderer = await engine.compile(test.template);
       const rslt = await renderer(files.htmlContext, opts.render);
 
-      if (logger.info) logger.info(test.template, '\nRESULTS:', rslt);
+      if (log.debug) {
+        log.debug(`Parameters test complete for template:\n${test.template}\nRESULT:\n${rslt}`);
+      }
       const dom = new JSDOM(rslt);
       const cases = Array.isArray(test.cases) ? test.cases : [test.cases];
 
       for (let cased of cases) {
-        if (cased.search && cased.search.name && cased.search.callCount) {
+        if (svr && cased.search && cased.search.name && cased.search.callCount) {
           expect(svr.callCount(cased.search.name, cased.params),
             `${label} ${cased.search.name} call count`).to.equal(cased.search.callCount);
         }
@@ -510,7 +519,7 @@ class Main {
         }
       }
     } finally {
-      await svr.close();
+      if (svr) await svr.close();
     }
   }
 
@@ -535,7 +544,7 @@ class Main {
     }
 
     if (execr['before']) {
-      if (logger.info) logger.info(`\nExecuting: ${Clazz.name}.before(${args.join(',')})`);
+      if (log.info) log.info(`\nExecuting: ${Clazz.name}.before(${args.join(',')})`);
       rtn['before'] = await execr['before'](...args);
     }
     let error;
@@ -543,32 +552,32 @@ class Main {
       error = null;
       if (typeof Clazz[prop] !== 'function' || (excludes && excludes.includes(prop)) || excls.includes(prop)) continue;
       if (execr['beforeEach']) {
-        if (logger.info) logger.info(`\nExecuting: ${Clazz.name}.beforeEach(${args.join(',')})`);
+        if (log.info) log.info(`\nExecuting: ${Clazz.name}.beforeEach(${args.join(',')})`);
         rtn['beforeEach'] = await execr['beforeEach'](...args);
       }
       try {
-        if (logger.info) logger.info(`\nExecuting: await ${Clazz.name}.${prop}(${args.join(',')})`);
+        if (log.info) log.info(`\nExecuting: await ${Clazz.name}.${prop}(${args.join(',')})`);
         rtn[prop] = await Clazz[prop](...args);
       } catch (err) {
         error = err;
       }
       if (execr['afterEach']) {
-        if (logger.info) logger.info(`\nExecuting: ${Clazz.name}.afterEach(${args.join(',')})`);
+        if (log.info) log.info(`\nExecuting: ${Clazz.name}.afterEach(${args.join(',')})`);
         try {
           rtn['afterEach'] = await execr['afterEach'](...args);
         } catch (err) {
-          if (error && logger.error) logger.error(err);
+          if (error && log.error) log.error(err);
           if (!error) throw err;
         }
       }
       if (error) break;
     }
     if (execr['after']) {
-      if (logger.info) logger.info(`\nExecuting: ${Clazz.name}.after(${args.join(',')})`);
+      if (log.info) log.info(`\nExecuting: ${Clazz.name}.after(${args.join(',')})`);
       try {
         rtn['after'] = await execr['after'](...args);
       } catch (err) {
-        if (error && logger.error) logger.error(err);
+        if (error && log.error) log.error(err);
         if (!error) throw err;
       }
     }

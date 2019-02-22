@@ -61,6 +61,55 @@ class Tester {
     // read partials from DB at render-time
     return Main.baseTest(opts.compile, engine, null, false, false, opts.render);
   }
+
+  static levelDbFromPartialsInDbRenderTimeReadWithSearchParams() {
+    const opts = baseOptions(meta);
+    opts.render.readFetchRequestOptions = {
+      rejectUnauthorized: false
+    };
+    const params = {
+      searchParam1: 'Search Param 1 VALUE',
+      searchParam2: 'Search Param 2 VALUE'
+    };
+    return Main.paramsTest({
+      label: 'Params = Single Search Param',
+      template: `<html><body>\${ await include\`text \${ new URLSearchParams(${ JSON.stringify(params) }) }\` }</body></html>`,
+      cases: {
+        params,
+        search: { name: 'text', paramCount: 1, callCount: 1 }
+      }
+    }, opts);
+  }
+
+  static async levelDbFromPartialsInDbRenderTimeReadWithRegisteredSearchParams() {
+    const opts = baseOptions(meta);
+    const params = {
+      registeredSearchParam1: 'Registered Search Param 1 VALUE',
+      registeredSearchParam2: 'Registered Search Param 2 VALUE'
+    };
+    const files = await Main.getFiles(Main.PATH_HTML_PARTIALS_DIR, true);
+    var text;
+    for (let file of files ) {
+      if (file.name === 'text') {
+        text = file;
+        break;
+      }
+    }
+    const partials = [{
+      name: `text?${new URLSearchParams(params).toString()}`,
+      content: text.content
+    }];
+    const cachier = new CachierDB(opts.compile, JsFrmt, LOGGER);
+    // write partial to DB, no HTTPS server
+    return Main.paramsTest({
+      label: 'Params = Single Search Param',
+      template: `<html><body>\${ await include\`text \${ new URLSearchParams(${ JSON.stringify(params) }) }\` }</body></html>`,
+      cases: {
+        params,
+        search: { name: 'text', paramCount: 1, callCount: 1 }
+      }
+    }, opts, partials, false, true, cachier);
+  }
 }
 
 // TODO : ESM remove the following line...

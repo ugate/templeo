@@ -172,7 +172,7 @@ class Engine {
   }
 
   /**
-   * Registers and caches a partial template
+   * Registers and stores a partial template __in-memory__. Use {@link Engine.registerPartials} to write partials to cache ({@link Cachier})
    * @param {String} name The template name that uniquely identifies the template content
    * @param {(String | URLSearchParams)} contentOrParams Either the partial template content __string__ to register _or_ the
    * `URLSearchParams` that will be passed during the content `read`
@@ -185,7 +185,7 @@ class Engine {
   }
 
   /**
-   * Registers and caches partial compile-time partial templates
+   * Registers and __caches__ one or more partial templates
    * @async
    * @param {Object[]} [partials] The partials to register
    * @param {String} partials[].name The template name that uniquely identifies the template content

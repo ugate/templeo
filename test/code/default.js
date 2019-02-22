@@ -156,7 +156,7 @@ class Tester {
         params,
         search: { name: 'text', paramCount: 1, callCount: 1 }
       }
-    }, null, baseOptions());
+    }, baseOptions());
   }
 
   static htmlIncludeMultiSameSearchParamsHttpsServerRead() {
@@ -172,7 +172,7 @@ class Tester {
         // call count should remain the same for 2nd include since it should be cached
         search: { name: 'text', paramCount: 2, callCount: 1 }
       }]
-    }, null, baseOptions());
+    }, baseOptions());
   }
 
   static htmlIncludeMultiDiffSearchParamsHttpsServerRead() {
@@ -187,7 +187,7 @@ class Tester {
         params: params2,
         search: { name: 'text', paramCount: 1, callCount: 1 }
       }]
-    }, null, baseOptions());
+    }, baseOptions());
   }
 
   static htmlIncludeOneSearchOneJsonParamsHttpsServerRead() {
@@ -202,7 +202,7 @@ class Tester {
         params: params2,
         pass: { paramCount: 1 }
       }]
-    }, null, baseOptions());
+    }, baseOptions());
   }
 
   static htmlIncludeMultiDiffJsonParamsHttpsServerRead() {
@@ -217,7 +217,7 @@ class Tester {
         params: params2,
         pass: { paramCount: 1 }
       }]
-    }, null, baseOptions());
+    }, baseOptions());
   }
 }
 
