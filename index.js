@@ -94,22 +94,27 @@ class Engine {
    * Compiles a template and returns a function that renders the template results using the passed `context` object
    * @param {String} content The raw template content
    * @param {Object} [opts] The options sent for compilation (omit to use the options set on the {@link Engine})
+   * @param {URLSearchParams} [params] Any URL search parmeters that will be passed when capturing the primary `template` and/or
+   * `context` when needed. Parameters can be excluded from the invocation by replacing `params` with a `callback` (e.g.
+   * `compile(content, opts, callback)`).
    * @param {Function} [callback] Optional _callback style_ support __for LEGACY-ONLY APIs__:  
    * `compile(content, opts, (error, (ctx, opts, cb) => cb(error, results)) => {})` or omit to run via
    * `await compile(content, opts)`. __Omission will return the normal stand-alone renderer that can be serialized/deserialized.
    * When a _callback function_ is specified, serialization/deserialization of the rendering function will not be possible!__
    * @returns {function} The rendering `function(context)` that returns a template result string based upon the provided context
    */
-  async compile(content, opts, callback) { // ensures partials are included in the compilation
+  async compile(content, opts, params, callback) { // ensures partials are included in the compilation
     const ns = internal(this);
     opts = opts || {};
     var fn, error;
+    callback = typeof params === 'function' ? params : callback;
+    params = params instanceof URLSearchParams ? params : null;
     if (callback) {
       if (ns.at.cache.logger.info) {
         ns.at.cache.logger.info('Compiling template w/callback style conventions');
       }
       try {
-        fn = await compile(ns, content, ns.at.cache.options, opts, null, ns.at.cache);
+        fn = await compile(ns, content, params, ns.at.cache.options, opts, null, ns.at.cache);
       } catch (err) {
         error = err;
       }
@@ -125,7 +130,7 @@ class Engine {
           cb(err);
         }
       });
-    } else fn = compile(ns, content, ns.at.cache.options, opts, null, ns.at.cache);
+    } else fn = compile(ns, content, params, ns.at.cache.options, opts, null, ns.at.cache);
     return fn;
   }
 
@@ -258,6 +263,7 @@ module.exports = Engine;
  * @private
  * @param {Object} ns The namespace of the template engine
  * @param {String} content The raw template content
+ * @param {URLSearchParams} [params] Any URL search parmeters that will be passed when capturing the primary `template` and/or `context` when needed
  * @param {TemplateOpts} [options] The options that overrides the default engine options
  * @param {Object} [ropts] The object definition to be used in the template
  * @param {String} [ropts.filename] When the template name is omitted, an attempt will be made to extract a name from the `filename` using `options.filename`
@@ -267,7 +273,7 @@ module.exports = Engine;
  * cache.
  * @returns {Function} The rendering `function(context)` that returns a template result string based upon the provided context
  */
-async function compile(ns, content, options, ropts, tname, cache) {
+async function compile(ns, content, params, options, ropts, tname, cache) {
   const opts = options instanceof TemplateOpts ? options : new TemplateOpts(options);
   if (!ropts) ropts = opts; // use definitions from the options when none are supplied
   cache = cache instanceof Cachier ? cache : new Cachier(opts);
@@ -275,7 +281,7 @@ async function compile(ns, content, options, ropts, tname, cache) {
   const tnm = tname || (parts && parts[2]) || (ropts && ropts.defaultTemplateName)
     || opts.defaultTemplateName || `template_${Sandbox.guid(null, false)}`;
   try {
-    return await cache.compile(tnm, content, parts && parts[3]); // await in order to catch errors
+    return await cache.compile(tnm, content, params, parts && parts[3]); // await in order to catch errors
   } catch (e) {
     if (ns.at.cache.logger.error) ns.at.cache.logger.error(`Could not compile template ${tnm} (ERROR: ${e.message}): ${content}`);
     throw e;

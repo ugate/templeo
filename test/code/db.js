@@ -6,7 +6,7 @@ const CachierDB = require('../../lib/cachier-db.js');
 // TODO : import { expect, LOGGER, Engine, JsFrmt, Main } from './_main.mjs';
 // TODO : import * as CachierDB from '../../lib/cachier-db.mjs';
 
-var meta, engine;
+var meta, engines = [];
 
 // DEBUGGING:
 // Use the following:
@@ -22,13 +22,16 @@ class Tester {
 
   static async after() {
     // close DB connection(s) and clear files on last test
-    return Main.clearDB(engine, true);
+    for (let engine of engines) {
+      await Main.clearDB(engine, engine === engines[engines.length - 1]);
+    }
   }
 
   static async levelDbFromRegisterPartialsComileTimeWrite() {
     const opts = baseOptions(meta);
     const cachier = new CachierDB(opts.compile, JsFrmt, LOGGER);
-    engine = Engine.create(cachier);
+    const engine = Engine.create(cachier);
+    engines.push(engine);
     const partials = await Main.getFiles(Main.PATH_HTML_PARTIALS_DIR);
     // write partials to DB at compile-time
     return Main.baseTest(opts.compile, engine, partials, false, true, opts.render);
@@ -38,7 +41,8 @@ class Tester {
     const opts = baseOptions(meta);
     // partials should still be cached from previous test w/registerPartials
     const cachier = new CachierDB(opts.compile, JsFrmt, LOGGER);
-    engine = Engine.create(cachier);
+    const engine = Engine.create(cachier);
+    engines.push(engine);
     // read partials from DB at compile-time
     return Main.baseTest(opts.compile, engine, null, true, false, opts.render);
   }
@@ -47,7 +51,8 @@ class Tester {
     const opts = baseOptions(meta);
     // partials should still be cached from previous test w/registerPartials
     const cachier = new CachierDB(opts.compile, JsFrmt, LOGGER);
-    engine = Engine.create(cachier);
+    const engine = Engine.create(cachier);
+    engines.push(engine);
     // read partials from DB at render-time
     return Main.baseTest(opts.compile, engine, null, false, false, opts.render);
   }
@@ -57,12 +62,13 @@ class Tester {
     opts.render.renderTimeReadPolicy = 'read-and-close';
     // partials should still be cached from previous test w/registerPartials
     const cachier = new CachierDB(opts.compile, JsFrmt, LOGGER);
-    engine = Engine.create(cachier);
+    const engine = Engine.create(cachier);
+    engines.push(engine);
     // read partials from DB at render-time
     return Main.baseTest(opts.compile, engine, null, false, false, opts.render);
   }
 
-  static levelDbFromPartialsInDbRenderTimeReadWithSearchParams() {
+  static async levelDbFromPartialsInDbRenderTimeReadWithSearchParams() {
     const opts = baseOptions(meta);
     opts.render.readFetchRequestOptions = {
       rejectUnauthorized: false
@@ -71,7 +77,7 @@ class Tester {
       searchParam1: 'Search Param 1 VALUE',
       searchParam2: 'Search Param 2 VALUE'
     };
-    return Main.paramsTest({
+    const test = await Main.paramsTest({
       label: 'Params = Single Search Param',
       template: `<html><body>\${ await include\`text \${ new URLSearchParams(${ JSON.stringify(params) }) }\` }</body></html>`,
       cases: {
@@ -79,6 +85,7 @@ class Tester {
         search: { name: 'text', paramCount: 1, callCount: 1 }
       }
     }, opts);
+    engines.push(test.engine);
   }
 
   static async levelDbFromPartialsInDbRenderTimeReadWithRegisteredSearchParams() {
@@ -101,7 +108,7 @@ class Tester {
     }];
     const cachier = new CachierDB(opts.compile, JsFrmt, LOGGER);
     // write partial to DB, no HTTPS server
-    return Main.paramsTest({
+    const test = await Main.paramsTest({
       label: 'Params = Single Search Param',
       template: `<html><body>\${ await include\`text \${ new URLSearchParams(${ JSON.stringify(params) }) }\` }</body></html>`,
       cases: {
@@ -109,6 +116,7 @@ class Tester {
         search: { name: 'text', paramCount: 1, callCount: 1 }
       }
     }, opts, partials, false, true, cachier);
+    engines.push(test.engine);
   }
 }
 

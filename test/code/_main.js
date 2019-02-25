@@ -455,6 +455,11 @@ class Main {
    * included template content for the given `search.name`
    * @param {Object} [test.cases[].pass] Whether or not basic JSON parameters are used
    * @param {Integer} [test.cases[].pass.paramCount] The number of times that include parameters that should be present in the result
+   * @param {Object} [test.files] The return object from {@link Main.getTemplateFiles}
+   * @param {Object} [test.server] The return object from {@link Main.httpsServer}
+   * @param {Engine} [test.engine] The {@link Engine} used in the test
+   * @param {Function} [test.renderer] The rendering function from {@link Engine.compile} used in the test
+   * @param {String} [test.result] The returned results from the rendering function invocation used in the test
    * @param {Object} [opts] The options passed into the {@link TemplateOpts} constructor
    * @param {TemplateOpts} [opts.compileOpts] The compile options
    * @param {TemplateOpts} [opts.renderOpts] The render options
@@ -463,32 +468,33 @@ class Main {
    * @param {Boolean} [writePartials] Passes the `write` flag into {@link Engine.registerPartials}
    * @param {Cachier} [cachier] A {@link Cachier} that will be passed into {@link Engine.create}
    * @param {Boolean} [useServer] `true` to serve partials via {@link Main.httpsServer} and validate the call count
+   * @returns {Object} `test` The test objects
    */
   static async paramsTest(test, opts, partials, readPartials, writePartials, cachier, useServer = true) {
     const idPrefix = 'inclParamFromServer_';
     opts = opts || { render: {} };
-    const files = await Main.getTemplateFiles();
+    test.files = await Main.getTemplateFiles();
     
     let els, label = test.label;
-    const svr = useServer ? await Main.httpsServer(opts.compile, idPrefix) : null;
+    test.server = useServer ? await Main.httpsServer(opts.compile, idPrefix) : null;
     try {
-      if (svr) opts.render.templatePathBase = svr.url;
-      const engine = cachier ? Engine.create(cachier) : new Engine(opts.compile, JsFrmt, log);
+      if (test.server) opts.render.templatePathBase = test.server.url;
+      test.engine = cachier ? Engine.create(cachier) : new Engine(opts.compile, JsFrmt, log);
       if (partials || readPartials) {
-        engine.registerPartials(partials, readPartials, writePartials);
+        await test.engine.registerPartials(partials, readPartials, writePartials);
       }
-      const renderer = await engine.compile(test.template);
-      const rslt = await renderer(files.htmlContext, opts.render);
+      test.renderer = await test.engine.compile(test.template);
+      test.result = await test.renderer(test.files.htmlContext, opts.render);
 
       if (log.debug) {
-        log.debug(`Parameters test complete for template:\n${test.template}\nRESULT:\n${rslt}`);
+        log.debug(`Parameters test complete for template:\n${test.template}\nRESULT:\n${test.result}`);
       }
-      const dom = new JSDOM(rslt);
+      const dom = new JSDOM(test.result);
       const cases = Array.isArray(test.cases) ? test.cases : [test.cases];
 
       for (let cased of cases) {
-        if (svr && cased.search && cased.search.name && cased.search.callCount) {
-          expect(svr.callCount(cased.search.name, cased.params),
+        if (test.server && cased.search && cased.search.name && cased.search.callCount) {
+          expect(test.server.callCount(cased.search.name, cased.params),
             `${label} ${cased.search.name} call count`).to.equal(cased.search.callCount);
         }
         for (let name in cased.params) {
@@ -519,8 +525,9 @@ class Main {
         }
       }
     } finally {
-      if (svr) await svr.close();
+      if (test.server) await test.server.close();
     }
+    return test;
   }
 
   /**
