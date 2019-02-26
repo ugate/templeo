@@ -73,8 +73,7 @@ class Engine {
    */
   constructor(opts, formatFunc, logger) {
     const ns = internal(this);
-    const isCachier = opts instanceof Cachier;
-    ns.at.cache = isCachier ? opts : new Cachier(opts, formatFunc, true, logger);
+    ns.at.cache = opts instanceof Cachier ? opts : new Cachier(opts, formatFunc, true, logger);
     ns.at.isInit = false;
     ns.at.prts = {};
     ns.at.prtlFuncs = {};
