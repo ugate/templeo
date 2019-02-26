@@ -108,15 +108,20 @@ class Tester {
     }];
     const cachier = new CachierDB(opts.compile, JsFrmt, LOGGER);
     // write partial to DB, no HTTPS server
-    const test = await Main.paramsTest({
+    const test = {
       label: 'Params = Single Search Param',
       template: `<html><body>\${ await include\`text \${ new URLSearchParams(${ JSON.stringify(params) }) }\` }</body></html>`,
       cases: {
         params,
-        search: { name: 'text', paramCount: 1, callCount: 1 }
+        search: { name: 'text', paramText: text.content }
       }
-    }, opts, partials, false, true, cachier);
+    };
+    // write the test partial to the DB
+    await Main.paramsTest(test, opts, partials, false, true, cachier, false);
     engines.push(test.engine);
+    if (LOGGER.info) LOGGER.info(`>>>>>>> Checking previously written search params...`);
+    // now include the search params again, but read from the DB
+    await Main.paramsTest(test, opts, partials, true, false, cachier, false);
   }
 }
 

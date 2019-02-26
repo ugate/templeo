@@ -25,4 +25,6 @@ lab.experiment(plan, async () => {
     { timeout: TEST_TKO }, Tester.levelDbFromPartialsInDbRenderTimeReadAndClose);
   lab.test(`${plan}: HTML/LevelDB from partials in DB with search parameters (render-time read)`,
     { timeout: TEST_TKO }, Tester.levelDbFromPartialsInDbRenderTimeReadWithSearchParams);
+  lab.test(`${plan}: HTML/LevelDB from partials in DB with registered search parameters (render-time read)`,
+    { timeout: TEST_TKO }, Tester.levelDbFromPartialsInDbRenderTimeReadWithRegisteredSearchParams);
 });
