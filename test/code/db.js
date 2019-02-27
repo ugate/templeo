@@ -121,7 +121,7 @@ class Tester {
     engines.push(test.engine);
     if (LOGGER.info) LOGGER.info(`>>>>>>> Checking previously written search params...`);
     // now include the search params again, but read from the DB
-    await Main.paramsTest(test, opts, partials, true, false, cachier, false);
+    await Main.paramsTest(test, opts, null, true, false, cachier, false);
   }
 }
 
