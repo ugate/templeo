@@ -94,17 +94,10 @@ class Tester {
       registeredSearchParam1: 'Registered Search Param 1 VALUE',
       registeredSearchParam2: 'Registered Search Param 2 VALUE'
     };
-    const files = await Main.getFiles(Main.PATH_HTML_PARTIALS_DIR, true);
-    var text;
-    for (let file of files ) {
-      if (file.name === 'text') {
-        text = file;
-        break;
-      }
-    }
+    const text = (await Main.getFile(`${Main.PATH_HTML_PARTIALS_DIR}/text.html`, true)).toString();
     const partials = [{
       name: `text?${new URLSearchParams(params).toString()}`,
-      content: text.content
+      content: text
     }];
     const cachier = new CachierDB(opts.compile, JsFrmt, LOGGER);
     // write partial to DB, no HTTPS server
@@ -113,7 +106,7 @@ class Tester {
       template: `<html><body>\${ await include\`text \${ new URLSearchParams(${ JSON.stringify(params) }) }\` }</body></html>`,
       cases: {
         params,
-        search: { name: 'text', paramText: text.content }
+        search: { name: 'text', paramText: text }
       }
     };
     // write the test partial to the DB

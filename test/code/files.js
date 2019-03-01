@@ -48,6 +48,26 @@ class Tester {
     const partials = await Main.getFiles(opts.compile.partialsPath, true);
     return Main.baseTest(opts.compile, await getFilesEngine(opts.compile), partials, true);
   }
+
+  static async htmlRenderTimeReadWithRegisteredSearchParams() {
+    const opts = baseOptions();
+    const params = {
+      registeredSearchParam1: 'Registered Search Param 1 VALUE',
+      registeredSearchParam2: 'Registered Search Param 2 VALUE'
+    };
+    const text = (await Main.getFile(`${Main.PATH_HTML_PARTIALS_DIR}/text.html`, true)).toString();
+    const cachier = new CachierFiles(opts, JsFrmt, LOGGER);
+    // write partial to DB, no HTTPS server
+    const test = {
+      label: 'Params = Single Search Param',
+      template: `<html><body>\${ await include\`text \${ new URLSearchParams(${ JSON.stringify(params) }) }\` }</body></html>`,
+      cases: {
+        params,
+        search: { name: 'text', paramText: text }
+      }
+    };
+    await Main.paramsTest(test, opts, null, false, false, cachier, false);
+  }
 }
 
 // TODO : ESM remove the following line...

@@ -7,8 +7,8 @@
 
 const TEST_FILES = {};
 const DB = {};
-const log = {};
-//const log = { info: console.info, warn: console.warn, error: console.error };
+//const log = {};
+const log = { info: console.info, warn: console.warn, error: console.error };
 //const log = console;
 
 const Forge = require('node-forge');
@@ -215,10 +215,10 @@ class Main {
       jsonContextPath: PATH_JSON_CONTEXT,
     };
 
-    rtn.html = getFile(rtn.htmlPath, cache);
-    rtn.json = getFile(rtn.jsonPath, cache);
-    rtn.htmlContext = getFile(rtn.htmlContextPath, cache);
-    rtn.jsonContext = getFile(rtn.jsonContextPath, cache);
+    rtn.html = Main.getFile(rtn.htmlPath, cache);
+    rtn.json = Main.getFile(rtn.jsonPath, cache);
+    rtn.htmlContext = Main.getFile(rtn.htmlContextPath, cache);
+    rtn.jsonContext = Main.getFile(rtn.jsonContextPath, cache);
 
     rtn.html = (await rtn.html).toString();
     rtn.json = (await rtn.json).toString();
@@ -273,6 +273,17 @@ class Main {
     if (isJSON) Main.expectJSON(test.result, context);
     else Main.expectDOM(test.result, context);
     return test;
+  }
+
+  /**
+   * Captures a test file contents
+   * @param {String} path The path to the file to read/get
+   * @param {Boolean} cache `true` to cache the read content for subsequent calls
+   * @returns {Buffer} The file contents
+   */
+  static async getFile(path, cache = true) {
+    if (cache && TEST_FILES[path]) return TEST_FILES[path];
+    return cache ? TEST_FILES[path] = await Fs.promises.readFile(path) : Fs.promises.readFile(path);
   }
 
   /**
@@ -671,17 +682,6 @@ class Main {
 
 // TODO : ESM remove the following line...
 exports.Main = Main;
-
-/**
- * Captures a test file contents
- * @param {String} path The path to the file to read/get
- * @param {Boolean} cache `true` to cache the read content for subsequent calls
- * @returns {Buffer} The file contents
- */
-async function getFile(path, cache = true) {
-  if (cache && TEST_FILES[path]) return TEST_FILES[path];
-  return cache ? TEST_FILES[path] = await Fs.promises.readFile(path) : Fs.promises.readFile(path);
-}
 
 /**
  * Validates that the supplied DOM contains the color values from the context data

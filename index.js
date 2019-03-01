@@ -65,15 +65,15 @@ class Engine {
    * @param {TemplateOpts} [opts] The {@link TemplateOpts} to use
    * @param {Function} [formatFunc] The `function(string, formatOptions)` that will return a formatted string for a specified code block,
    * passing the formatting options from `opts.formatOptions` (e.g. minification and/or beautifying)
-   * @param {Object} [logger] The logger for handling logging output
-   * @param {Function} [logger.debug] A function that will accept __debug__ level logging messages (i.e. `debug('some message to log')`)
-   * @param {Function} [logger.info] A function that will accept __info__ level logging messages (i.e. `info('some message to log')`)
-   * @param {Function} [logger.warn] A function that will accept __warning__ level logging messages (i.e. `warn('some message to log')`)
-   * @param {Function} [logger.error] A function that will accept __error__ level logging messages (i.e. `error('some message to log')`)
+   * @param {Object} [log] The log for handling logging output
+   * @param {Function} [log.debug] A function that will accept __debug__ level logging messages (i.e. `debug('some message to log')`)
+   * @param {Function} [log.info] A function that will accept __info__ level logging messages (i.e. `info('some message to log')`)
+   * @param {Function} [log.warn] A function that will accept __warning__ level logging messages (i.e. `warn('some message to log')`)
+   * @param {Function} [log.error] A function that will accept __error__ level logging messages (i.e. `error('some message to log')`)
    */
-  constructor(opts, formatFunc, logger) {
+  constructor(opts, formatFunc, log) {
     const ns = internal(this);
-    ns.at.cache = opts instanceof Cachier ? opts : new Cachier(opts, formatFunc, true, logger);
+    ns.at.cache = opts instanceof Cachier ? opts : new Cachier(opts, formatFunc, true, log);
     ns.at.isInit = false;
     ns.at.prts = {};
     ns.at.prtlFuncs = {};
@@ -109,8 +109,8 @@ class Engine {
     callback = typeof params === 'function' ? params : callback;
     params = params instanceof URLSearchParams ? params : null;
     if (callback) {
-      if (ns.at.cache.logger.info) {
-        ns.at.cache.logger.info('Compiling template w/callback style conventions');
+      if (ns.at.cache.log.info) {
+        ns.at.cache.log.info('Compiling template w/callback style conventions');
       }
       try {
         fn = await compile(ns, content, params, ns.at.cache.options, opts, null, ns.at.cache);
@@ -177,6 +177,7 @@ class Engine {
 
   /**
    * Registers and stores a partial template __in-memory__. Use {@link Engine.registerPartials} to write partials to cache ({@link Cachier})
+   * @async
    * @param {String} name The template name that uniquely identifies the template content
    * @param {(String | URLSearchParams)} contentOrParams Either the partial template content __string__ to register _or_ the
    * `URLSearchParams` that will be passed during the content `read`
@@ -282,7 +283,7 @@ async function compile(ns, content, params, options, ropts, tname, cache) {
   try {
     return await cache.compile(tnm, content, params, parts && parts[3]); // await in order to catch errors
   } catch (e) {
-    if (ns.at.cache.logger.error) ns.at.cache.logger.error(`Could not compile template ${tnm} (ERROR: ${e.message}): ${content}`);
+    if (ns.at.cache.log.error) ns.at.cache.log.error(`Could not compile template ${tnm} (ERROR: ${e.message}): ${content}`);
     throw e;
   }
 }
