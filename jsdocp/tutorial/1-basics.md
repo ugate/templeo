@@ -242,6 +242,8 @@ So far, the inclusion examples we've used have been on HTML, but any format that
 // https://localhost:9000/context.json
 ```
 
+Using the sources above, the JSON could be rendered doing:
+
 ```js
 // read the template at compile-time, the template context at render-time
 // and the partial templates as includes are encountered during render-time

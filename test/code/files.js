@@ -50,14 +50,14 @@ class Tester {
   }
 
   static async htmlRenderTimeReadWithRegisteredSearchParams() {
-    const opts = baseOptions();
+    const opts = baseOptions(true);
     const params = {
       registeredSearchParam1: 'Registered Search Param 1 VALUE',
       registeredSearchParam2: 'Registered Search Param 2 VALUE'
     };
     const text = (await Main.getFile(`${Main.PATH_HTML_PARTIALS_DIR}/text.html`, true)).toString();
-    const cachier = new CachierFiles(opts, JsFrmt, LOGGER);
-    // write partial to DB, no HTTPS server
+    const cachier = new CachierFiles(opts.render, JsFrmt, LOGGER);
+    // write partial to file system, no HTTPS server
     const test = {
       label: 'Params = Single Search Param',
       template: `<html><body>\${ await include\`text \${ new URLSearchParams(${ JSON.stringify(params) }) }\` }</body></html>`,
@@ -66,6 +66,9 @@ class Tester {
         search: { name: 'text', paramText: text }
       }
     };
+    // write source code to the file system at compile-time
+    await Main.paramsTest(test, opts, null, false, true, cachier, false);
+    // read partials from the file system at render-time
     await Main.paramsTest(test, opts, null, false, false, cachier, false);
   }
 }
@@ -78,19 +81,21 @@ if (!Main.usingTestRunner()) {
   (async () => await Main.run(Tester))();
 }
 
-function baseOptions() {
+function baseOptions(renderTime) {
+  const opts = {
+    templatePathBase: Main.PATH_BASE,
+    viewsPath: Main.PATH_VIEWS_DIR,
+    partialsPath: Main.PATH_HTML_PARTIALS_DIR,
+    sourcePath: Main.PATH_HTML_PARTIALS_DIR
+  };
+  const copts = renderTime ? {} : opts;
+  const ropts = renderTime ? opts : {};
+  ropts.readFetchRequestOptions = {
+    rejectUnauthorized: false
+  }
   return {
-    compile: {
-      templatePathBase: Main.PATH_BASE,
-      viewsPath: Main.PATH_VIEWS_DIR,
-      partialsPath: Main.PATH_HTML_PARTIALS_DIR,
-      sourcePath: Main.PATH_HTML_PARTIALS_DIR
-    },
-    render: {
-      readFetchRequestOptions: {
-        rejectUnauthorized: false
-      }
-    }
+    compile: copts,
+    render: ropts
   };
 }
 

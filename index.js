@@ -13,10 +13,6 @@ const Sandbox = require('./lib/sandbox');
  * Micro rendering template engine
  * @module templeo
  * @example
- * // Basic example in browser
- * const Engine = require('templeo');
- * const htmlEngine = new Engine();
- * @example
  * // Hapi.js example:
  * const Hapi = require('hapi');
  * const Vision = require('vision');
