@@ -282,9 +282,12 @@ async function compile(ns, content, params, options, ropts, tname, cache) {
     || opts.defaultTemplateName || `template_${Sandbox.guid(null, false)}`;
   try {
     return await cache.compile(tnm, content, params, parts && parts[3]); // await in order to catch errors
-  } catch (e) {
-    if (ns.at.cache.log.error) ns.at.cache.log.error(`Could not compile template ${tnm} (ERROR: ${e.message}): ${content}`);
-    throw e;
+  } catch (err) {
+    if (ns.at.cache.log.error) {
+      err.stack += `\nCAUSE: Unable to compile template ${tnm}:\n${content}`;
+      ns.at.cache.log.error(err);
+    }
+    throw err;
   }
 }
 
