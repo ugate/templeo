@@ -40,7 +40,9 @@ class Tester {
   static async defaultEnginePartialFetchHttpServer() {
     const opts = baseOptions();
     const svr = await Main.httpsServer(opts.compile);
-    opts.render.templatePathBase = svr.url; // partials will be served from this URL
+    opts.render.contextURL = svr.url;
+    opts.render.templateURL = svr.url;
+    opts.render.partialsURL = svr.url;
     const engine = new Engine(opts.compile, JsFrmt, LOGGER);
     // Hapi will not be happy with rendering options that are not part of the vision options
     // when calling: h.view('index', context, renderOpts);
@@ -80,8 +82,7 @@ if (!Main.usingTestRunner()) {
 function baseOptions(dynamicIncludeURL) {
   return {
     compile: {
-      templatePathBase: Main.PATH_BASE,
-      viewsPath: Main.PATH_VIEWS_DIR,
+      relativeTo: Main.PATH_RELATIVE_TO,
       partialsPath: Main.PATH_HTML_PARTIALS_DIR,
       sourcePath: Main.PATH_HTML_PARTIALS_DIR
     },
@@ -110,11 +111,11 @@ async function startServer(engine, opts, context, renderOpts) {
     engines: { html: engine },
     compileMode: 'async',
     defaultExtension: opts.defaultExtension,
-    path: opts.viewsPath,
+    path: Main.PATH_VIEWS_DIR,
     partialsPath: opts.partialsPath,
-    relativeTo: opts.templatePathBase,
+    relativeTo: opts.relativeTo,
     layout: true,
-    layoutPath: `${opts.viewsPath}/layout`
+    layoutPath: `${Main.PATH_VIEWS_DIR}/layout`
   });
   server.route({
     method: 'GET',

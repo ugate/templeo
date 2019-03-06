@@ -19,9 +19,9 @@ const Sandbox = require('./lib/sandbox');
  * const JsFrmt = require('js-beautify').js;
  * const Engine = require('templeo');
  * const econf = {
- *   templatePathBase: '.',
- *   viewsPath: 'views',
- *   partialsPath: 'views/partials',
+ *   partialsURL: 'https://example.com', // partial reads from a server?
+ *   contextURL: 'https://example.com', // context read from a server?
+ *   partialsPath: 'views/partials', // file path to the partials
  *   defaultExtension: 'html' // can be HTML, JSON, etc.
  * };
  * const cachier = new CachierFiles(econf, JsFrmt);
@@ -32,8 +32,8 @@ const Sandbox = require('./lib/sandbox');
  * await server.register(Vision);
  * server.views({
  *  compileMode: 'async',
- *  relativeTo: econf.templatePathBase,
- *  path: econf.viewsPath,
+ *  relativeTo: '.',
+ *  path: 'views',
  *  partialsPath: econf.partialsPath,
  *  defaultExtension: econf.defaultExtension,
  *  layoutPath: 'views/layout',

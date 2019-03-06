@@ -102,19 +102,19 @@ Although, we are not limited to just HTML, we'll start with some simple HTML tem
 }
 ```
 
-Assuming that the aforementioned sources are accessible from an HTTP server, we can assign a server URL to the [`options.templatePathBase`](module-templeo_options.html#.Options). Any partial template that is not registered when calling [`Engine.registerPartials`](module-templeo.Engine.html#registerPartials) will be fetched from the server by appending the partial name from the include to the `templatePathBase`. For example, with `templatePathBase = 'https://localhost:8080'` and an `` include`first/item` ``, a read/fetch will be made to `https://localhost:8080/first/item.html` (the file extension is determined by [`options.defaultExtension`](module-templeo_options.html#.Options)).
+Assuming that the aforementioned sources are accessible from an HTTP server, we can assign a server URL to the [`options.partialsURL`](module-templeo_options.html#.Options). Any partial template that is not registered when calling [`Engine.registerPartials`](module-templeo.Engine.html#registerPartials) will be fetched from the server by appending the partial name from the include to the `partialsURL`. For example, with `partialsURL = 'https://localhost:8080'` and an `` include`first/item` ``, a read/fetch will be made to `https://localhost:8080/first/item.html` (the file extension is determined by [`options.defaultExtension`](module-templeo_options.html#.Options)).
 
 Likewise, if template _content_ is __not__ specified when calling [`Engine.compile(content)`](module-templeo.Engine.html#compile), an atempt will be made to read/fetch the content from `https://localhost:8080/template.html`. The "template" name can be configured using [`options.defaultTemplateName`](module-templeo_options.html#.Options).
 
-The same read/fetch criteria applies to the _context_ used when invoking the rendering function. If no context is specified when calling `renderer(context)`, an attempt will be made to read/fetch `https://localhost:9000/context.json` at render-time (assuming that [`options.contextPathBase`](module-templeo_options.html#.Options) is set to `https://localhost:9000`). The "context" name can be configured using [`options.defaultContextName`](module-templeo_options.html#.Options).
+The same read/fetch criteria applies to the _context_ used when invoking the rendering function. If no context is specified when calling `renderer(context)`, an attempt will be made to read/fetch `https://localhost:9000/context.json` at render-time (assuming that [`options.contextURL`](module-templeo_options.html#.Options) is set to `https://localhost:9000`). The "context" name can be configured using [`options.defaultContextName`](module-templeo_options.html#.Options).
 
 ```js
 // read the template at compile-time, the template context at render-time
 // and the partial templates as includes are encountered during render-time
 const Engine = require('templeo');
 const engine = new Engine({
-  templatePathBase: 'https://localhost:8080',
-  contextPathBase: 'https://localhost:9000'
+  partialsURL: 'https://localhost:8080',
+  contextURL: 'https://localhost:9000'
 });
 const renderer = await engine.compile();
 const rslt = await renderer();
@@ -249,8 +249,8 @@ Using the sources above, the JSON could be rendered doing:
 // and the partial templates as includes are encountered during render-time
 const Engine = require('templeo');
 const engine = new Engine({
-  templatePathBase: 'https://localhost:8080',
-  contextPathBase: 'https://localhost:9000'
+  partialsURL: 'https://localhost:8080',
+  contextURL: 'https://localhost:9000'
 });
 const renderer = await engine.compile();
 const rslt = await renderer();

@@ -76,7 +76,9 @@ class Tester {
     const opts = baseOptions();
     const svr = await Main.httpsServer(opts.compile);
     try {
-      opts.compile.templatePathBase = svr.url; // partials will be served from this URL during compile-time
+      opts.compile.contextURL = svr.url;
+      opts.compile.templateURL = svr.url;
+      opts.compile.partialsURL = svr.url;
       const engine = new Engine(opts.compile, JsFrmt, LOGGER);
       // partials should be fetched via the HTTPS server during compilation via the cache read/fetch
       const partials = await Main.getFiles(Main.PATH_HTML_PARTIALS_DIR, false); // false will only return the partial names w/o content
@@ -103,7 +105,9 @@ class Tester {
     const svr = await Main.httpsServer(opts.compile);
     try {
       const context = { dynamicIncludeURL: `${svr.url}text.html` }; // test include from context value
-      opts.render.templatePathBase = svr.url; // partials will be served from this URL during render-time
+      opts.render.contextURL = svr.url;
+      opts.render.templateURL = svr.url;
+      opts.render.partialsURL = svr.url;
       const engine = new Engine(opts.compile, JsFrmt, LOGGER);
       // partials should be fetched via the HTTPS server when includes are encountered during rendering
       await Main.baseTest(opts.compile, engine, null, false, false, opts.render, context); // false to prevent compile-time registerPartials
@@ -129,8 +133,9 @@ class Tester {
     const svr = await Main.httpsServer(opts.compile);
     try {
       // read/load both the template.html and context.json from the HTTPS server
-      opts.compile.templatePathBase = svr.url;
-      opts.compile.contextPathBase = svr.url;
+      opts.compile.contextURL = svr.url;
+      opts.compile.templateURL = svr.url;
+      opts.compile.partialsURL = svr.url;
 
       const engine = new Engine(opts.compile);
       const renderer = await engine.compile();

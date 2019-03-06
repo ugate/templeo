@@ -70,7 +70,7 @@ exports.LOGGER = log;
 // export const LOGGER = log;
 
 const Fsp = Fs.promises;
-const PATH_BASE = '.';
+const PATH_RELATIVE_TO = '.';
 const PATH_VIEWS_DIR = 'test/views';
 
 const PATH_HTML_CONTEXT_DIR = 'test/context/html';
@@ -115,7 +115,7 @@ class Main {
         const topts = opts instanceof TemplateOpts ? opts : new TemplateOpts(opts);
         const isMainTmpl = req.url.endsWith(`${topts.defaultTemplateName}${topts.defaultExtension ? `.${topts.defaultExtension}` : ''}`);
         const isContext = !isMainTmpl && req.url.endsWith(`${topts.defaultContextName}.json`);
-        const baseFilePath = `${PATH_BASE}/${isMainTmpl ? PATH_VIEWS_DIR : isContext ? PATH_HTML_CONTEXT_DIR : PATH_HTML_PARTIALS_DIR}`;
+        const baseFilePath = `${PATH_RELATIVE_TO}/${isMainTmpl ? PATH_VIEWS_DIR : isContext ? PATH_HTML_CONTEXT_DIR : PATH_HTML_PARTIALS_DIR}`;
         const mthd = req.method.toUpperCase();
         try {
           const urlo = new URL(`${url}${req.url}`), prms = urlo.searchParams, type = prms.get('type');
@@ -490,7 +490,11 @@ class Main {
     let els, label = test.label, pit;
     test.server = useServer ? test.server || await Main.httpsServer(opts.compile, idPrefix) : null;
     try {
-      if (test.server) opts.render.templatePathBase = test.server.url;
+      if (test.server) {
+        opts.render.contextURL = test.server.url;
+        opts.render.templateURL = test.server.url;
+        opts.render.partialsURL = test.server.url;
+      }
       test.engine = test.engine || cachier ? Engine.create(cachier) : new Engine(opts.compile, JsFrmt, log);
       if (partials || readPartials) {
         await test.engine.registerPartials(partials, readPartials, writePartials);
@@ -639,8 +643,8 @@ class Main {
     return process.mainModule.filename.endsWith('lab');
   }
 
-  static get PATH_BASE() {
-    return PATH_BASE;
+  static get PATH_RELATIVE_TO() {
+    return PATH_RELATIVE_TO;
   }
 
   static get PATH_VIEWS_DIR() {

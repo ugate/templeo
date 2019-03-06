@@ -35,7 +35,7 @@
   "devDependencies": {
     "code": "^5.2.4",
     "hapi": "^18.1.0",
-    "js-beautify": "^1.8.9",
+    "js-beautify": "^1.9.0",
     "jsdoc": "^3.5.5",
     "jsdocp": "^1.0.1",
     "jsdom": "^13.2.0",
