@@ -67,7 +67,7 @@ class Tester {
       }
     };
     // write source code to the file system at compile-time
-    await Main.paramsTest(test, opts, null, false, true, cachier, false);
+    const writeTest = await Main.paramsTest(test, opts, null, false, true, cachier, false);
     // read partials from the file system at render-time
     await Main.paramsTest(test, opts, null, false, false, cachier, false);
   }
