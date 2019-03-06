@@ -60,16 +60,17 @@ class Tester {
     // write partial to file system, no HTTPS server
     const test = {
       label: 'Params = Single Search Param',
-      template: `<html><body>\${ await include\`text \${ new URLSearchParams(${ JSON.stringify(params) }) }\` }</body></html>`,
+      template: `<html><body>\${ await include\`text \${ new URLSearchParams(${ JSON.stringify(params) }) }\` }\${ await include\`${ Main.NO_FILE_NAME }\` }</body></html>`,
       cases: {
         params,
         search: { name: 'text', paramText: text }
       }
     };
     // write source code to the file system at compile-time
-    const writeTest = await Main.paramsTest(test, opts, null, false, true, cachier, false);
+    await Main.paramsTest(test, opts, null, false, true, cachier, true, false);
+    let els = test.dom.window.document.getElementsByName(Main.NO_FILE_NAME);
     // read partials from the file system at render-time
-    await Main.paramsTest(test, opts, null, false, false, cachier, false);
+    await Main.paramsTest(test, opts, null, false, false, cachier, true, true);
   }
 }
 
