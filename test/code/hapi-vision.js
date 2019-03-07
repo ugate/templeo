@@ -83,8 +83,7 @@ function baseOptions(dynamicIncludeURL) {
   return {
     compile: {
       relativeTo: Main.PATH_RELATIVE_TO,
-      partialsPath: Main.PATH_HTML_PARTIALS_DIR,
-      sourcePath: Main.PATH_HTML_PARTIALS_DIR
+      partialsPath: Main.PATH_HTML_PARTIALS_DIR
     },
     render: {
       readFetchRequestOptions: {

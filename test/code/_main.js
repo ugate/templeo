@@ -565,6 +565,17 @@ class Main {
   }
 
   /**
+   * Validates that a {@link Main.NO_FILE_NAME} has been added by a server from {@link Main.httpsServer}
+   * @param {JSDOM} dom The JSDOM to validate from
+   */
+  static noFileValidate(dom) {
+    let noFileEl = dom.window.document.querySelector(`[name="${NO_FILE_NAME}"]`);
+    let label = `Element validation for "${NO_FILE_NAME}"`;
+    expect(noFileEl, label).to.not.be.null();
+    expect(noFileEl.value, label).to.equal(NO_FILE_VAL);
+  }
+
+  /**
    * Runs a function from a class using `return Clazz[process.argv[2]](...args)`
    * __or__ runs through all of the `async` functions from `Object.getOwnPropertyNames(Clazz)` via
    * `await Clazz[propertyName](...args)` other than function names that are found in `excludes` or

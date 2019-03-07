@@ -36,11 +36,17 @@ class Tester {
 
   static async htmlCacheWithWatch() {
     const opts = baseOptions();
-    opts.compile.watchRegistrationSourcePaths = true;
+    opts.compile.watchRegistrationPartialPaths = true;
     const test = await Main.init(opts.compile, await getFilesEngine(opts.compile));
     await test.engine.registerPartials(null, true);
-    await partialFrag(test);
-    return engine.clearCache(true); // should clear the cache/watches
+    return partialFragWatch(test);
+  }
+
+  static async htmlRenderTimeCacheWithWatch() {
+    const opts = baseOptions(true);
+    opts.render.watchRegistrationPartialPaths = true;
+    const test = await Main.init(opts.compile, await getFilesEngine(opts.compile));
+    await partialFragWatch(test, opts.render);
   }
 
   static async htmlCacheWithRegisterPartials() {
@@ -68,9 +74,13 @@ class Tester {
     };
     // write source code to the file system at compile-time
     await Main.paramsTest(test, opts, null, false, true, cachier, true, false);
-    let els = test.dom.window.document.getElementsByName(Main.NO_FILE_NAME);
+    // validate the no file element was added by the server
+    Main.noFileValidate(test.dom);
+
     // read partials from the file system at render-time
     await Main.paramsTest(test, opts, null, false, false, cachier, true, true);
+    // test.result updated, validate the no file element was added by the server
+    Main.noFileValidate(test.dom);
   }
 }
 
@@ -84,8 +94,7 @@ if (!Main.usingTestRunner()) {
 
 function baseOptions(renderTime) {
   const opts = {
-    partialsPath: Main.PATH_HTML_PARTIALS_DIR,
-    sourcePath: Main.PATH_HTML_PARTIALS_DIR
+    partialsPath: Main.PATH_HTML_PARTIALS_DIR
   };
   const copts = renderTime ? {} : opts;
   const ropts = renderTime ? opts : {};
@@ -105,7 +114,7 @@ async function getFilesEngine(opts) {
   return engine;
 }
 
-async function partialFrag(test, elId, name) {
+async function partialFragWatch(test, renderOpts, elId, name) {
   test.frag = { elementId: elId || 'test-partial-add', name: name || 'watch-test' };
   test.frag.html = `<div id="${test.frag.elementId}"></div>`;
   /* jSDOM escapes templeo template syntax causing errors
@@ -121,17 +130,25 @@ async function partialFrag(test, elId, name) {
   test.frag.path = `${Path.join(opts.relativeTo, opts.partialsPath, test.frag.name)}.html`;
   await Fs.promises.writeFile(test.frag.path, test.frag.html);
 
+  let renderFunc;
   try {
     await Main.wait(PARTIAL_DETECT_DELAY_MS); // give the watch some time to detect the changes
     // compile the updated HTML
-    const fn = await test.engine.compile(test.html);
+    renderFunc = await test.engine.compile(test.html);
     // check the result and make sure the test partial was detected 
-    const rslt = await fn(test.htmlContext), dom = new JSDOM(rslt);
+    const rslt = await renderFunc(test.htmlContext, renderOpts), dom = new JSDOM(rslt);
     const prtl = dom.window.document.getElementById(test.frag.elementId);
     expect(prtl).not.null();
     Main.expectDOM(rslt, test.htmlContext);
   } finally {
     await Fs.promises.unlink(test.frag.path); // remove test fragment
+    if (opts.watchRegistrationPartialPaths) {
+      await engine.clearCache(true); // should clear the compile-time cache/watches
+    } else if (renderFunc && renderOpts && renderOpts.watchRegistrationPartialPaths) {
+      const unwatchOpts = baseOptions(true);
+      unwatchOpts.unwatch = true;
+      await renderFunc('', unwatchOpts); // should clear the render-time watches
+    }
   }
   return test;
 }
