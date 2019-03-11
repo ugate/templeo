@@ -36,7 +36,7 @@ class Tester {
 
   static async htmlCacheWithWatch() {
     const opts = baseOptions();
-    opts.compile.watchRegistrationPartialPaths = true;
+    opts.compile.watchPartials = true;
     const test = await Main.init(opts.compile, await getFilesEngine(opts.compile));
     await test.engine.registerPartials(null, true);
     return partialFragWatch(test);
@@ -44,7 +44,9 @@ class Tester {
 
   static async htmlRenderTimeCacheWithWatch() {
     const opts = baseOptions(true);
-    opts.render.watchRegistrationPartialPaths = true;
+    opts.render.watchPartials = true;
+    opts.render.renderTimeReadPolicy = 'read-all-on-init-when-empty';
+    opts.compile.debugger = true;
     const test = await Main.init(opts.compile, await getFilesEngine(opts.compile));
     await partialFragWatch(test, opts.render);
   }
@@ -55,7 +57,7 @@ class Tester {
     return Main.baseTest(opts.compile, await getFilesEngine(opts.compile), partials, true);
   }
 
-  static async htmlRenderTimeReadWithRegisteredSearchParams() {
+  static async htmlRenderTimeReadWrite() {
     const opts = baseOptions(true);
     const params = {
       registeredSearchParam1: 'Registered Search Param 1 VALUE',
@@ -126,28 +128,31 @@ async function partialFragWatch(test, renderOpts, elId, name) {
   });
 
   // write frag (should be picked up and registered by the file watcher set via registerPartials read)
-  const opts = test.engine.options;
-  test.frag.path = `${Path.join(opts.relativeTo, opts.partialsPath, test.frag.name)}.html`;
+  const opts = test.engine.options, relativeTo = (renderOpts && renderOpts.relativeTo) || opts.relativeTo;
+  const partialsPath = (renderOpts && renderOpts.partialsPath) || opts.partialsPath;
+  test.frag.path = `${Path.join(relativeTo, partialsPath, test.frag.name)}.html`;
   await Fs.promises.writeFile(test.frag.path, test.frag.html);
 
-  let renderFunc;
+  let renderFunc, error;
   try {
     await Main.wait(PARTIAL_DETECT_DELAY_MS); // give the watch some time to detect the changes
     // compile the updated HTML
     renderFunc = await test.engine.compile(test.html);
-    // check the result and make sure the test partial was detected 
+    // check the result and make sure the test partial was detected
     const rslt = await renderFunc(test.htmlContext, renderOpts), dom = new JSDOM(rslt);
     const prtl = dom.window.document.getElementById(test.frag.elementId);
     expect(prtl).not.null();
     Main.expectDOM(rslt, test.htmlContext);
+  } catch (err) {
+    error = err;
   } finally {
     await Fs.promises.unlink(test.frag.path); // remove test fragment
-    if (opts.watchRegistrationPartialPaths) {
+    if (opts.watchPartials) {
       await engine.clearCache(true); // should clear the compile-time cache/watches
-    } else if (renderFunc && renderOpts && renderOpts.watchRegistrationPartialPaths) {
-      const unwatchOpts = baseOptions(true);
-      unwatchOpts.unwatch = true;
-      await renderFunc('', unwatchOpts); // should clear the render-time watches
+    } else if (!error && renderFunc && renderOpts && renderOpts.watchPartials) {
+      const uopts = baseOptions(true);
+      uopts.render.unwatchPartials = true;
+      await renderFunc({}, uopts.render); // should clear the render-time watches
     }
   }
   return test;
