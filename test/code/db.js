@@ -59,7 +59,7 @@ class Tester {
 
   static async levelDbFromPartialsInDbRenderTimeReadAndClose() {
     const opts = baseOptions(meta);
-    opts.render.renderTimeReadPolicy = 'read-and-close';
+    opts.render.renderTimePolicy = 'read-write-and-close';
     // partials should still be cached from previous test w/registerPartials
     const cachier = new CachierDB(opts.compile, JsFrmt, LOGGER);
     const engine = Engine.create(cachier);

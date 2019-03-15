@@ -96,7 +96,13 @@ class Engine {
    * `compile(content, opts, (error, (ctx, opts, cb) => cb(error, results)) => {})` or omit to run via
    * `await compile(content, opts)`. __Omission will return the normal stand-alone renderer that can be serialized/deserialized.
    * When a _callback function_ is specified, serialization/deserialization of the rendering function will not be possible!__
-   * @returns {function} The rendering `function(context)` that returns a template result string based upon the provided context
+   * @returns {Function} The rendering `async function` that returns a template result string based upon the provided context.
+   * The following arguments apply:
+   * 1. _{Object}_ `context` The context JSON that can be used as data during rendering
+   * 1. _{TemplateOpts}_ `[renderOptions]` The rendering options that will superceed any options set on the {@link Engine}
+   * 1. _{Function}_ `[formatter]` The function that will format written sources during include discovery (if any). The
+   * formatting function takes 1 or 2 arguments with the first being the content that will be formatted and the second being
+   * the `options.formatOptions`. The returned result should be a valid string.
    */
   async compile(content, opts, params, callback) { // ensures partials are included in the compilation
     const ns = internal(this);

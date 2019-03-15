@@ -45,7 +45,7 @@ class Tester {
   static async htmlRenderTimeCacheWithWatch() {
     const opts = baseOptions(true);
     opts.render.watchPartials = true;
-    opts.render.renderTimeReadPolicy = 'read-all-on-init-when-empty';
+    opts.render.renderTimePolicy = 'read-all-on-init-when-empty';
     opts.compile.debugger = true;
     const test = await Main.init(opts.compile, await getFilesEngine(opts.compile));
     await partialFragWatch(test, opts.render);
