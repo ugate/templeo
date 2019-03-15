@@ -16,6 +16,7 @@ const Sandbox = require('./lib/sandbox');
  * // Hapi.js example:
  * const Hapi = require('hapi');
  * const Vision = require('vision');
+ * const HtmlFrmt = require('js-beautify').html;
  * const JsFrmt = require('js-beautify').js;
  * const Engine = require('templeo');
  * const econf = {
@@ -24,10 +25,10 @@ const Sandbox = require('./lib/sandbox');
  *   partialsPath: 'views/partials', // file path to the partials
  *   defaultExtension: 'html' // can be HTML, JSON, etc.
  * };
- * const cachier = new CachierFiles(econf, JsFrmt);
+ * const cachier = new CachierFiles(econf, HtmlFrmt, JsFrmt);
  * const htmlEngine = new Engine(cachier);
  * // use the following instead if compiled templates don't need to be stored in files
- * // const htmlEngine = new Engine(econf, JsFrmt);
+ * // const htmlEngine = new Engine(econf, HtmlFrmt, JsFrmt);
  * const server = Hapi.Server({});
  * await server.register(Vision);
  * server.views({
@@ -59,17 +60,21 @@ class Engine {
   /**
    * Creates a template literal engine
    * @param {TemplateOpts} [opts] The {@link TemplateOpts} to use
-   * @param {Function} [formatFunc] The `function(string, formatOptions)` that will return a formatted string for a specified code block,
-   * passing the formatting options from `opts.formatOptions` (e.g. minification and/or beautifying)
+   * @param {Function} [readFormatter] The `function(string, formatOptions)` that will return a formatted string for __reading__
+   * data using the `options.formatOptions` from {@link TemplateOpts} as the formatting options. Typically reads are for __HTML__
+   * _minification_ and/or _beautifying_.
+   * @param {Function} [writeFormatter] The `function(string, formatOptions)` that will return a formatted string for __writting__
+   * data using the `options.formatOptions` from {@link TemplateOpts} as the formatting options. Typically reads are for __JS__
+   * _minification_ and/or _beautifying_.
    * @param {Object} [log] The log for handling logging output
    * @param {Function} [log.debug] A function that will accept __debug__ level logging messages (i.e. `debug('some message to log')`)
    * @param {Function} [log.info] A function that will accept __info__ level logging messages (i.e. `info('some message to log')`)
    * @param {Function} [log.warn] A function that will accept __warning__ level logging messages (i.e. `warn('some message to log')`)
    * @param {Function} [log.error] A function that will accept __error__ level logging messages (i.e. `error('some message to log')`)
    */
-  constructor(opts, formatFunc, log) {
+  constructor(opts, readFormatter, writeFormatter, log) {
     const ns = internal(this);
-    ns.at.cache = opts instanceof Cachier ? opts : new Cachier(opts, formatFunc, true, log);
+    ns.at.cache = opts instanceof Cachier ? opts : new Cachier(opts, readFormatter, writeFormatter, log);
     ns.at.isInit = false;
     ns.at.prts = {};
     ns.at.prtlFuncs = {};
@@ -100,7 +105,10 @@ class Engine {
    * The following arguments apply:
    * 1. _{Object}_ `context` The context JSON that can be used as data during rendering
    * 1. _{TemplateOpts}_ `[renderOptions]` The rendering options that will superceed any options set on the {@link Engine}
-   * 1. _{Function}_ `[formatter]` The function that will format written sources during include discovery (if any). The
+   * 1. _{Function}_ `[readFormatter]` The function that will format read partials during include discovery (if any). The
+   * formatting function takes 1 or 2 arguments with the first being the content that will be formatted and the second being
+   * the `options.formatOptions`. The returned result should be a valid string.
+   * 1. _{Function}_ `[writeFormatter]` The function that will format written sources during include discovery (if any). The
    * formatting function takes 1 or 2 arguments with the first being the content that will be formatted and the second being
    * the `options.formatOptions`. The returned result should be a valid string.
    */
@@ -273,7 +281,7 @@ module.exports = Engine;
  * @param {String} [tname] Name to be given to the template (omit to use the one from `options.filename` or an auto generated name)
  * @param {Cachier} [cache] The {@link Cachier} instance that will handle the {@link Cachier.write} of the compiled template code. Defaults to in-memory
  * cache.
- * @returns {Function} The rendering `function(context)` that returns a template result string based upon the provided context
+ * @returns {Function} The rendering function described in {@link Engine.compile}
  */
 async function compile(ns, content, params, options, ropts, tname, cache) {
   const opts = options instanceof TemplateOpts ? options : new TemplateOpts(options);

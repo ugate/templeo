@@ -26,7 +26,9 @@ const { expect } = require('code');
 exports.expect = expect;
 const Lab = require('lab');
 exports.Lab = Lab;
+const HtmlFrmt = require('js-beautify').html;
 const JsFrmt = require('js-beautify').js;
+exports.HtmlFrmt = HtmlFrmt;
 exports.JsFrmt = JsFrmt;
 const { JSDOM } = require('jsdom');
 exports.JSDOM = JSDOM;
@@ -55,6 +57,8 @@ exports.LOGGER = log;
 // export * as expect from expect;
 // TODO : import * as Lab from 'lab';
 // export * as Lab from Lab;
+// TODO : import { html } as HtmlFrmt from 'js-beautify';
+// export * as HtmlFrmt from HtmlFrmt;
 // TODO : import { js } as JsFrmt from 'js-beautify';
 // export * as JsFrmt from JsFrmt;
 // TODO : import { JSDOM } as JSDOM from 'jsdom';
@@ -371,7 +375,7 @@ class Main {
    */
   static async init(opts, engine) {
     const rtn = await Main.getTemplateFiles();
-    rtn.engine = engine || new Engine(opts, JsFrmt, log);
+    rtn.engine = engine || new Engine(opts, HtmlFrmt, JsFrmt, log);
     rtn.opts = opts;
     return rtn;
   }
@@ -508,7 +512,7 @@ class Main {
         opts.render.templateURL = test.server.url;
         opts.render.partialsURL = test.server.url;
       }
-      test.engine = test.engine || cachier ? Engine.create(cachier) : new Engine(opts.compile, JsFrmt, log);
+      test.engine = test.engine || cachier ? Engine.create(cachier) : new Engine(opts.compile, HtmlFrmt, JsFrmt, log);
       if (partials || readPartials || writePartials) {
         await test.engine.registerPartials(partials, readPartials, writePartials);
       }

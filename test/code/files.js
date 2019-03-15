@@ -1,9 +1,9 @@
 'use strict';
 
-const { expect, LOGGER, Engine, JSDOM, Path, Fs, JsFrmt, Main } = require('./_main');
+const { expect, LOGGER, Engine, JSDOM, Path, Fs, HtmlFrmt, JsFrmt, Main } = require('./_main');
 const CachierFiles = require('../../lib/cachier-files.js');
 // ESM uncomment the following lines...
-// TODO : import { expect, LOGGER, Engine, JSDOM, Path, Fs, JsFrmt, Main } from './_main.mjs';
+// TODO : import { expect, LOGGER, Engine, JSDOM, Path, Fs, HtmlFrmt, JsFrmt, Main } from './_main.mjs';
 // TODO : import * as CachierFiles from '../../lib/cachier-files.mjs';
 
 const PARTIAL_DETECT_DELAY_MS = 100;
@@ -64,7 +64,7 @@ class Tester {
       registeredSearchParam2: 'Registered Search Param 2 VALUE'
     };
     const text = (await Main.getFile(`${Main.PATH_HTML_PARTIALS_DIR}/text.html`, true)).toString();
-    const cachier = new CachierFiles(opts.render, JsFrmt, LOGGER);
+    const cachier = new CachierFiles(opts.render, HtmlFrmt, JsFrmt, LOGGER);
     // write partial to file system, no HTTPS server
     const test = {
       label: 'Params = Single Search Param',
@@ -111,7 +111,7 @@ function baseOptions(renderTime) {
 
 async function getFilesEngine(opts) {
   if (engine) await engine.clearCache(true); // cleanup temp files
-  const cachier = new CachierFiles(opts, JsFrmt, LOGGER);
+  const cachier = new CachierFiles(opts, HtmlFrmt, JsFrmt, LOGGER);
   engine = new Engine(cachier);
   return engine;
 }

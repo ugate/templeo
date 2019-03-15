@@ -1,9 +1,9 @@
 'use strict';
 
-const { expect, LOGGER, Engine, JsFrmt, Main } = require('./_main.js');
+const { expect, LOGGER, Engine, HtmlFrmt, JsFrmt, Main } = require('./_main.js');
 const CachierDB = require('../../lib/cachier-db.js');
 // ESM uncomment the following lines...
-// TODO : import { expect, LOGGER, Engine, JsFrmt, Main } from './_main.mjs';
+// TODO : import { expect, LOGGER, Engine, HtmlFrmt, JsFrmt, Main } from './_main.mjs';
 // TODO : import * as CachierDB from '../../lib/cachier-db.mjs';
 
 var meta, engines = [];
@@ -29,7 +29,7 @@ class Tester {
 
   static async levelDbFromRegisterPartialsComileTimeWrite() {
     const opts = baseOptions(meta);
-    const cachier = new CachierDB(opts.compile, JsFrmt, LOGGER);
+    const cachier = new CachierDB(opts.compile, HtmlFrmt, JsFrmt, LOGGER);
     const engine = Engine.create(cachier);
     engines.push(engine);
     const partials = await Main.getFiles(Main.PATH_HTML_PARTIALS_DIR);
@@ -40,7 +40,7 @@ class Tester {
   static async levelDbFromPartialsInDbCompileTimeRead() {
     const opts = baseOptions(meta);
     // partials should still be cached from previous test w/registerPartials
-    const cachier = new CachierDB(opts.compile, JsFrmt, LOGGER);
+    const cachier = new CachierDB(opts.compile, HtmlFrmt, JsFrmt, LOGGER);
     const engine = Engine.create(cachier);
     engines.push(engine);
     // read partials from DB at compile-time
@@ -50,7 +50,7 @@ class Tester {
   static async levelDbFromPartialsInDbRenderTimeRead() {
     const opts = baseOptions(meta);
     // partials should still be cached from previous test w/registerPartials
-    const cachier = new CachierDB(opts.compile, JsFrmt, LOGGER);
+    const cachier = new CachierDB(opts.compile, HtmlFrmt, JsFrmt, LOGGER);
     const engine = Engine.create(cachier);
     engines.push(engine);
     // read partials from DB at render-time
@@ -61,7 +61,7 @@ class Tester {
     const opts = baseOptions(meta);
     opts.render.renderTimePolicy = 'read-write-and-close';
     // partials should still be cached from previous test w/registerPartials
-    const cachier = new CachierDB(opts.compile, JsFrmt, LOGGER);
+    const cachier = new CachierDB(opts.compile, HtmlFrmt, JsFrmt, LOGGER);
     const engine = Engine.create(cachier);
     engines.push(engine);
     // read partials from DB at render-time
@@ -99,7 +99,7 @@ class Tester {
       name: `text?${new URLSearchParams(params).toString()}`,
       content: text
     }];
-    const cachier = new CachierDB(opts.compile, JsFrmt, LOGGER);
+    const cachier = new CachierDB(opts.compile, HtmlFrmt, JsFrmt, LOGGER);
     // write partial to DB, no HTTPS server
     const test = {
       label: 'Params = Single Search Param',

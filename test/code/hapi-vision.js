@@ -1,12 +1,12 @@
 'use strict';
 
-const { LOGGER, Engine, JsFrmt, Main } = require('./_main.js');
+const { LOGGER, Engine, HtmlFrmt, JsFrmt, Main } = require('./_main.js');
 const CachierDB = require('../../lib/cachier-db.js');
 const CachierFiles = require('../../lib/cachier-files.js');
 const Hapi = require('hapi');
 const Vision = require('vision');
 // ESM uncomment the following lines...
-// TODO : import { LOGGER, Engine, JsFrmt, Main } from './_main.mjs';
+// TODO : import { LOGGER, Engine, HtmlFrmt, JsFrmt, Main } from './_main.mjs';
 // TODO : import * as CachierDB from '../../lib/cachier-db.mjs';
 // TODO : import * as CachierFiles from '../../lib/cachier-files.mjs';
 // TODO : import * as Hapi from 'hapi';
@@ -33,7 +33,7 @@ class Tester {
 
   static async defaultEngine() {
     const opts = baseOptions();
-    const engine = new Engine(opts.compile, JsFrmt, LOGGER);
+    const engine = new Engine(opts.compile, HtmlFrmt, JsFrmt, LOGGER);
     return reqAndValidate(engine, opts.compile);
   }
 
@@ -43,7 +43,7 @@ class Tester {
     opts.render.contextURL = svr.url;
     opts.render.templateURL = svr.url;
     opts.render.partialsURL = svr.url;
-    const engine = new Engine(opts.compile, JsFrmt, LOGGER);
+    const engine = new Engine(opts.compile, HtmlFrmt, JsFrmt, LOGGER);
     // Hapi will not be happy with rendering options that are not part of the vision options
     // when calling: h.view('index', context, renderOpts);
     // Need to set the legacy render options instead
@@ -56,7 +56,7 @@ class Tester {
     const meta = await Main.initDB();
     opts.compile.dbTypeName = opts.render.dbTypeName = meta.type;
     opts.compile.dbLocName = opts.render.dbLocName = meta.loc;
-    const cachier = new CachierDB(opts.compile, JsFrmt, LOGGER);
+    const cachier = new CachierDB(opts.compile, HtmlFrmt, JsFrmt, LOGGER);
     const engine = Engine.create(cachier);
     await reqAndValidate(engine, opts.compile);
     return Main.clearDB(engine);
@@ -64,7 +64,7 @@ class Tester {
 
   static async filesEngine() {
     const opts = baseOptions();
-    const cachier = new CachierFiles(opts.compile, JsFrmt, LOGGER);
+    const cachier = new CachierFiles(opts.compile, HtmlFrmt, JsFrmt, LOGGER);
     const engine = new Engine(cachier);
     await reqAndValidate(engine, opts.compile);
     return engine.clearCache(true);
