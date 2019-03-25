@@ -8,9 +8,12 @@ const CachierDB = require('../../lib/cachier-db.js');
 
 var meta, engines = [];
 
-// DEBUGGING:
-// Use the following:
+// DEBUGGING: Use the following
 // node --inspect-brk test/code/db.js
+// LOGGING: Use the following
+// node test/code/db.js -NODE_ENV=test
+// LOGGING Single Test: Use the following
+// node test/code/db.js -NODE_ENV=test <name_of_func_to_run_here>
 
 // TODO : ESM uncomment the following line...
 // export
@@ -68,7 +71,7 @@ class Tester {
     return Main.baseTest(opts.compile, engine, null, false, false, opts.render);
   }
 
-  static async levelDbFromPartialsInDbRenderTimeReadWithSearchParams() {
+  static async levelDbFromPartialsInDbRenderTimeReadWithSearchParams() { // test requires prior DB write from prior tests
     const opts = baseOptions(meta);
     opts.render.readFetchRequestOptions = {
       rejectUnauthorized: false
@@ -77,6 +80,7 @@ class Tester {
       searchParam1: 'Search Param 1 VALUE',
       searchParam2: 'Search Param 2 VALUE'
     };
+    const cachier = new CachierDB(opts.compile, HtmlFrmt, JsFrmt, LOGGER);
     const test = await Main.paramsTest({
       label: 'Params = Single Search Param',
       template: `<html><body>\${ await include\`text \${ new URLSearchParams(${ JSON.stringify(params) }) }\` }</body></html>`,
@@ -84,7 +88,7 @@ class Tester {
         params,
         search: { name: 'text', paramCount: 1, callCount: 1 }
       }
-    }, opts);
+    }, opts, null, false, false, cachier);
     engines.push(test.engine);
   }
 

@@ -60,11 +60,11 @@ class Engine {
   /**
    * Creates a template literal engine
    * @param {TemplateOpts} [opts] The {@link TemplateOpts} to use
-   * @param {Function} [readFormatter] The `function(string, formatOptions)` that will return a formatted string for __reading__
-   * data using the `options.formatOptions` from {@link TemplateOpts} as the formatting options. Typically reads are for __HTML__
+   * @param {Function} [readFormatter] The `function(string, readFormatOptions)` that will return a formatted string for __reading__
+   * data using the `options.readFormatOptions` from {@link TemplateOpts} as the formatting options. Typically reads are for __HTML__
    * _minification_ and/or _beautifying_.
-   * @param {Function} [writeFormatter] The `function(string, formatOptions)` that will return a formatted string for __writting__
-   * data using the `options.formatOptions` from {@link TemplateOpts} as the formatting options. Typically reads are for __JS__
+   * @param {Function} [writeFormatter] The `function(string, writeFormatOptions)` that will return a formatted string for __writting__
+   * data using the `options.writeFormatOptions` from {@link TemplateOpts} as the formatting options. Typically reads are for __JS__
    * _minification_ and/or _beautifying_.
    * @param {Object} [log] The log for handling logging output
    * @param {Function} [log.debug] A function that will accept __debug__ level logging messages (i.e. `debug('some message to log')`)
@@ -107,10 +107,10 @@ class Engine {
    * 1. _{TemplateOpts}_ `[renderOptions]` The rendering options that will superceed any options set on the {@link Engine}
    * 1. _{Function}_ `[readFormatter]` The function that will format read partials during include discovery (if any). The
    * formatting function takes 1 or 2 arguments with the first being the content that will be formatted and the second being
-   * the `options.formatOptions`. The returned result should be a valid string.
+   * the `options.readFormatOptions`. The returned result should be a valid string.
    * 1. _{Function}_ `[writeFormatter]` The function that will format written sources during include discovery (if any). The
    * formatting function takes 1 or 2 arguments with the first being the content that will be formatted and the second being
-   * the `options.formatOptions`. The returned result should be a valid string.
+   * the `options.writeFormatOptions`. The returned result should be a valid string.
    */
   async compile(content, opts, params, callback) { // ensures partials are included in the compilation
     const ns = internal(this);

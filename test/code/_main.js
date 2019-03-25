@@ -7,10 +7,10 @@
 
 const TEST_FILES = {};
 const DB = {};
-const log = {};
-//const log = { info: console.info, warn: console.warn, error: console.error };
-//const log = console;
-
+const argv = process.argv.slice(2);
+const log = process.env.NODE_ENV === 'test' || argv.includes('-NODE_ENV=test') ?
+  { info: console.info, warn: console.warn, error: console.error } : 
+  process.env.NODE_ENV === 'dev' || argv.includes('-NODE_ENV=dev') ? console : {};
 const Forge = require('node-forge');
 const Http = require('http');
 exports.Http = Http;
@@ -284,7 +284,6 @@ class Main {
     if (log.info || log.debug) {
       (log.debug || log.info)(`<< Rendering of the "${engine.options.defaultTemplateName}" ${isJSON ? 'JSON' : 'HTML'} template complete!`
       + (log.debug ? ` result:\n${test.result}` : ''));
-      //log.debug(JsFrmt(test.result, compileOpts.formatOptions));
     }
     if (isJSON) Main.expectJSON(test.result, context);
     else Main.expectDOM(test.result, context);
@@ -486,6 +485,7 @@ class Main {
    * @param {Object} [test.files] A return object from {@link Main.getTemplateFiles} (will initialize when _falsy_)
    * @param {Object} [test.server] The return object from {@link Main.httpsServer} (will initialize when _falsy_)
    * @param {Engine} [test.engine] The {@link Engine} used in the test (will initialize when _falsy_)
+   * @param {Cachier} [test.cachier] The test cachier to use (__passed `cachier` overrides `test.cachier`__)
    * @param {Function} [test.renderer] The rendering function from {@link Engine.compile} used in the test (will initialize when _falsy_)
    * @param {String} [test.result] The returned results from the rendering function invocation used in the test (will initialize when _falsy_)
    * @param {Object} [opts] The options passed into the {@link TemplateOpts} constructor
@@ -497,7 +497,7 @@ class Main {
    * @param {Cachier} [cachier] A {@link Cachier} that will be passed into {@link Engine.create}
    * @param {Boolean} [useServer] `true` to serve partials via {@link Main.httpsServer} and validate the call count
    * @param {Boolean} [closeServer] `true` to close the server when complete
-   * @returns {Object} `test` The test objects
+   * @returns {Object} `test` The passed test object
    */
   static async paramsTest(test, opts, partials, readPartials, writePartials, cachier, useServer = true, closeServer = true) {
     const idPrefix = useServer ? 'inclParamFromServer_' : '';
@@ -512,7 +512,7 @@ class Main {
         opts.render.templateURL = test.server.url;
         opts.render.partialsURL = test.server.url;
       }
-      test.engine = test.engine || cachier ? Engine.create(cachier) : new Engine(opts.compile, HtmlFrmt, JsFrmt, log);
+      test.engine = test.engine || (cachier || test.cachier ? Engine.create(cachier || test.cachier) : new Engine(opts.compile, HtmlFrmt, JsFrmt, log));
       if (partials || readPartials || writePartials) {
         await test.engine.registerPartials(partials, readPartials, writePartials);
       }
@@ -592,15 +592,21 @@ class Main {
    * name set to the name of the function executed and the value as the return value from the call
    */
   static async run(Clazz, excludes, ...args) {
-    const prps = process.argv[2] ? [process.argv[2]] : Object.getOwnPropertyNames(Clazz);
-    const excls = ['before', 'beforeEach', 'after', 'afterEach'], execr = {}, rtn = {};
+    let prps = [], frx = /^[a-z]/i;
+    for (let arg of argv) {
+      if (frx.test(arg)) prps.push(arg);
+    }
+    if (!prps.length) prps = Object.getOwnPropertyNames(Clazz);
+    if (log && log.info) log.info(`Preparing execution of ${Clazz.name}.${prps.join(`, ${Clazz.name}.`)}`);
 
+    const excls = ['before', 'beforeEach', 'after', 'afterEach'], execr = {}, rtn = {};
+    const prefix1 = '\n\x1b[37m\x1b[44m============>> ', prefix2 = ' <<============\x1b[0m\x1b[40m';
     for (let enm of excls) {
       execr[enm] = typeof Clazz[enm] === 'function' ? Clazz[enm] : null;
     }
 
     if (execr['before']) {
-      if (log.info) log.info(`\nExecuting: ${Clazz.name}.before(${args.join(',')})`);
+      if (log.info) log.info(`${prefix1}Executing: ${Clazz.name}.before(${args.join(',')})${prefix2}`);
       rtn['before'] = await execr['before'](...args);
     }
     let error;
@@ -608,17 +614,20 @@ class Main {
       error = null;
       if (typeof Clazz[prop] !== 'function' || (excludes && excludes.includes(prop)) || excls.includes(prop)) continue;
       if (execr['beforeEach']) {
-        if (log.info) log.info(`\nExecuting: ${Clazz.name}.beforeEach(${args.join(',')})`);
+        if (log.info) log.info(`${prefix1}Executing: ${Clazz.name}.beforeEach(${args.join(',')})${prefix2}`);
         rtn['beforeEach'] = await execr['beforeEach'](...args);
       }
       try {
-        if (log.info) log.info(`\nExecuting: await ${Clazz.name}.${prop}(${args.join(',')})`);
+        if (log.info) log.info(`${prefix1}Executing: await ${Clazz.name}.${prop}(${args.join(',')})${prefix2}`);
         rtn[prop] = await Clazz[prop](...args);
+        if (log.info) log.info(`\nExecution complete for: await ${Clazz.name}.${prop}(${args.join(',')})`);
       } catch (err) {
+        if (log.error) log.error(err);
         error = err;
+        error.cause = `Execution failed for: await ${Clazz.name}.${prop}(${args.join(',')})`;
       }
       if (execr['afterEach']) {
-        if (log.info) log.info(`\nExecuting: ${Clazz.name}.afterEach(${args.join(',')})`);
+        if (log.info) log.info(`${prefix1}Executing: ${Clazz.name}.afterEach(${args.join(',')})${prefix2}`);
         try {
           rtn['afterEach'] = await execr['afterEach'](...args);
         } catch (err) {
@@ -629,7 +638,7 @@ class Main {
       if (error) break;
     }
     if (execr['after']) {
-      if (log.info) log.info(`\nExecuting: ${Clazz.name}.after(${args.join(',')})`);
+      if (log.info) log.info(`${prefix1}Executing: ${Clazz.name}.after(${args.join(',')})${prefix2}`);
       try {
         rtn['after'] = await execr['after'](...args);
       } catch (err) {
@@ -637,7 +646,7 @@ class Main {
         if (!error) throw err;
       }
     }
-    if (error) throw error;
+    if (error) throw new Error(`\n${error.cause} ... Execution aborted!`);
 
     return rtn;
   }

@@ -4,11 +4,12 @@ const { expect, LOGGER, Engine, HtmlFrmt, JsFrmt, Main, JSDOM } = require('./_ma
 // ESM uncomment the following lines...
 // TODO : import { expect, LOGGER, Engine, HtmlFrmt, JsFrmt, Main, JSDOM } from './_main.mjs';
 
-// DEBUGGING:
-// Use the following:
+// DEBUGGING: Use the following
 // node --inspect-brk test/code/default.js
-// ...or with optional test function name appended to the end:
-// node --inspect-brk test/code/default.js htmlRegisterPartials
+// LOGGING: Use the following
+// node test/code/default.js -NODE_ENV=test
+// LOGGING Single Test: Use the following
+// node test/code/default.js -NODE_ENV=test <name_of_func_to_run_here>
 
 const params = {
   hello: 'world',

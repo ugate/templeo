@@ -9,7 +9,9 @@
     "jsdocp-deploy": "jsdocp -D ./jsdocp/jsdoc.json"
   },
   "scripts": {
-    "test": "lab -v -c --coverage-exclude lib -t 70",
+    "test": "lab -v -c --coverage-exclude lib -t 70 -e prod",
+    "testing": "lab -v -c --coverage-exclude lib -t 70 -e test",
+    "test-debug": "lab -v -c --coverage-exclude lib -t 70 -e dev",
     "jsdocp": "jsdocp ./jsdocp/jsdoc.json",
     "jsdocp-deploy": "jsdocp -D ./jsdocp/jsdoc.json"
   },

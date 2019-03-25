@@ -9,11 +9,12 @@ const CachierFiles = require('../../lib/cachier-files.js');
 const PARTIAL_DETECT_DELAY_MS = 100;
 var engine;
 
-// DEBUGGING:
-// Use the following:
+// DEBUGGING: Use the following
 // node --inspect-brk test/code/files.js
-// ...or with optional test function name appended to the end:
-// node --inspect-brk test/code/files.js htmlNoCache
+// LOGGING: Use the following
+// node test/code/files.js -NODE_ENV=test
+// LOGGING Single Test: Use the following
+// node test/code/files.js -NODE_ENV=test <name_of_func_to_run_here>
 
 // TODO : ESM uncomment the following line...
 // export
