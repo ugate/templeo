@@ -22,7 +22,9 @@ lab.experiment(plan, () => {
   lab.test(`${plan}: HTML - Partials Fetch From HTTPS Server (compile-time ERROR missing "options.partialsURL")`, { timeout: TEST_TKO }, flags => {
     return new Promise(resolve => {
       flags.onUnhandledRejection = err => {
-        if (LOGGER.info) LOGGER.info(`Expected error message received for: ${err.message}`, err);
+        if (LOGGER.info || LOGGER.debug) {
+          (LOGGER.debug || LOGGER.info)(`Expected error message received for: ${err.message}`, LOGGER.debug ? err : '');
+        }
         expect(err).to.be.error();
         expect(err.code).to.equal('ERR_INVALID_URL');
         resolve();
@@ -34,7 +36,9 @@ lab.experiment(plan, () => {
   lab.test(`${plan}: HTML - Partials Fetch From HTTPS Server (render-time ERROR missing "options.partialsURL")`, { timeout: TEST_TKO }, flags => {
     return new Promise(resolve => {
       flags.onUnhandledRejection = err => {
-        if (LOGGER.info) LOGGER.info(`Expected error message received for (code ${err.code}): ${err.message}`, err);
+        if (LOGGER.info || LOGGER.debug) {
+          (LOGGER.debug || LOGGER.info)(`Expected error message received for (code ${err.code}): ${err.message}`, LOGGER.debug ? err : '');
+        }
         expect(err).to.be.error();
         expect(err.code).to.equal('ERR_INVALID_URL');
         resolve();
@@ -51,7 +55,9 @@ lab.experiment(plan, () => {
   lab.test(`${plan}: JSON - Engine.create (ERROR not Cachier)`, { timeout: TEST_TKO }, flags => {
     return new Promise(resolve => {
       flags.onUncaughtException = err => {
-        if (LOGGER.info) LOGGER.info(`Expected error message received for: ${err.message}`, err);
+        if (LOGGER.info || LOGGER.debug) {
+          (LOGGER.debug || LOGGER.info)(`Expected error message received for: ${err.message}`, LOGGER.debug ? err : '');
+        }
         expect(err).to.be.error();
         resolve();
       };

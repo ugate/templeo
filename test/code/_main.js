@@ -583,7 +583,8 @@ class Main {
    * Runs a function from a class using `return Clazz[process.argv[2]](...args)`
    * __or__ runs through all of the `async` functions from `Object.getOwnPropertyNames(Clazz)` via
    * `await Clazz[propertyName](...args)` other than function names that are found in `excludes` or
-   * `before`, `beforeEach`, `after`, `afterEach`.
+   * `before`, `beforeEach`, `after`, `afterEach`. If the _static_ method ends with "__Error__", execution
+   * will assume that the function will _throw_.
    * @ignore
    * @param {Object} Clazz The class the test running will be running for
    * @param {String[]} [excludes] Function names to exclude from execution (only used when executing all)
@@ -622,9 +623,14 @@ class Main {
         rtn[prop] = await Clazz[prop](...args);
         if (log.info) log.info(`\nExecution complete for: await ${Clazz.name}.${prop}(${args.join(',')})`);
       } catch (err) {
-        if (log.error) log.error(err);
-        error = err;
-        error.cause = `Execution failed for: await ${Clazz.name}.${prop}(${args.join(',')})`;
+        if (prop.endsWith('Error')) {
+          rtn[prop] = err;
+          if (log.info) log.info(`\nExecution complete for: await ${Clazz.name}.${prop}(${args.join(',')}) -> Expected error: "${err.message}"`);
+        } else {
+          if (log.error) log.error(err);
+          error = err;
+          error.cause = `Execution failed for: await ${Clazz.name}.${prop}(${args.join(',')})`;
+        }
       }
       if (execr['afterEach']) {
         if (log.info) log.info(`${prefix1}Executing: ${Clazz.name}.afterEach(${args.join(',')})${prefix2}`);
