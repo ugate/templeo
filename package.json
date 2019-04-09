@@ -37,14 +37,14 @@
   "devDependencies": {
     "code": "^5.2.4",
     "hapi": "^18.1.0",
-    "js-beautify": "^1.9.0",
+    "js-beautify": "^1.9.1",
     "jsdoc": "^3.5.5",
     "jsdocp": "^1.0.1",
     "jsdom": "^14.0.0",
     "lab": "^18.0.2",
     "level": "^5.0.0",
     "minami": "^1.2.3",
-    "node-forge": "^0.8.1",
+    "node-forge": "^0.8.2",
     "vision": "^5.4.4"
   },
   "files": [
