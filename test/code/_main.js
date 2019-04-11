@@ -652,8 +652,10 @@ class Main {
         if (!error) throw err;
       }
     }
-    if (error) throw new Error(`\n${error.cause} ... Execution aborted!`);
-
+    if (error) {
+      if (error.cause) throw new Error(`\n${error.cause} ... Execution aborted!`);
+      throw error;
+    }
     return rtn;
   }
 
