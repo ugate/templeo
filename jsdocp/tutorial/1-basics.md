@@ -143,13 +143,13 @@ The same output could also be accomplished by either registering partials _manua
 
 ```js
 // OPTION 1:
-// manually register partial content
+// manually register partial content prior to compiling
 engine.registerPartails([
   { name: 'first/item', content: preloadedContent1 },
   { name: 'second/item', content: preloadedContent2 }
 ]);
 // OPTION 2:
-// read/load defined partials at compile-time
+// read/load defined partials prior to compiling
 engine.registerPartails([
   { name: 'first/item' },
   { name: 'second/item' }
@@ -195,7 +195,7 @@ const rslt = await renderer({
 // Assume the following snippets exist in "myTemplate"...
 
 // 1st include:
-// initiates a read w/o parameters since "first/item" is not registered or has no content
+// initiates a read w/o parameters since "first/item" is not registered and has no content
 ${ await include`first/item` }
 // 2nd include:
 // initiates a read with new parameters: { param1: 456 }
@@ -205,7 +205,8 @@ ${ await include`first/item ${ new URLSearchParams(it.my1stParams) }` }
 ${ await include`first/item` }
 // 4th include:
 // uses the last cached "first/item" content from the 1st include w/o params
-// and "params" is accessible only within this include as: ${ params.test === 'TEST' }
+// and "params" is accessible only within this included partial fragment
+// as: ${ params.env === 'TEST' }
 ${ await include`first/item ${ { env: 'TEST' } }` }
 
 // 1st include:
@@ -260,7 +261,7 @@ console.log(rslt);
 
 ### 🔁 repeat <sub id="repeat"></sub>
 
-The `repeat` directive iterates over a series of values or properties. The `repeat` directive takes two arguments:
+The `repeat` directive iterates over a series of values or properties. Each iterated template is natively parsed only when iterating occurs within the scope of the passed function. The `repeat` directive takes two arguments:
 - `iterable` - The iterable array, array-like objects, etc. that will be repeated in the form of a [`for of`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/for...of) loop or an iterable non-symbol enumerable whose properties will be traversed in the form of a [`for in`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/for...in) loop
 - `function` - The function that will return a result for each iteration.
   - When using `for of` the follwing arguments will be passed:
