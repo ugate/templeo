@@ -1,7 +1,7 @@
 ### 🏧 The Cachier
 The [cachier](Cachier.html) handles transactions that are submitted during [Engine.registerPartial](Cachier.html#registerPartial), [Engine.registerPartials](Cachier.html#registerPartials), [Engine.registerHelper](Cachier.html#registerHelper) and any other process that handles template persistence. This also includes any `read`/`write` operations that may be responsible for retrieving or writing to a persistence store. The default [cachier](Cachier.html) fetches/[`reads`](Cachier.html#read) and [`writes`](Cachier.html#write) template sources to/from _temporary memory_. When either a _read_ is flagged during registeration or an [include](tutorial-1-basics.html#include) is encountered during rendering that does not have a registered template source, the `Cachier` will check that [`options.partialsURL`](module-templeo_options.html#.Options) is set. When set, an attempt will be made to load/`read` the template content as discussed in [the `include` section of the tutorial](tutorial-1-basics.html#include). The same occurs for missing `context` as well.
 
-When using the default [`Cachier`](Cachier.html) and a _read_ is flagged when calling [Engine.registerPartials](Cachier.html#registerPartials) or when an [include](tutorial-1-basics.html#include) is encountered during rendering that does not have a registered template source, the follwing sequence will apply:
+When using the default [`Cachier`](Cachier.html) and a _read_ is flagged when calling [Engine.registerPartials](Cachier.html#registerPartials) or when an [include](tutorial-1-basics.html#include) is encountered during rendering that does not have a registered template source, the follwing sequence will apply. There are also several different policies that can be applied that determines when and how _reads_/_writes_ are executed during rendering using the [`renderTimePolicy` option](tutorial-2-cache.html).
 - An attempt to retrieve the template from the __rendering function's temporary memory__ will be made.
 - When not in memory, an attempt to retrieve the template from __the HTTP/S [`options.partialsURL`](module-templeo_options.html#.Options)__
 - When no `options.partialsURL` is set or retrieval fails, an error is thrown
@@ -48,12 +48,30 @@ The [CachierDB constructor](CachierDB.html) takes an optional [LevelDB instance]
 - When not in the DB, an attempt to retrieve the template from __the HTTP/S [`options.partialsURL`](module-templeo_options.html#.Options)__
 - When no `options.partialsURL` is set or retrieval fails, an error is thrown
 
+Just like any other type of `Cachier`, templates can be written to _cache_ either manually via [Engine.registerPartials](Cachier.html#registerPartials) or a There are basically two ways to write templates to the DB. The
 For simplicity's sake we'll use some basic in-line templates to demonstrate using `CachierDB`:
 
 ```js
-const Engine = require('templeo'), Cachier = require('templeo/lib/cachier-db');
+const Engine = require('templeo'), CachierDB = require('templeo/lib/cachier-db');
 const cachier = new CachierDB({ dbLocName: 'my-indexed-db-name' } );
 const engine = Engine.create(cachier);
+
+// read any partials from the DB (2nd arg passing "true")
+// and write the partials to the DB (3rd arg passing "true")
+await engine.registerPartials([{
+  name: 'part1',
+  content: 'Save "${it.name1}" to the DB'
+},{
+  name: 'part2',
+  content: 'Save something else called "${it.name2}" to the DB'
+}], true, true);
+
+// reads "template" from from IndexedDB "my-indexed-db-name"
+const renderer = await engine.compile();
+// reads "context" from IndexedDB "my-indexed-db-name"
+// reads any included partials by name from IndexedDB "my-indexed-db-name"
+const rslt = await renderer();
+
 // reads "template" from from IndexedDB "my-indexed-db-name"
 const renderer = await engine.compile();
 // reads "context" from IndexedDB "my-indexed-db-name"
@@ -68,3 +86,14 @@ Using a file system is the recommended caching mechanism to use when processing 
 - When not in memory, an attempt to retrieve the template from the __file system__ will be made using [`options.partialsPath`](module-templeo_options.html#.FileOptions)
 - When not in the file system, an attempt to retrieve the template from __the HTTP/S [`options.partialsURL`](module-templeo_options.html#.Options)__
 - When no `options.partialsURL` is set or retrieval fails, an error is thrown
+
+```js
+const Engine = require('templeo'), CachierDB = require('templeo/lib/cachier-files');
+// create a cachier for the file system that uses the current directory
+// for HTML partials
+const cachier = new CachierFiles({
+  relativeTo: '.',
+  partialsPath: 'views/partials/html'
+});
+const engine = Engine.create(cachier);
+```
