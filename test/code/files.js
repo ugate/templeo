@@ -113,7 +113,7 @@ function baseOptions(renderTime) {
 async function getFilesEngine(opts) {
   if (engine) await engine.clearCache(true); // cleanup temp files
   const cachier = new CachierFiles(opts, HtmlFrmt, JsFrmt, LOGGER);
-  engine = new Engine(cachier);
+  engine = Engine.create(cachier);
   return engine;
 }
 
