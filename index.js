@@ -166,37 +166,13 @@ class Engine {
   }
 
   /**
-   * Registers a _directive_ function that can be used within template
-   * [interpolations](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Template_literals#Expression_interpolation)
-   * @param {Function} func A __named__ `function` that has no external scope dependencies/closures other than those exposed
-   * via templates during rendering
-   */
-  registerHelper(func) {
-    const ns = internal(this);
-    return ns.at.cache.registerHelper(func);
-  }
-
-  /**
-   * Unregisters a partial template from cache
+   * Unregisters a template data from cache
+   * @async
    * @param {String} name The template name that uniquely identifies the template content
    */
   unregister(name) {
     const ns = internal(this);
     return ns.at.cache.unregister(name);
-  }
-
-  /**
-   * Registers and stores a partial template __in-memory__. Use {@link Engine.registerPartials} to write partials to cache ({@link Cachier})
-   * @async
-   * @param {String} name The template name that uniquely identifies the template content
-   * @param {(String | URLSearchParams)} contentOrParams Either the partial template content __string__ to register _or_ the
-   * `URLSearchParams` that will be passed during the content `read`
-   * @param {String} [extension=options.defaultExtension] Optional override for a file extension designation for the partial
-   * @returns {String} The partial content
-   */
-  registerPartial(name, contentOrParams, extension) {
-    const ns = internal(this);
-    return ns.at.cache.registerPartial(name, contentOrParams, extension);
   }
 
   /**
@@ -226,6 +202,20 @@ class Engine {
   }
 
   /**
+   * Registers and stores a partial template __in-memory__. Use {@link Engine.registerPartials} to write partials to cache ({@link Cachier})
+   * @async
+   * @param {String} name The template name that uniquely identifies the template content
+   * @param {(String | URLSearchParams)} contentOrParams Either the partial template content __string__ to register _or_ the
+   * `URLSearchParams` that will be passed during the content `read`
+   * @param {String} [extension=options.defaultExtension] Optional override for a file extension designation for the partial
+   * @returns {String} The partial content
+   */
+  registerPartial(name, contentOrParams, extension) {
+    const ns = internal(this);
+    return ns.at.cache.registerPartial(name, contentOrParams, extension);
+  }
+
+  /**
    * @returns {Function} A reference safe `async` function to {@link Engine.renderPartial} that can be safely passed into other functions
    */
   renderPartialGenerate() {
@@ -243,6 +233,17 @@ class Engine {
     const ns = internal(this);
     const func = await ns.at.cache.compile(name);
     return func(context, renderOptions);
+  }
+
+  /**
+   * Registers a _directive_ function that can be used within template
+   * [interpolations](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Template_literals#Expression_interpolation)
+   * @param {Function} func A __named__ `function` that has no external scope dependencies/closures other than those exposed
+   * via templates during rendering
+   */
+  registerHelper(func) {
+    const ns = internal(this);
+    return ns.at.cache.registerHelper(func);
   }
 
   /**

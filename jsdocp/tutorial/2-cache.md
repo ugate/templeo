@@ -59,14 +59,29 @@ const engine = Engine.create(cachier);
 // read any partials from the DB (2nd arg passing "true")
 // and write the partials to the DB (3rd arg passing "true")
 await engine.registerPartials([{
+  name: 'main',
+  content: `
+    <ol>
+      <li>${ await include`part1` }</li>
+      <li>${ await include`part2` }</li>
+    </ol>
+  `
+},{
   name: 'part1',
-  content: 'Save "${it.name1}" to the DB'
+  content: 'First Name: "${it.firstName}"'
 },{
   name: 'part2',
-  content: 'Save something else called "${it.name2}" to the DB'
+  content: 'Last Name: "${it.lastName}"'
+},{
+  name: 'mainContext',
+  content: {
+    firstName: 'John',
+    lastName: 'Doe'
+  }
 }], true, true);
 
-// reads "template" from from IndexedDB "my-indexed-db-name"
+// reads the previously written "template" from
+// IndexedDB "my-indexed-db-name"
 const renderer = await engine.compile();
 // reads "context" from IndexedDB "my-indexed-db-name"
 // reads any included partials by name from IndexedDB "my-indexed-db-name"
