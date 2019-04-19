@@ -1,9 +1,9 @@
 'use strict';
 
-const { expect, LOGGER, Engine, HtmlFrmt, JsFrmt, Main } = require('./_main.js');
+const { expect, LOGGER, Engine, HtmlFrmt, JsFrmt, JSDOM, Main } = require('./_main.js');
 const CachierDB = require('../../lib/cachier-db.js');
 // ESM uncomment the following lines...
-// TODO : import { expect, LOGGER, Engine, HtmlFrmt, JsFrmt, Main } from './_main.mjs';
+// TODO : import { expect, LOGGER, Engine, HtmlFrmt, JsFrmt, JSDOM, Main } from './_main.mjs';
 // TODO : import * as CachierDB from '../../lib/cachier-db.mjs';
 
 var meta, engines = [];
@@ -120,6 +120,62 @@ class Tester {
     // now include the search params again, but read from the DB
     await Main.paramsTest(test, opts, null, true, false, cachier, false);
   }
+
+  static async levelDbWriteAll() {
+    const opts = baseOptions(meta);
+    const cachier = new CachierDB(opts.compile);//{ dbLocName: 'my-indexed-db-name', defaultTemplateName: 'main', defaultContextName: 'mainContext' });
+    const engine = Engine.create(cachier);
+    engines.push(engine);
+
+    // read any partials from the DB (2nd arg passing "true")
+    // and write the partials to the DB (3rd arg passing "true")
+    await engine.registerPartials([{
+      name: 'template',
+      content: '\
+        <ol>\
+          <li>${ await include`part1` }</li>\
+          <li>${ await include`part2` }</li>\
+        </ol>\
+      '
+    },{
+      name: 'part1',
+      content: 'First Name: <input id="firstName" value="${it.firstName}">'
+    },{
+      name: 'part2',
+      content: 'Last Name: <input id="lastName" value="${it.lastName}">'
+    },{
+      name: 'context',
+      extension: 'json',
+      content: {
+        firstName: 'John',
+        lastName: 'Doe'
+      }
+    }], false, true);
+
+    return validateWriteAll(engine);
+  }
+
+  static async levelDbReadFromWriteAll() {
+    const opts = baseOptions(meta);
+    const cachier = new CachierDB(opts.compile);
+    const engine = Engine.create(cachier);
+    engines.push(engine);
+
+    // read template, context and partials from the DB (2nd arg passing "true")
+    await engine.registerPartials(null, true);
+
+    return validateWriteAll(engine);
+  }
+
+  static async levelDbRenderReadFromWriteAll() {
+    const opts = baseOptions(meta);
+    const cachier = new CachierDB(opts.compile);
+    const engine = Engine.create(cachier);
+    engines.push(engine);
+
+    // read template, context and partials from the DB (render-time)
+    return validateWriteAll(engine, opts.render);
+  }
 }
 
 // TODO : ESM remove the following line...
@@ -141,4 +197,21 @@ function baseOptions(meta) {
       dbLocName: meta.loc
     }
   };
+}
+
+/**
+ * Validates that the test write to the DB has been successful
+ * @param {Engine} engine The template engine
+ * @param {Object} [renderOpts] The rendering options
+ */
+async function validateWriteAll(engine, renderOpts) {
+  const renderer = await engine.compile();
+  const rslt = await renderer(undefined, renderOpts);
+
+  const dom = new JSDOM(rslt);
+  const fnm = dom.window.document.querySelector('#firstName'), lnm = dom.window.document.querySelector('#lastName');
+  expect(fnm).not.null();
+  expect(fnm.value).equal('John');
+  expect(lnm).not.null();
+  expect(lnm.value).equal('Doe');
 }

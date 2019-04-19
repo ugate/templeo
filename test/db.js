@@ -27,4 +27,7 @@ lab.experiment(plan, async () => {
     { timeout: TEST_TKO }, Tester.levelDbFromPartialsInDbRenderTimeReadWithSearchParams);
   lab.test(`${plan}: HTML/LevelDB from partials in DB with registered search parameters (render-time read)`,
     { timeout: TEST_TKO }, Tester.levelDbFromPartialsInDbRenderTimeReadWithRegisteredSearchParams);
+  lab.test(`${plan}: HTML/LevelDB write template, context and partials (compile-time write)`, { timeout: TEST_TKO }, Tester.levelDbWriteAll);
+  lab.test(`${plan}: HTML/LevelDB read template, context and partials (compile-time read)`, { timeout: TEST_TKO }, Tester.levelDbReadFromWriteAll);
+  //lab.test(`${plan}: HTML/LevelDB read template, context and partials (render-time read)`, { timeout: TEST_TKO }, Tester.levelDbRenderReadFromWriteAll);
 });

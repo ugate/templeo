@@ -53,19 +53,18 @@ For simplicity's sake we'll use some basic in-line templates to demonstrate usin
 
 ```js
 const Engine = require('templeo'), CachierDB = require('templeo/lib/cachier-db');
-const cachier = new CachierDB({ dbLocName: 'my-indexed-db-name' } );
+const cachier = new CachierDB({ dbLocName: 'my-indexed-db-name' });
 const engine = Engine.create(cachier);
 
-// read any partials from the DB (2nd arg passing "true")
-// and write the partials to the DB (3rd arg passing "true")
+// write to the DB (3rd arg passing "true")
 await engine.registerPartials([{
-  name: 'main',
-  content: `
-    <ol>
-      <li>${ await include`part1` }</li>
-      <li>${ await include`part2` }</li>
-    </ol>
-  `
+  name: 'template',
+  content: '\
+    <ol>\
+      <li>${ await include`part1` }</li>\
+      <li>${ await include`part2` }</li>\
+    </ol>\
+  '
 },{
   name: 'part1',
   content: 'First Name: "${it.firstName}"'
@@ -73,19 +72,13 @@ await engine.registerPartials([{
   name: 'part2',
   content: 'Last Name: "${it.lastName}"'
 },{
-  name: 'mainContext',
+  name: 'context',
+  extension: 'json',
   content: {
     firstName: 'John',
     lastName: 'Doe'
   }
-}], true, true);
-
-// reads the previously written "template" from
-// IndexedDB "my-indexed-db-name"
-const renderer = await engine.compile();
-// reads "context" from IndexedDB "my-indexed-db-name"
-// reads any included partials by name from IndexedDB "my-indexed-db-name"
-const rslt = await renderer();
+}], false, true);
 
 // reads "template" from from IndexedDB "my-indexed-db-name"
 const renderer = await engine.compile();
