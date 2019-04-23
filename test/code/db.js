@@ -123,7 +123,7 @@ class Tester {
 
   static async levelDbWriteAll() {
     const opts = baseOptions(meta);
-    const cachier = new CachierDB(opts.compile);//{ dbLocName: 'my-indexed-db-name', defaultTemplateName: 'main', defaultContextName: 'mainContext' });
+    const cachier = new CachierDB(opts.compile, null, null, LOGGER);//{ dbLocName: 'my-indexed-db-name', defaultTemplateName: 'main', defaultContextName: 'mainContext' });
     const engine = Engine.create(cachier);
     engines.push(engine);
 
@@ -157,7 +157,7 @@ class Tester {
 
   static async levelDbReadFromWriteAll() {
     const opts = baseOptions(meta);
-    const cachier = new CachierDB(opts.compile);
+    const cachier = new CachierDB(opts.compile, null, null, LOGGER);
     const engine = Engine.create(cachier);
     engines.push(engine);
 
@@ -169,12 +169,12 @@ class Tester {
 
   static async levelDbRenderReadFromWriteAll() {
     const opts = baseOptions(meta);
-    const cachier = new CachierDB(opts.compile);
+    const cachier = new CachierDB(opts.compile, null, null, LOGGER);
     const engine = Engine.create(cachier);
     engines.push(engine);
 
     // read template, context and partials from the DB (render-time)
-    return validateWriteAll(engine, opts.render);
+    return validateWriteAll(engine, opts.render, true);
   }
 }
 
@@ -204,7 +204,7 @@ function baseOptions(meta) {
  * @param {Engine} engine The template engine
  * @param {Object} [renderOpts] The rendering options
  */
-async function validateWriteAll(engine, renderOpts) {
+async function validateWriteAll(engine, renderOpts, go) {
   const renderer = await engine.compile();
   const rslt = await renderer(undefined, renderOpts);
 
