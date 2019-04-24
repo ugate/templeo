@@ -350,7 +350,7 @@ class Main {
 
   /**
    * Clears any resources associated with an LevelDB instance
-   * @param {Engine} engine The engine being used
+   * @param {Engine} [engine] The engine that will be used to call {@link Engine.clearCache}
    * @param {Boolean} [all=true] The flag passed into {@link Engine.clearCache}. Also, when `true`, the DB resources will be __wiped__
    * @param {String} [locPrefix='templeo-test-indexedDB-'] The DB location prefix to use (set to `null` to leave DB intact)
    */
