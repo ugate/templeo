@@ -1,5 +1,5 @@
 ### 🏎️ The Template Engine
-At the heart of template compilation and rendering is the [Template Engine](module-templeo-Engine.html). It handles compiling features, options and any number of nested "_partial_" templates into a __stand-alone__ rendering function that __can be ran in either the same VM in which it was compiled or an entirely new VM!__ Rendering functions are fully independent from _any_ internal or external dependencies and can be serialized/deserialized on-demand. They are responsible for outputting parsed [template literal expressions](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Template_literals) using a specified JSON context as a primary datasource. The `Engine` handles _partial_ template fragments that may be included/nested within other template(s) that are being rendered. Any distribution of included partial templates can be resolved/loaded/read during __compile-time__ or __render-time__. This flexibility allows for some partial template inclusions to be loaded during compilation while others can be loaded when the template(s) are actually encountered during rendering.
+At the heart of template compilation/rendering is the [Template Engine](module-templeo-Engine.html). It handles compiling features, options and any number of nested "_partial_" templates into a __stand-alone__ rendering function that __can be ran in either the same VM in which it was compiled or an entirely new VM!__ Rendering functions are fully independent from _any_ internal or external dependencies and can be serialized/deserialized on-demand. They are responsible for outputting parsed [template literal expressions](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Template_literals) using a specified JSON context as a primary datasource for rendering. The `Engine` handles _partial_ template fragments that may be included/nested within other template(s) that are being rendered. Any distribution of included partial templates can be resolved/loaded/read during __compile-time__ or __render-time__. This flexibility allows for some partial template inclusions to be loaded during compilation while others can be loaded when the template(s) are actually encountered during rendering.
 
 > TOC
 - [Metadata &amp; Context](#meta-context)
@@ -102,10 +102,13 @@ Although, we are not limited to just HTML, we'll start with some simple HTML tem
 }
 ```
 
-Assuming that the aforementioned sources are accessible from an HTTP server, we can assign a server URL to the [`options.partialsURL`](module-templeo_options.html#.Options). Any partial template that is not registered when calling [`Engine.registerPartials`](module-templeo.Engine.html#registerPartials) will be fetched from the server by appending the partial name from the include to the `partialsURL`. For example, with `partialsURL = 'https://localhost:8080'` and an `` include`first/item` ``, a read/fetch will be made to `https://localhost:8080/first/item.html` (the file extension is determined by [`options.defaultExtension`](module-templeo_options.html#.Options)).
+__Partials (render-time)__<br/>
+Assuming that the aforementioned sources are accessible from an HTTP server, we can assign a server URL to the [`options.partialsURL`](module-templeo_options.html#.Options). Any partial template that is not registered when calling [`Engine.register`](module-templeo.Engine.html#register) will be fetched from the server by appending the partial name from the include to the `partialsURL`. For example, with `partialsURL = 'https://localhost:8080'` and an `` include`first/item` ``, a read/fetch will be made to `https://localhost:8080/first/item.html` (the file extension is determined by [`options.defaultExtension`](module-templeo_options.html#.Options)).
 
-Likewise, if template _content_ is __not__ specified when calling [`Engine.compile(content)`](module-templeo.Engine.html#compile), an atempt will be made to read/fetch the content from `https://localhost:8080/template.html`. The "template" name can be configured using [`options.defaultTemplateName`](module-templeo_options.html#.Options).
+__The primary template (compile-time)__<br/>
+Likewise, if template _content_ is __not__ specified when calling [`Engine.compile(content)`](module-templeo.Engine.html#compile), an atempt will be made to read/fetch the content from `https://localhost:8080/template.html` during compilation. The "template" name can be configured using [`options.defaultTemplateName`](module-templeo_options.html#.Options).
 
+__The context (render-time)__<br/>
 The same read/fetch criteria applies to the _context_ used when invoking the rendering function. If no context is specified when calling `renderer(context)`, an attempt will be made to read/fetch `https://localhost:9000/context.json` at render-time (assuming that [`options.contextURL`](module-templeo_options.html#.Options) is set to `https://localhost:9000`). The "context" name can be configured using [`options.defaultContextName`](module-templeo_options.html#.Options).
 
 ```js
@@ -139,23 +142,23 @@ OUTPUT:
 </html>
 ```
 
-The same output could also be accomplished by either registering partials _manually_ by passing them into [`Engine.registerPartials(partials)`](module-templeo.Engine.html#registerPartials). Any partials that are not registered will be read/loaded either at __compile-time__ (when calling `registerPartials`) or at __render-time__ when an `include` is encountered during rendering that has not yet been registered.
+The same output could also be accomplished by either registering partials _manually_ by passing them into [`Engine.register(data)`](module-templeo.Engine.html#register). Any partials that are not registered will be read/loaded either at __compile-time__ (when calling `register`) or at __render-time__ when an `include` is encountered during rendering that has not yet been registered.
 
 ```js
 // OPTION 1:
 // manually register partial content prior to compiling
-engine.registerPartails([
+engine.register([
   { name: 'first/item', content: preloadedContent1 },
   { name: 'second/item', content: preloadedContent2 }
 ]);
 // OPTION 2:
 // read/load defined partials prior to compiling
-engine.registerPartails([
+engine.register([
   { name: 'first/item' },
   { name: 'second/item' }
 ], true); // true for read/fetch during compile
 // OPTION 3:
-// omit engine.registerPartials to read/load partials
+// omit engine.register to read/load partials
 // as includes are encountered at render-time
 ```
 
@@ -178,7 +181,7 @@ This makes for some interesting capabilities. `URLSearchParams` can be used to d
 
 ```js
 // register some partials
-engine.registerPartails([
+engine.register([
   {
     name: 'second/item',
     params: new URLSearchParams({

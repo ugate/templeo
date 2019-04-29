@@ -39,7 +39,7 @@ class Tester {
     const opts = baseOptions();
     opts.compile.watchPartials = true;
     const test = await Main.init(opts.compile, await getFilesEngine(opts.compile));
-    await test.engine.registerPartials(null, true);
+    await test.engine.register(null, true);
     return partialFragWatch(test);
   }
 
@@ -128,7 +128,7 @@ async function partialFragWatch(test, renderOpts, elId, name) {
     return `${open}${content}\${ await include\`${test.frag.name}\` }${close}`;
   });
 
-  // write frag (should be picked up and registered by the file watcher set via registerPartials read)
+  // write frag (should be picked up and registered by the file watcher set via register read)
   const opts = test.engine.options, relativeTo = (renderOpts && renderOpts.relativeTo) || opts.relativeTo;
   const partialsPath = (renderOpts && renderOpts.partialsPath) || opts.partialsPath;
   test.frag.path = `${Path.join(relativeTo, partialsPath, test.frag.name)}.html`;

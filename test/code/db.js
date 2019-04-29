@@ -42,7 +42,7 @@ class Tester {
 
   static async levelDbFromPartialsInDbCompileTimeRead() {
     const opts = baseOptions(meta);
-    // partials should still be cached from previous test w/registerPartials
+    // partials should still be cached from previous test w/register
     const cachier = new CachierDB(opts.compile, HtmlFrmt, JsFrmt, LOGGER);
     const engine = Engine.create(cachier);
     engines.push(engine);
@@ -52,7 +52,7 @@ class Tester {
 
   static async levelDbFromPartialsInDbRenderTimeRead() {
     const opts = baseOptions(meta);
-    // partials should still be cached from previous test w/registerPartials
+    // partials should still be cached from previous test w/register
     const cachier = new CachierDB(opts.compile, HtmlFrmt, JsFrmt, LOGGER);
     const engine = Engine.create(cachier);
     engines.push(engine);
@@ -63,7 +63,7 @@ class Tester {
   static async levelDbFromPartialsInDbRenderTimeReadAndClose() {
     const opts = baseOptions(meta);
     opts.render.renderTimePolicy = 'read-write-and-close';
-    // partials should still be cached from previous test w/registerPartials
+    // partials should still be cached from previous test w/register
     const cachier = new CachierDB(opts.compile, HtmlFrmt, JsFrmt, LOGGER);
     const engine = Engine.create(cachier);
     engines.push(engine);
@@ -129,7 +129,7 @@ class Tester {
 
     // read any partials from the DB (2nd arg passing "true")
     // and write the partials to the DB (3rd arg passing "true")
-    await engine.registerPartials([{
+    await engine.register([{
       name: 'template',
       content: '\
         <ol>\
@@ -145,7 +145,6 @@ class Tester {
       content: 'Last Name: <input id="lastName" value="${it.lastName}">'
     },{
       name: 'context',
-      extension: 'json',
       content: {
         firstName: 'John',
         lastName: 'Doe'
@@ -162,7 +161,7 @@ class Tester {
     engines.push(engine);
 
     // read template, context and partials from the DB (2nd arg passing "true")
-    await engine.registerPartials(null, true);
+    await engine.register(null, true);
 
     return validateWriteAll(engine);
   }

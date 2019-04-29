@@ -92,7 +92,7 @@ class Engine {
 
   /**
    * Compiles a template and returns a function that renders the template results using the passed `context` object
-   * @param {String} content The raw template content
+   * @param {String} [content] The raw template content. Omit to load the template content from cache.
    * @param {Object} [opts] The options sent for compilation (omit to use the options set on the {@link Engine})
    * @param {URLSearchParams} [params] Any URL search parmeters that will be passed when capturing the primary `template` and/or
    * `context` when needed. Parameters can be excluded from the invocation by replacing `params` with a `callback` (e.g.
@@ -166,9 +166,9 @@ class Engine {
   }
 
   /**
-   * Unregisters a template data from cache
+   * Unregisters a template, partial or context from cache
    * @async
-   * @param {String} name The template name that uniquely identifies the template content
+   * @param {String} name The name that uniquely identifies the template, partial or context
    */
   unregister(name) {
     const ns = internal(this);
@@ -176,33 +176,36 @@ class Engine {
   }
 
   /**
-   * Registers and __caches__ one or more partial templates
+   * Registers and __caches__ the template, one or more partial templates and/or context JSON.
    * @async
-   * @param {Object[]} [partials] The partials to register
-   * @param {String} partials[].name The template name that uniquely identifies the template content
-   * @@param {String} [partials[].content] The partial template content to register. Omit when `read === true` to read content from cache
+   * @param {Object[]} [data] The template, partials and/or context to register.
+   * @param {String} partials[].name The name that uniquely identifies the template, partial or context
+   * @param {String} [partials[].content] The raw content that will be registered. Omit when `read === true` to read content from cache.
    * @param {URLSearchParams} [partials[].params] The `URLSearchParams` that will be passed during the content `read`
-   * (__ignored when `content` is specified__)
-   * @param {String} [partials[].extension] Optional override for a file extension designation for the partial
-   * @param {Boolean} [read] When `true`, an attempt will be made to also {@link Cachier.read} any partials that __do not have__ a `content` property set
-   * @param {Boolean} [write] When `true`, an attempt will be made to also {@link Cachier.write} any partials that __have__ a `content` property set
+   * (__ignored when `content` is specified__).
+   * @param {String} [partials[].extension] Optional override for a file extension designated for a template, partial or context.
+   * @param {Boolean} [read] When `true`, an attempt will be made to also {@link Cachier.read} the template, partials and context that
+   * __do not have__ a `content` property set.
+   * @param {Boolean} [write] When `true`, an attempt will be made to also {@link Cachier.write} the template, partials and context that
+   * __have__ a `content` property set.
    * @returns {Object} An object that contains the registration results:
    * 
-   * - `partials` The `partials` object that contains the fragments that have been registered
-   *   - `name` The template name that uniquely identifies the template content
-   *   - `content` The template content
+   * - `data` The object that contains the template, partial fragments and/or context that have been registered
+   *   - `name` The name that uniquely identifies the template, partial or context
+   *   - `content` The raw content of the template, partial or context
    *   - `extension` The template file extension designation
    *   - `params` The URLSearchParams passed during the __initial__ content read
-   *   - `fromRead` A flag that indicates that the 
-   * - `dirs` Present __only__ when {@link Engine.filesEngine} was used. Contains the directories/sub-directories that were created
+   *   - `fromRead` A flag that indicates that the data was set from a read operation
+   *   - `overrideFromFileRead` A flag that indicates if the passed partial content was overridden by content from a file read
+   * - `dirs` Present __only__ when file system back-end is used. Contains the directories/sub-directories that were created
    */
-  registerPartials(partials, read, write) {
+  register(data, read, write) {
     const ns = internal(this);
-    return ns.at.cache.registerPartials(partials, read, write);
+    return ns.at.cache.register(data, read, write);
   }
 
   /**
-   * Registers and stores a partial template __in-memory__. Use {@link Engine.registerPartials} to write partials to cache ({@link Cachier})
+   * Registers and stores a partial template __in-memory__. Use {@link Engine.register} to write partials to cache ({@link Cachier})
    * @async
    * @param {String} name The template name that uniquely identifies the template content
    * @param {(String | URLSearchParams)} contentOrParams Either the partial template content __string__ to register _or_ the

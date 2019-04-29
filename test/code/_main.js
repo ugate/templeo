@@ -248,22 +248,22 @@ class Main {
    * Runs the primary set of tests for an `Engine` for either {@link Main.expectDOM} for HTML output or {@link Main.expectJSON} for JSON output
    * @param {Object} [compileOpts] The options to use when calling {@link Main.init}
    * @param {Engine} [engine] The `Engine` to use when calling {@link Main.init}
-   * @param {Object} [partials] The partials to pass into {@link Engine.registerPartials}
-   * @param {Boolean} [readPartials] The read flag to pass into {@link Engine.registerPartials}
-   * @param {Boolean} [writePartials] The write flag to pass into {@link Engine.registerPartials}
+   * @param {Object} [data] The template, partials and/or context to pass into {@link Engine.register}
+   * @param {Boolean} [readPartials] The read flag to pass into {@link Engine.register}
+   * @param {Boolean} [writePartials] The write flag to pass into {@link Engine.register}
    * @param {Object} [renderOpts] The options to pass into the rendering function generated from {@link Engine.compile}
    * @param {Object} [extraContext] Key/value pairs to add to the extracted context JSON
    * @returns {Object} The test object parameters that contain property/values from {@link Main.init} as well as the following:
-   * - `registerPartialsResult` - Result from calling {@link Engine.registerPartials} when called
+   * - `registerResult` - Result from calling {@link Engine.register} when called
    * - `fn` - The rendering funtion returned from {@link Engine.compile}
    * - `result` - The rendered result from calling the rendering function
    */
-  static async baseTest(compileOpts, engine, partials, readPartials, writePartials, renderOpts, extraContext) {
+  static async baseTest(compileOpts, engine, data, readPartials, writePartials, renderOpts, extraContext) {
     const test = await Main.init(compileOpts, engine);
     const opts = test.engine.options;
     if (!/^html$|^json$/.test(opts.defaultExtension)) throw new Error(`Invalid TEST compileOpts.defaultExtension -> ${opts.defaultExtension}`);
     const isJSON = opts.defaultExtension === 'json';
-    test.registerPartialsResult = partials || readPartials ? await test.engine.registerPartials(partials, readPartials, writePartials) : null;
+    test.registerResult = data || readPartials ? await test.engine.register(data, readPartials, writePartials) : null;
     if (log.info) log.info(`>> Compiling the "${engine.options.defaultTemplateName}" ${isJSON ? 'JSON' : 'HTML'} template...`);
     test.fn = await test.engine.compile(isJSON ? test.json : test.html);
     if (log.info) log.info(`<< Compiling of the "${engine.options.defaultTemplateName}" ${isJSON ? 'JSON' : 'HTML'} template complete!`);
@@ -491,15 +491,15 @@ class Main {
    * @param {Object} [opts] The options passed into the {@link TemplateOpts} constructor
    * @param {TemplateOpts} [opts.compileOpts] The compile options
    * @param {TemplateOpts} [opts.renderOpts] The render options
-   * @param {Object[]} [partials] Partials passed into {@link Engine.registerPartials}
-   * @param {Boolean} [readPartials] Passes the `read` flag into {@link Engine.registerPartials}
-   * @param {Boolean} [writePartials] Passes the `write` flag into {@link Engine.registerPartials}
+   * @param {Object[]} [data] Template, partials and/or context passed into {@link Engine.register}
+   * @param {Boolean} [readPartials] Passes the `read` flag into {@link Engine.register}
+   * @param {Boolean} [writePartials] Passes the `write` flag into {@link Engine.register}
    * @param {Cachier} [cachier] A {@link Cachier} that will be passed into {@link Engine.create}
    * @param {Boolean} [useServer] `true` to serve partials via {@link Main.httpsServer} and validate the call count
    * @param {Boolean} [closeServer] `true` to close the server when complete
    * @returns {Object} `test` The passed test object
    */
-  static async paramsTest(test, opts, partials, readPartials, writePartials, cachier, useServer = true, closeServer = true) {
+  static async paramsTest(test, opts, data, readPartials, writePartials, cachier, useServer = true, closeServer = true) {
     const idPrefix = useServer ? 'inclParamFromServer_' : '';
     opts = opts || { render: {} };
     test.files = test.files || await Main.getTemplateFiles();
@@ -513,8 +513,8 @@ class Main {
         opts.render.partialsURL = test.server.url;
       }
       test.engine = test.engine || (cachier || test.cachier ? Engine.create(cachier || test.cachier) : new Engine(opts.compile, HtmlFrmt, JsFrmt, log));
-      if (partials || readPartials || writePartials) {
-        await test.engine.registerPartials(partials, readPartials, writePartials);
+      if (data || readPartials || writePartials) {
+        await test.engine.register(data, readPartials, writePartials);
       }
       test.renderer = test.renderer || await test.engine.compile(test.template);
       test.result = test.result || await test.renderer(test.files.htmlContext, opts.render);
