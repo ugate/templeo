@@ -1,23 +1,22 @@
 'use strict';
 
-const { LOGGER, Engine, HtmlFrmt, JsFrmt, Main } = require('./_main.js');
+const { LOGGER, Engine, HtmlFrmt, JsFrmt, Main, Fs } = require('./_main.js');
 const CachierDB = require('../../lib/cachier-db.js');
 const CachierFiles = require('../../lib/cachier-files.js');
-const Hapi = require('hapi');
-const Vision = require('vision');
+const Express = require('express');
 // ESM uncomment the following lines...
 // TODO : import { LOGGER, Engine, HtmlFrmt, JsFrmt, Main } from './_main.mjs';
 // TODO : import * as CachierDB from '../../lib/cachier-db.mjs';
 // TODO : import * as CachierFiles from '../../lib/cachier-files.mjs';
-// TODO : import * as Hapi from 'hapi';
-// TODO : import * as Vision from 'vision';
+// TODO : import * as Express from 'express';
 
 var server;
+const PORT = 0, HOST = '127.0.0.1', connections = [];
 
 // Use the following when debugging:
-// node --inspect-brk test/code/hapi-vision.js
+// node --inspect-brk test/code/express.js -NODE_ENV=test
 // ...or with optional test function name appended to the end:
-// node --inspect-brk test/code/hapi-vision.js defaultEngine
+// node --inspect-brk test/code/express.js defaultEngine
 
 // TODO : ESM uncomment the following line...
 // export
@@ -83,7 +82,9 @@ function baseOptions(dynamicIncludeURL) {
   return {
     compile: {
       relativeTo: Main.PATH_RELATIVE_TO,
-      partialsPath: Main.PATH_HTML_PARTIALS_DIR
+      partialsPath: Main.PATH_HTML_PARTIALS_DIR,
+      templatePath: Main.PATH_VIEWS_DIR,
+      contextPath: Main.PATH_VIEWS_DIR
     },
     render: {
       readFetchRequestOptions: {
@@ -95,46 +96,59 @@ function baseOptions(dynamicIncludeURL) {
 
 async function stopServer() {
   if (!server) return;
-  await server.stop({ timeout: 3000 });
-  if (LOGGER.debug) LOGGER.debug(`Hapi.js server stopped @ ${server.info.uri}`);
+  return new Promise(async (resolve, reject) => {
+    server.close(err => {
+      if (LOGGER.debug) LOGGER.debug(`Express server stopped @ ${PORT}`);
+      if (err) reject(err);
+      else resolve(server);
+    });
+    connections.forEach(curr => curr.end());
+    setTimeout(() => connections.forEach(curr => curr.destroy()), 5000);
+  });
 }
 
 // renderOpts must be vision options, not templeo options
 async function startServer(engine, opts, context, renderOpts) {
-  if (LOGGER.debug) LOGGER.debug(`Starting Hapi.js server...`);
+  return new Promise(async (resolve, reject) => {
+    if (LOGGER.debug) LOGGER.debug(`Starting express server...`);
 
-  const sopts = LOGGER.debug ? { debug: { request: ['error'] } } : {};
-  server = Hapi.server(sopts);
-  await server.register(Vision);
-  server.views({
-    engines: { html: engine },
-    compileMode: 'async',
-    defaultExtension: opts.defaultExtension,
-    path: Main.PATH_VIEWS_DIR,
-    partialsPath: opts.partialsPath,
-    relativeTo: opts.relativeTo,
-    layout: true,
-    layoutPath: `${Main.PATH_VIEWS_DIR}/layout`
-  });
-  server.route({
-    method: 'GET',
-    path: '/',
-    handler: function hapiViewTestHandler(req, h) {
-      if (LOGGER.info) LOGGER.info(`Hapi.js request received @ ${req.path}`);
-      return h.view('index', context, renderOpts);
+    try {
+      const app = Express(), store = { engine, renderers: {} };
+      app.engine('html', async (filePath, options, callback) => {
+        try {
+          if (!store.renderers[filePath]) {
+            store.renderers[filePath] = await store.engine.compile(null, options);
+          }
+          callback(await store.renderers[filePath](context));
+        } catch (err) {
+          return callback(err);
+        }
+      });
+      app.set('views', Main.PATH_VIEWS_DIR);
+      app.set('view engine', 'html'); // register the template engine
+      app.get('/', function expressRootRoute(req, res) {
+        if (LOGGER.info) LOGGER.info(`Express request received @ ${req.path}`);
+        res.render('index', context, renderOpts);
+      });
+      server = app.listen(PORT, HOST, () => {
+        if (LOGGER.info) {
+          const addy = server.address();
+          LOGGER.info(`Express app listening on ${addy.address}:${addy.port}`);
+        }
+        resolve(server);
+      });
+      server.on('error', async err => {
+        if (LOGGER.error) LOGGER.error(err);
+        await stopServer();
+        throw err;
+      });
+      process.on('SIGTERM', stopServer);
+      process.on('SIGINT', stopServer);
+    } catch (err) {
+      if (LOGGER.error) LOGGER.error(err);
+      reject(err);
     }
   });
-  server.events.on('log', (event, tags) => {
-    if (tags.error) {
-      if (LOGGER.error) LOGGER.error(`Hapi server error: ${event.error ? event.error.message : 'unknown'}`);
-    } else if (LOGGER.info) {
-      LOGGER.info(`Hapi server ${JSON.stringify(tags)} for event: ${JSON.stringify(event)}`);
-    }
-  });
-  server.app.htmlPartial = engine.renderPartialGenerate();
-  await server.start();
-  if (LOGGER.debug) LOGGER.debug(`Hapi.js server running @ ${server.info.uri}`);
-  return server;
 }
 
 async function reqAndValidate(engine, compileOpts, dynamicIncludeURL, renderOpts) {
@@ -142,7 +156,10 @@ async function reqAndValidate(engine, compileOpts, dynamicIncludeURL, renderOpts
   tmpl.htmlContext.dynamicIncludeURL = dynamicIncludeURL;
   server = await startServer(engine, compileOpts, tmpl.htmlContext, renderOpts);
 
-  const html = await Main.clientRequest(server.info.uri);
+  const addy = server.address();
+  const url = `http://${addy.address}${addy.port ? `:${addy.port}` : ''}/`;
+
+  const html = await Main.clientRequest(url);
   if (LOGGER.debug) LOGGER.debug(html);
   Main.expectDOM(html, tmpl.htmlContext);
 }

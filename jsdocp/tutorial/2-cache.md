@@ -48,7 +48,7 @@ The [CachierDB constructor](CachierDB.html) takes an optional [LevelDB instance]
 - When not in the DB, an attempt to retrieve the template from __the HTTP/S [`options.partialsURL`](module-templeo_options.html#.Options)__
 - When no `options.partialsURL` is set or retrieval fails, an error is thrown
 
-Just like any other type of `Cachier`, templates can be written to _cache_ via [Engine.register](Cachier.html#register). For simplicity's sake we'll use some basic in-line templates to demonstrate using `CachierDB`:
+Just like any other type of `Cachier`, templates can be __written__ to _cache_ via [Engine.register](Cachier.html#register). For simplicity's sake we'll use some basic in-line templates to demonstrate using `CachierDB`:
 
 ```js
 const Engine = require('templeo'), CachierDB = require('templeo/lib/cachier-db');
@@ -107,7 +107,7 @@ const rslt = await renderer({
 */
 ```
 
-Now that the template, partials and context are written to the database, we can use the written content as default values when a template, partial and/or context are not specified. This decouples stored content from any `Engine` instance or rederering function.
+Now that the template, partials and context are written to the database, we can use the written content as default values when a template, partial and/or context are not specified. This decouples stored content from any single `Engine` instance or rederering function.
 
 ```js
 const Engine = require('templeo'), CachierDB = require('templeo/lib/cachier-db');
@@ -138,7 +138,7 @@ Using a file system is the recommended caching mechanism to use when processing 
 - When no `options.partialsURL` is set or retrieval fails, an error is thrown
 
 ```js
-const Engine = require('templeo'), CachierDB = require('templeo/lib/cachier-files');
+const Engine = require('templeo'), CachierFiles = require('templeo/lib/cachier-files');
 // create a cachier for the file system that uses the current directory
 // for HTML partials
 const cachier = new CachierFiles({
