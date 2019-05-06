@@ -16,7 +16,7 @@ const PORT = 0, HOST = '127.0.0.1', connections = [];
 // Use the following when debugging:
 // node --inspect-brk test/code/express.js -NODE_ENV=test
 // ...or with optional test function name appended to the end:
-// node --inspect-brk test/code/express.js defaultEngine
+// node --inspect-brk test/code/express.js -NODE_ENV=test filesEngine
 
 // TODO : ESM uncomment the following line...
 // export
@@ -63,7 +63,7 @@ class Tester {
 
   static async filesEngine() {
     const opts = baseOptions();
-    const cachier = new CachierFiles(opts.compile, HtmlFrmt, JsFrmt, LOGGER);
+    const cachier = new CachierFiles(opts.compile, null, null, LOGGER);
     const engine = new Engine(cachier);
     await reqAndValidate(engine, opts.compile);
     return engine.clearCache(true);
@@ -96,9 +96,12 @@ function baseOptions(dynamicIncludeURL) {
 
 async function stopServer() {
   if (!server) return;
+  const addy = server.address();
+  const uri = `${addy.address}${addy.port ? `:${addy.port}` : ''}`;
+  if (LOGGER.info) LOGGER.info(`Express server stopping @ ${uri}`);
   return new Promise(async (resolve, reject) => {
     server.close(err => {
-      if (LOGGER.debug) LOGGER.debug(`Express server stopped @ ${PORT}`);
+      if (LOGGER.info) LOGGER.info(`Express server stopped @ ${uri}`);
       if (err) reject(err);
       else resolve(server);
     });
@@ -107,19 +110,18 @@ async function stopServer() {
   });
 }
 
-// renderOpts must be vision options, not templeo options
 async function startServer(engine, opts, context, renderOpts) {
   return new Promise(async (resolve, reject) => {
     if (LOGGER.debug) LOGGER.debug(`Starting express server...`);
-
     try {
       const app = Express(), store = { engine, renderers: {} };
       app.engine('html', async (filePath, options, callback) => {
         try {
           if (!store.renderers[filePath]) {
+            if (LOGGER.info) LOGGER.info(`Express compiling @ ${filePath}`);
             store.renderers[filePath] = await store.engine.compile(null, options);
           }
-          callback(await store.renderers[filePath](context));
+          callback(null, await store.renderers[filePath](context));
         } catch (err) {
           return callback(err);
         }
