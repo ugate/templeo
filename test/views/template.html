@@ -21,6 +21,7 @@
   `)}
 </head>
 <body data-message="${ it.message || '' }">
+  <h3 id="text">${ await include`text` }</h3>
   ${ await include`double` }
   ${ await include`double` }
   <select id="state">

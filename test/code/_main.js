@@ -336,6 +336,17 @@ class Main {
   }
 
   /**
+   * 
+   * @param {Object[]} files The files returned from {@link Main.getFiles} 
+   */
+  static expectFiles(files) {
+    for (let filed of files) {
+      if (!filed.path) continue;
+
+    }
+  }
+
+  /**
    * Initializes a test location for a LevelDB connection
    * @param {String} [locPrefix='templeo-test-indexedDB-'] The DB location prefix to use
    * @returns {Object} A metadata object containing `{ locPrefix:String, loc:String }`
@@ -401,32 +412,38 @@ class Main {
    * @param {Object} context The template context to validate against
    * @returns {JSDOM} The generated DOM
    */
-  static expectDOM(html, context) {
-    const dom = new JSDOM(html);
-    var el;
+  static expectDOM(html, context, files) {
+    const dom = new JSDOM(html), textRx = /[\n\r\s]*Test simple text inclusion[\n\r\s]*/;
+    let el;
+
+    // text inclusion
+    el = dom.window.document.getElementById('text');
+    expect(el, 'Text Included Element').not.null();
+    expect(el.innerHTML, 'Text Included innerHTML').to.match(textRx);
   
     // comment block should be removed
-    expect(html.includes('This is a comment')).to.be.false();
+    expect(html.includes('This is a comment'), 'Comment').to.be.false();
   
     // array iteration test
     for (let i = 0, arr = context.metadata; i < arr.length; i++) {
       el = dom.window.document.querySelector(`[name="${arr[i].name}"][content="${arr[i].content}"]`) || {};
-      expect(el.name).to.equal(arr[i].name);
-      expect(el.getAttribute('content')).to.equal(arr[i].content);
+      expect(el.name, `Metadata Context Name @ index ${i}`).to.equal(arr[i].name);
+      expect(el.getAttribute('content'), `Metadata Context "content" attribute @ index ${i}`).to.equal(arr[i].content);
     }
 
     const doubles = dom.window.document.getElementsByName('doubles');
-    expect(doubles.length).to.equal(2);
+    expect(doubles.length, 'Doubles').to.equal(2);
   
     // object property iteration test
-    var el, hasSel;
+    let hasSel;
     for (let state in context.globals.states) {
       el = dom.window.document.querySelector(`option[id="stateSelect${state}"]`) || {};
-      expect(el.value).to.equal(state);
-      expect(el.innerHTML).to.equal(context.globals.states[state]);
+      expect(el, 'State Option Element').not.null();
+      expect(el.value, 'State Option Value').to.equal(state);
+      expect(el.innerHTML, 'State Option innerHTML').to.equal(context.globals.states[state]);
       if (state === 'FL') {
         hasSel = true;
-        expect(el.selected).to.be.true(); // conditional check
+        expect(el.selected, 'State Option Selected').to.be.true(); // conditional check
       }
     }
   
@@ -438,18 +455,36 @@ class Main {
   
     // validate nested partial
     const swatchDatalist = dom.window.document.getElementById('swatchDatalist');
-    expect(swatchDatalist).to.be.object();
+    expect(swatchDatalist, 'Swatch DataList').to.be.object();
 
     // validate partial from render-time read (if present)
     if (context.dynamicIncludeURL) {
       const dynInclURL = dom.window.document.getElementById('dynamicIncludeURL');
-      expect(dynInclURL).to.be.object();
-      expect(dynInclURL.dataset.url).to.equal(context.dynamicIncludeURL);
-      expect(dynInclURL.innerHTML).to.match(/[\n\r\s]*Test simple text inclusion[\n\r\s]*/);
+      expect(dynInclURL, 'Dynamic Include URL Element').to.be.object();
+      expect(dynInclURL.dataset.url, 'Dynamic Include data-url').to.equal(context.dynamicIncludeURL);
+      expect(dynInclURL.innerHTML, 'Dynamic Include URL innerHTML').to.match(textRx);
     }
   
     //if (log.debug) log.debug(fn, rslt);
     return dom;
+  }
+
+  /**
+   * Validates that a set of {@link Main.getFiles} exists from another set of {@link Main.getFiles}
+   * @param {Object} [files] The files from {@link Main.getFiles}
+   * @param {Object[]} [files.expected] A return value from {@link Main.getFiles} that should be present in `files.actual`
+   * @param {Object[]} [files.actual] A return value from {@link Main.getFiles} that expect to have values present in `files.expected`
+   */
+  static async expectFiles(files) {
+    expected: for (let exp in files.expected) {
+      for (let act in files.actual) {
+        if (exp.name === act.name) {
+          continue expected;
+        }
+      }
+      expect(filed.path)
+      filed.path
+    }
   }
 
   /**
