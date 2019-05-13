@@ -66,7 +66,8 @@ class Tester {
     const cachier = new CachierFiles(opts.compile, null, null, LOGGER);
     const engine = new Engine(cachier);
     await reqAndValidate(engine, opts.compile);
-    //return engine.clearCache(true);
+    await Main.expectFiles(engine);
+    return engine.clearCache(true);
   }
 }
 
@@ -105,8 +106,10 @@ async function stopServer() {
       if (err) reject(err);
       else resolve(server);
     });
-    connections.forEach(curr => curr.end());
-    setTimeout(() => connections.forEach(curr => curr.destroy()), 5000);
+    connections.forEach(curr => {
+      curr.end();
+      curr.destroy();
+    });
   });
 }
 
@@ -162,9 +165,6 @@ async function reqAndValidate(engine, compileOpts, dynamicIncludeURL, renderOpts
   const url = `http://${addy.address}${addy.port ? `:${addy.port}` : ''}/`;
 
   const html = await Main.clientRequest(url);
-  if (LOGGER.debug) LOGGER.debug(html);
-  Main.expectDOM(html, tmpl.htmlContext, {
-    expected: await Main.getFiles(Main.PATH_HTML_PARTIALS_DIR, false),
-    actual: await Main.getFiles(engine.options.outputPath, false)
-  });
+  if (LOGGER.debug) LOGGER.debug('Express server HTML:\n', html);
+  Main.expectDOM(html, tmpl.htmlContext);
 }

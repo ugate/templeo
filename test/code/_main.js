@@ -470,21 +470,36 @@ class Main {
   }
 
   /**
-   * Validates that a set of {@link Main.getFiles} exists from another set of {@link Main.getFiles}
-   * @param {Object} [files] The files from {@link Main.getFiles}
-   * @param {Object[]} [files.expected] A return value from {@link Main.getFiles} that should be present in `files.actual`
-   * @param {Object[]} [files.actual] A return value from {@link Main.getFiles} that expect to have values present in `files.expected`
+   * Validates that a set of {@link Engine.options} contains a valid `options.outputPath` and the _actual_ __source__ files have been generated.
+   * @param {Engine} engine The engine to check files for
    */
-  static async expectFiles(files) {
-    expected: for (let exp in files.expected) {
-      for (let act in files.actual) {
-        if (exp.name === act.name) {
+  static async expectFiles(engine) {
+    expect(engine.options.outputPath, 'Engine options.outputPath').not.empty();
+    const test = {
+      expected: {
+        path: engine.options.outputPath,
+        files: await Main.getFiles(Main.PATH_HTML_PARTIALS_DIR, false)
+      },
+      actual: {
+        templateName: engine.options.defaultTemplateName,
+        path: Main.PATH_HTML_PARTIALS_DIR,
+        files: await Main.getFiles(engine.options.outputPath, false)
+      }
+    };
+    let ename, aname, stats, cnt = 0, tmpl;
+    expected: for (let exp of test.expected.files) {
+      ename = '/' + exp.name.replace(test.expected.path, '').replace(/\..+$/, '').replace(/\\+/g, '/');
+      for (let act of test.actual.files) {
+        aname = act.name === test.actual.templateName ? !tmpl ? tmpl = act.name : null : act.name.replace(test.actual.path, '').replace(/\..+$/, '').replace(/\\+/g, '/');
+        if (ename === aname) {
+          stats = await Fs.promises.stat(act.path);
+          expect(stats.isFile(), `Actual file named "${aname}" @ "${act.path}" is file?`).true();
+          cnt++;
           continue expected;
         }
       }
-      expect(filed.path)
-      filed.path
     }
+    expect(cnt, `Expected ${test.expected.files.length} file matches, but found ${cnt}`).equal(test.expected.files.length -1);
   }
 
   /**

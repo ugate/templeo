@@ -14,7 +14,7 @@ var engine;
 // LOGGING: Use the following
 // node test/code/files.js -NODE_ENV=test
 // LOGGING Single Test: Use the following
-// node test/code/files.js -NODE_ENV=test <name_of_func_to_run_here>
+// node test/code/files.js -NODE_ENV=test htmlPartialReadCache
 
 // TODO : ESM uncomment the following line...
 // export
@@ -25,14 +25,14 @@ class Tester {
   }
 
   static async htmlPartialReadCache() {
-    const opts = baseOptions();
-    return Main.baseTest(opts.compile, await getFilesEngine(opts.compile), null, true);
+    const opts = baseOptions(), engine = await getFilesEngine(opts.compile);
+    return Main.baseTest(opts.compile, engine, null, true);
   }
 
   static async htmlPartialReadNoCache() {
-    const opts = baseOptions();
+    const opts = baseOptions(), engine = await getFilesEngine(opts.compile);
     opts.compile.cacheRawTemplates = false;
-    return Main.baseTest(opts.compile, await getFilesEngine(opts.compile), null, true);
+    return Main.baseTest(opts.compile, engine, null, true);
   }
 
   static async htmlCacheWithWatch() {

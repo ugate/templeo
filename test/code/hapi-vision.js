@@ -67,6 +67,7 @@ class Tester {
     const cachier = new CachierFiles(opts.compile, HtmlFrmt, JsFrmt, LOGGER);
     const engine = new Engine(cachier);
     await reqAndValidate(engine, opts.compile);
+    // NOTE : no Main.expectFiles since they are handled internally to Hapi
     return engine.clearCache(true);
   }
 }
