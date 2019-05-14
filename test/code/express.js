@@ -55,6 +55,17 @@ class Tester {
     const meta = await Main.initDB();
     opts.compile.dbTypeName = opts.render.dbTypeName = meta.type;
     opts.compile.dbLocName = opts.render.dbLocName = meta.loc;
+    { // write to DB
+      const cachier = new CachierDB(opts.compile, HtmlFrmt, JsFrmt, LOGGER);
+      const engine = Engine.create(cachier);
+      const partials = (await Main.getFiles(Main.PATH_HTML_PARTIALS_DIR));
+      // add the default primary template to the partials that will be written
+      partials.splice(0, 0, { name: engine.options.defaultTemplateName, content: (await Main.getFile(Main.PATH_HTML_TEMPLATE)).toString() });
+      // write partials to DB at compile-time
+      await engine.register(partials, false, true);
+      //engine.clearCache()
+    }
+    // read from DB
     const cachier = new CachierDB(opts.compile, HtmlFrmt, JsFrmt, LOGGER);
     const engine = Engine.create(cachier);
     await reqAndValidate(engine, opts.compile);
@@ -97,7 +108,13 @@ function baseOptions(dynamicIncludeURL) {
 
 async function stopServer() {
   if (!server) return;
-  const addy = server.address();
+  let addy;
+  try {
+    addy = server.address();
+  } catch (err) {
+    if (LOGGER.error) LOGGER.error(`Express server cannot determine "server.address()" @ ${uri}`, err);
+  }
+  if (!addy) return;
   const uri = `${addy.address}${addy.port ? `:${addy.port}` : ''}`;
   if (LOGGER.info) LOGGER.info(`Express server stopping @ ${uri}`);
   return new Promise(async (resolve, reject) => {
@@ -133,7 +150,7 @@ async function startServer(engine, opts, context, renderOpts) {
       app.set('view engine', 'html'); // register the template engine
       app.get('/', function expressRootRoute(req, res) {
         if (LOGGER.info) LOGGER.info(`Express request received @ ${req.path}`);
-        res.render('index', context, renderOpts);
+        res.render('template', context, renderOpts);
       });
       server = app.listen(PORT, HOST, () => {
         if (LOGGER.info) {

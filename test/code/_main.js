@@ -80,6 +80,7 @@ const PATH_VIEWS_DIR = 'test/views';
 const PATH_HTML_CONTEXT_DIR = 'test/context/html';
 const PATH_HTML_PARTIALS_DIR = `${PATH_VIEWS_DIR}/partials/html`;
 const PATH_HTML_TEMPLATE = `${PATH_VIEWS_DIR}/template.html`;
+const PATH_HTML_INDEX = `${PATH_VIEWS_DIR}/index.html`;
 const PATH_HTML_CONTEXT = `${PATH_HTML_CONTEXT_DIR}/context.json`;
 
 const PATH_JSON_CONTEXT_DIR = 'test/context/json';
@@ -293,7 +294,7 @@ class Main {
   /**
    * Captures a test file contents
    * @param {String} path The path to the file to read/get
-   * @param {Boolean} cache `true` to cache the read content for subsequent calls
+   * @param {Boolean} [cache=true] `true` to cache the read content for subsequent calls
    * @returns {Buffer} The file contents
    */
   static async getFile(path, cache = true) {
@@ -306,21 +307,21 @@ class Main {
    * @param {String} dir The directory to get the files from
    * @param {Boolean} [readContent=true] `true` to include read file contents in the return value for each file found
    * @param {Booean} [rmBasePartial=true] `true` to remove the initial `dir` when composing the name in the return value
-   * @param {Boolean} [cache=true] Value passed when calling {@link } 
+   * @param {Boolean} [includeSubDirs=true] `true` to include any files that reside in child directories
    * @param {String} [_initDir=null] Used to keep track of the original `dir` when making recursive calls __Internal use only!__
    * @returns {Object[]} The files that were found with each object entry containing the follwoing:
    * - `name:String` - The derived name of the file
    * - `path:String` - The file path
    * - `content:String` - The file contents (omitted when `readContent` is falsy)
    */
-  static async getFiles(dir, readContent = true, rmBasePartial = true, _initDir = null) {
+  static async getFiles(dir, readContent = true, rmBasePartial = true, includeSubDirs = true, _initDir = null) {
     if (!_initDir) _initDir = dir.replace(/[\/\\]/g, Path.sep);
     const sdirs = await Fs.promises.readdir(dir);
     var spth, stat, sfiles, files = [], filed, named;
     for (let sdir of sdirs) {
       spth = Path.join(dir, sdir), stat = await Fs.promises.stat(spth);
-      if (stat.isDirectory()) {
-        sfiles = await Main.getFiles(spth, readContent, rmBasePartial, _initDir);
+      if (includeSubDirs && stat.isDirectory()) {
+        sfiles = await Main.getFiles(spth, readContent, rmBasePartial, includeSubDirs, _initDir);
         files = sfiles && sfiles.length ? files.length ? files.concat(sfiles) : sfiles : files;
       } else if (stat.isFile()) {
         named = rmBasePartial ? spth.replace(_initDir, '').replace(/^[\.\/\\]+/, '') : spth;
@@ -423,11 +424,11 @@ class Main {
   
     // comment block should be removed
     expect(html.includes('This is a comment'), 'Comment').to.be.false();
-  
+
     // array iteration test
     for (let i = 0, arr = context.metadata; i < arr.length; i++) {
       el = dom.window.document.querySelector(`[name="${arr[i].name}"][content="${arr[i].content}"]`) || {};
-      expect(el.name, `Metadata Context Name @ index ${i}`).to.equal(arr[i].name);
+      expect(el.name, `HMTL metadata Context Name @ index ${i}`).to.equal(arr[i].name);
       expect(el.getAttribute('content'), `Metadata Context "content" attribute @ index ${i}`).to.equal(arr[i].content);
     }
 
@@ -760,6 +761,10 @@ class Main {
 
   static get PATH_HTML_TEMPLATE() {
     return PATH_HTML_TEMPLATE;
+  }
+
+  static get PATH_HTML_INDEX() {
+    return PATH_HTML_INDEX;
   }
 
   static get PATH_HTML_CONTEXT() {

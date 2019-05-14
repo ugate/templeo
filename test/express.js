@@ -19,7 +19,7 @@ lab.experiment(plan, () => {
   lab.afterEach(Tester.afterEach);
 
   /*lab.test(`${plan}: Default Engine`, { timeout: TEST_TKO }, Tester.defaultEngine);
-  lab.test(`${plan}: Default Engine - Partials Fetch From HTTPS Server`, { timeout: TEST_TKO }, Tester.defaultEnginePartialFetchHttpServer);
+  lab.test(`${plan}: Default Engine - Partials Fetch From HTTPS Server`, { timeout: TEST_TKO }, Tester.defaultEnginePartialFetchHttpServer);*/
   lab.test(`${plan}: LevelDB Engine`, { timeout: TEST_TKO }, Tester.levelDbEngine);
-  lab.test(`${plan}: Files Engine`, { timeout: TEST_TKO }, Tester.filesEngine);*/
+  lab.test(`${plan}: Files Engine`, { timeout: TEST_TKO }, Tester.filesEngine);
 });

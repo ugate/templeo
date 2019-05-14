@@ -25,7 +25,7 @@ class Tester {
 
   static async jsonRegisterPartials() {
     const opts = baseOptions();
-    opts.compile.defaultExtension = 'json'; // testing json 
+    opts.compile.defaultExtension = opts.render.defaultExtension = 'json'; // testing json 
     const engine = new Engine(opts.compile, HtmlFrmt, JsFrmt, LOGGER);
     const partials = await Main.getFiles(Main.PATH_JSON_PARTIALS_DIR);
     return Main.baseTest(opts.compile, engine, partials, true, false, opts.render);

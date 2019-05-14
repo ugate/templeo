@@ -298,7 +298,7 @@ async function compile(ns, content, params, options, ropts, tname, cache) {
     return await cache.compile(tnm, content, params, parts && parts[3]); // await in order to catch errors
   } catch (err) {
     if (ns.at.cache.log.error) {
-      err.stack += `\nCAUSE: Unable to compile template ${tnm}:\n${content}`;
+      err.stack += `\nCAUSE: Unable to compile template "${tnm}":\n${content}`;
       ns.at.cache.log.error(err);
     }
     throw err;
