@@ -63,7 +63,6 @@ class Tester {
       partials.splice(0, 0, { name: engine.options.defaultTemplateName, content: (await Main.getFile(Main.PATH_HTML_TEMPLATE)).toString() });
       // write partials to DB at compile-time
       await engine.register(partials, false, true);
-      //engine.clearCache()
     }
     // read from DB
     const cachier = new CachierDB(opts.compile, HtmlFrmt, JsFrmt, LOGGER);
