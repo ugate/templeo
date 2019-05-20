@@ -75,9 +75,6 @@ class Engine {
   constructor(opts, readFormatter, writeFormatter, log) {
     const ns = internal(this);
     ns.at.cache = opts instanceof Cachier ? opts : new Cachier(opts, readFormatter, writeFormatter, log);
-    ns.at.isInit = false;
-    ns.at.prts = {};
-    ns.at.prtlFuncs = {};
   }
 
   /**
@@ -227,10 +224,10 @@ class Engine {
   }
 
   /**
-   * On-Demand compilation of a registered template
+   * On-Demand compilation of a registered templates
    * @param {String} name The name of the registered tempalte
-   * @param {Object} [context={}] The object that contains contextual data used in the template
-   * @returns {String} The compiled template
+   * @param {Object} [context={}] The object that contains contextual data used by the template
+   * @returns {String} The rendered template
    */
   async renderPartial(name, context, renderOptions) {
     const ns = internal(this);

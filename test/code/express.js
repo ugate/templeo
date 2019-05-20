@@ -1,6 +1,7 @@
 'use strict';
 
 const { LOGGER, Engine, HtmlFrmt, JsFrmt, Main, Fs } = require('./_main.js');
+const Cachier = require('../../lib/cachier.js');
 const CachierDB = require('../../lib/cachier-db.js');
 const CachierFiles = require('../../lib/cachier-files.js');
 const Express = require('express');
@@ -33,6 +34,8 @@ class Tester {
   static async defaultEngine() {
     const opts = baseOptions();
     const engine = new Engine(opts.compile, HtmlFrmt, JsFrmt, LOGGER);
+    // write to DB
+    await writePartials(opts.compile);
     return reqAndValidate(engine, opts.compile);
   }
 
@@ -43,10 +46,6 @@ class Tester {
     opts.render.templateURL = svr.url;
     opts.render.partialsURL = svr.url;
     const engine = new Engine(opts.compile, HtmlFrmt, JsFrmt, LOGGER);
-    // Hapi will not be happy with rendering options that are not part of the vision options
-    // when calling: h.view('index', context, renderOpts);
-    // Need to set the legacy render options instead
-    engine.legacyRenderOptions = opts.render;
     return reqAndValidate(engine, opts.compile, `${svr.url}text.html`);
   }
 
@@ -57,12 +56,7 @@ class Tester {
     opts.compile.dbLocName = opts.render.dbLocName = meta.loc;
     { // write to DB
       const cachier = new CachierDB(opts.compile, HtmlFrmt, JsFrmt, LOGGER);
-      const engine = Engine.create(cachier);
-      const partials = (await Main.getFiles(Main.PATH_HTML_PARTIALS_DIR));
-      // add the default primary template to the partials that will be written
-      partials.splice(0, 0, { name: engine.options.defaultTemplateName, content: (await Main.getFile(Main.PATH_HTML_TEMPLATE)).toString() });
-      // write partials to DB at compile-time
-      await engine.register(partials, false, true);
+      await writePartials(cachier);
     }
     // read from DB
     const cachier = new CachierDB(opts.compile, HtmlFrmt, JsFrmt, LOGGER);
@@ -103,6 +97,15 @@ function baseOptions(dynamicIncludeURL) {
       }
     }
   };
+}
+
+async function writePartials(cachierOrOpts) {
+  const engine = cachierOrOpts instanceof Cachier ? Engine.create(cachierOrOpts) : new Engine(cachierOrOpts, HtmlFrmt, JsFrmt, LOGGER);;
+  const partials = await Main.getFiles(Main.PATH_HTML_PARTIALS_DIR);
+  // add the default primary template to the partials that will be written
+  partials.splice(0, 0, { name: engine.options.defaultTemplateName, content: (await Main.getFile(Main.PATH_HTML_TEMPLATE)).toString() });
+  // write partials at compile-time
+  return engine.register(partials, false, true);
 }
 
 async function stopServer() {
