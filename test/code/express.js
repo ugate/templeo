@@ -33,9 +33,8 @@ class Tester {
 
   static async defaultEngine() {
     const opts = baseOptions();
-    const engine = new Engine(opts.compile, HtmlFrmt, JsFrmt, LOGGER);
     // write to DB
-    await writePartials(opts.compile);
+    const engine = await writePartials(opts.compile);
     return reqAndValidate(engine, opts.compile);
   }
 
@@ -46,7 +45,7 @@ class Tester {
     opts.render.templateURL = svr.url;
     opts.render.partialsURL = svr.url;
     const engine = new Engine(opts.compile, HtmlFrmt, JsFrmt, LOGGER);
-    return reqAndValidate(engine, opts.compile, `${svr.url}text.html`);
+    return reqAndValidate(engine, opts.compile, `${svr.url}text.html`, opts.render);
   }
 
   static async levelDbEngine() {
@@ -105,7 +104,8 @@ async function writePartials(cachierOrOpts) {
   // add the default primary template to the partials that will be written
   partials.splice(0, 0, { name: engine.options.defaultTemplateName, content: (await Main.getFile(Main.PATH_HTML_TEMPLATE)).toString() });
   // write partials at compile-time
-  return engine.register(partials, false, true);
+  await engine.register(partials, false, true);
+  return engine;
 }
 
 async function stopServer() {
@@ -132,7 +132,7 @@ async function stopServer() {
   });
 }
 
-async function startServer(engine, opts, context, renderOpts) {
+async function startServer(engine, compileOpts, context, renderOpts) {
   return new Promise(async (resolve, reject) => {
     if (LOGGER.debug) LOGGER.debug(`Starting express server...`);
     try {
