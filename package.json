@@ -36,16 +36,16 @@
   "dependencies": {},
   "devDependencies": {
     "code": "^5.2.4",
-    "express": "^4.16.4",
+    "express": "^4.17.1",
     "hapi": "^18.1.0",
-    "js-beautify": "^1.9.1",
-    "jsdoc": "^3.5.5",
-    "jsdocp": "^1.0.1",
-    "jsdom": "^15.0.0",
+    "js-beautify": "^1.10.2",
+    "jsdoc": "^3.6.3",
+    "jsdocp": "^1.0.2",
+    "jsdom": "^15.1.1",
     "lab": "^18.0.2",
     "level": "^5.0.0",
     "minami": "^1.2.3",
-    "node-forge": "^0.8.2",
+    "node-forge": "^0.8.5",
     "vision": "^5.4.4"
   },
   "files": [
