@@ -28,14 +28,14 @@ class Tester {
     opts.compile.defaultExtension = opts.render.defaultExtension = 'json'; // testing json 
     const engine = new Engine(opts.compile, HtmlFrmt, JsFrmt, LOGGER);
     const partials = await Main.getFiles(Main.PATH_JSON_PARTIALS_DIR);
-    return Main.baseTest(opts.compile, engine, partials, true, false, opts.render);
+    return Main.baseTest({ read: true, sendTemplate: true, sendContext: true }, opts.compile, engine, partials, opts.render);
   }
 
   static async htmlRegisterPartials() {
     const opts = baseOptions();
     const engine = new Engine(opts.compile, HtmlFrmt, JsFrmt, LOGGER);
     const partials = await Main.getFiles(Main.PATH_HTML_PARTIALS_DIR);
-    return Main.baseTest(opts.compile, engine, partials, true, false, opts.render);
+    return Main.baseTest({ read: true, sendTemplate: true, sendContext: true }, opts.compile, engine, partials, opts.render);
   }
 
   static async htmlregisterHelper() {
@@ -83,7 +83,7 @@ class Tester {
       const engine = new Engine(opts.compile, HtmlFrmt, JsFrmt, LOGGER);
       // partials should be fetched via the HTTPS server during compilation via the cache read/fetch
       const partials = await Main.getFiles(Main.PATH_HTML_PARTIALS_DIR, false); // false will only return the partial names w/o content
-      await Main.baseTest(opts.compile, engine, partials, true, false, opts.render); // true to register at compile-time
+      await Main.baseTest({ read: true }, opts.compile, engine, partials, opts.render); // register at compile-time
     } finally {
       await svr.close();
     }
@@ -95,7 +95,7 @@ class Tester {
     try {
       const engine = new Engine(opts.compile, HtmlFrmt, JsFrmt, LOGGER);
       const partials = await Main.getFiles(Main.PATH_HTML_PARTIALS_DIR, false); // false will only return the partial names w/o content
-      await Main.baseTest(opts.compile, engine, partials, true, false, opts.render); // true to register at compile-time
+      await Main.baseTest({ read: true }, opts.compile, engine, partials, opts.render); // register at compile-time
     } finally {
       await svr.close();
     }
@@ -111,7 +111,7 @@ class Tester {
       opts.render.partialsURL = svr.url;
       const engine = new Engine(opts.compile, HtmlFrmt, JsFrmt, LOGGER);
       // partials should be fetched via the HTTPS server when includes are encountered during rendering
-      await Main.baseTest(opts.compile, engine, null, false, false, opts.render, context); // false to prevent compile-time register
+      await Main.baseTest({ sendContext: true }, opts.compile, engine, null, opts.render, context); // no compile-time register
     } finally {
       await svr.close();
     }
@@ -123,7 +123,7 @@ class Tester {
     try {
       const engine = new Engine(opts.compile, HtmlFrmt, JsFrmt, LOGGER);
       // partials should be fetched via the HTTPS server when includes are encountered during rendering
-      await Main.baseTest(opts.compile, engine, null, false, false, opts.render); // false to prevent compile-time register
+      await Main.baseTest({}, opts.compile, engine, null, opts.render); // no compile-time register
     } finally {
       await svr.close();
     }

@@ -33,17 +33,16 @@
     `)}
   </select>
   ${ it.content }
-  <script id="someJson" type="application/json">
-    {
-      "zero": 0
-      ${ it.json ? `
+  ${ it.json ? `
+    <script id="someJson" type="application/json">
+      {
+        "zero": 0, 
         "one": ${ it.json.one },
         "two": ${ it.json.two },
-        "three": ${ it.json.three || '' },
-        ` : ``
+        "three": ${ it.json.three || '' }
       }
-    }
-  </script>
+    </script>
+    ` : ''}
   ${ repeat(it.js, (c) => `
     <script src="${ c.src }${ it.pkg && it.pkg.version && c.version !== 0 ? '?' + (c.version || it.pkg.version) : '' }"></script>
   `)}

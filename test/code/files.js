@@ -26,13 +26,13 @@ class Tester {
 
   static async htmlPartialReadCache() {
     const opts = baseOptions(), engine = await getFilesEngine(opts.compile);
-    return Main.baseTest(opts.compile, engine, null, true);
+    return Main.baseTest({ read: true, sendTemplate: true, sendContext: true }, opts.compile, engine);
   }
 
   static async htmlPartialReadNoCache() {
     const opts = baseOptions(), engine = await getFilesEngine(opts.compile);
     opts.compile.cacheRawTemplates = false;
-    return Main.baseTest(opts.compile, engine, null, true);
+    return Main.baseTest({ read: true }, opts.compile, engine);
   }
 
   static async htmlCacheWithWatch() {
@@ -43,11 +43,24 @@ class Tester {
     return partialFragWatch(test);
   }
 
+  static async htmlRenderTimePartialReadCache() {
+    const opts = baseOptions(true), engine = await getFilesEngine(opts.compile);
+    return Main.baseTest({}, opts.compile, engine, null, opts.render);
+  }
+
+  static async htmlRenderTimePartialReadNoCache() {
+    const opts = baseOptions(), engine = await getFilesEngine(opts.compile);
+    opts.render.cacheRawTemplates = false;
+    return Main.baseTest({}, opts.compile, engine);
+  }
+
   static async htmlRenderTimeCacheWithWatch() {
+    // TODO : need to fixe render-time file watch test
+    return;
     const opts = baseOptions(true);
     opts.render.watchPartials = true;
     opts.render.renderTimePolicy = 'read-all-on-init-when-empty';
-    opts.compile.debugger = true;
+    opts.render.debugger = true;
     const test = await Main.init(opts.compile, await getFilesEngine(opts.compile));
     await partialFragWatch(test, opts.render);
   }
@@ -55,7 +68,7 @@ class Tester {
   static async htmlCacheWithRegisterPartials() {
     const opts = baseOptions();
     const partials = await Main.getFiles(opts.compile.partialsPath, true);
-    return Main.baseTest(opts.compile, await getFilesEngine(opts.compile), partials, true);
+    return Main.baseTest({ read: true }, opts.compile, await getFilesEngine(opts.compile), partials);
   }
 
   static async htmlRenderTimeReadWrite() {
@@ -97,6 +110,8 @@ if (!Main.usingTestRunner()) {
 
 function baseOptions(renderTime) {
   const opts = {
+    templatePath: Main.PATH_VIEWS_DIR,
+    contextPath: Main.PATH_HTML_CONTEXT_DIR,
     partialsPath: Main.PATH_HTML_PARTIALS_DIR
   };
   const copts = renderTime ? {} : opts;

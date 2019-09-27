@@ -11,13 +11,14 @@ const Express = require('express');
 // TODO : import * as CachierFiles from '../../lib/cachier-files.mjs';
 // TODO : import * as Express from 'express';
 
-var server;
+var server, tmplServer;
 const PORT = 0, HOST = '127.0.0.1', connections = [];
 
 // Use the following when debugging:
 // node --inspect-brk test/code/express.js -NODE_ENV=test
 // ...or with optional test function name appended to the end:
-// node --inspect-brk test/code/express.js -NODE_ENV=test filesEngine
+// node --inspect-brk test/code/express.js -NODE_ENV=test defaultEnginePartialFetchHttpServer
+// node test/code/express.js -NODE_ENV=test defaultEnginePartialFetchHttpServer
 
 // TODO : ESM uncomment the following line...
 // export
@@ -40,12 +41,13 @@ class Tester {
 
   static async defaultEnginePartialFetchHttpServer() {
     const opts = baseOptions();
-    const svr = await Main.httpsServer(opts.compile);
-    opts.render.contextURL = svr.url;
-    opts.render.templateURL = svr.url;
-    opts.render.partialsURL = svr.url;
+    tmplServer = await Main.httpsServer(opts.compile);
+    // need URLs for capture during rendering
+    opts.render.templateURL = tmplServer.url;
+    opts.render.contextURL = tmplServer.url;
+    opts.render.partialsURL = tmplServer.url;
     const engine = new Engine(opts.compile, HtmlFrmt, JsFrmt, LOGGER);
-    return reqAndValidate(engine, opts.compile, `${svr.url}text.html`, opts.render);
+    return reqAndValidate(engine, opts.compile, `${tmplServer.url}text.html`, opts.render);
   }
 
   static async levelDbEngine() {
@@ -88,7 +90,10 @@ function baseOptions(dynamicIncludeURL) {
       relativeTo: Main.PATH_RELATIVE_TO,
       partialsPath: Main.PATH_HTML_PARTIALS_DIR,
       templatePath: Main.PATH_VIEWS_DIR,
-      contextPath: Main.PATH_VIEWS_DIR
+      contextPath: Main.PATH_VIEWS_DIR,
+      readFetchRequestOptions: {
+        rejectUnauthorized: false
+      }
     },
     render: {
       readFetchRequestOptions: {
@@ -109,6 +114,17 @@ async function writePartials(cachierOrOpts) {
 }
 
 async function stopServer() {
+  if (tmplServer) {
+    try {
+      if (LOGGER.info) LOGGER.info(`HTTPS template server stopping @ ${tmplServer.url}`);
+      await tmplServer.close();
+      if (LOGGER.info) LOGGER.info(`HTTPS template server stopped @ ${tmplServer.url}`);
+      tmplServer = null;
+    } catch (err) {
+      if (LOGGER.error) LOGGER.error(`HTTPS template server cannot be stopped @ ${tmplServer.url}`, err);
+      throw err;
+    }
+  }
   if (!server) return;
   let addy;
   try {
@@ -137,13 +153,13 @@ async function startServer(engine, compileOpts, context, renderOpts) {
     if (LOGGER.debug) LOGGER.debug(`Starting express server...`);
     try {
       const app = Express(), store = { engine, renderers: {} };
-      app.engine('html', async (filePath, options, callback) => {
+      app.engine('html', async function(filePath, localCtx, callback) {
         try {
           if (!store.renderers[filePath]) {
             if (LOGGER.info) LOGGER.info(`Express compiling @ ${filePath}`);
-            store.renderers[filePath] = await store.engine.compile(null, options);
+            store.renderers[filePath] = await store.engine.compile(null, compileOpts);
           }
-          callback(null, await store.renderers[filePath](context));
+          callback(null, await store.renderers[filePath](localCtx || context, renderOpts));
         } catch (err) {
           return callback(err);
         }
@@ -152,7 +168,10 @@ async function startServer(engine, compileOpts, context, renderOpts) {
       app.set('view engine', 'html'); // register the template engine
       app.get('/', function expressRootRoute(req, res) {
         if (LOGGER.info) LOGGER.info(`Express request received @ ${req.path}`);
-        res.render('template', context, renderOpts);
+        res.render('template', context, function(err, html) {
+          if (err) return res.status(500).send({ error: err.message, stack: err.stack });
+          res.send(html);
+        });
       });
       server = app.listen(PORT, HOST, () => {
         if (LOGGER.info) {

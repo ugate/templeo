@@ -12,7 +12,7 @@ const Vision = require('vision');
 // TODO : import * as Hapi from 'hapi';
 // TODO : import * as Vision from 'vision';
 
-var server;
+var server, tmplServer;
 
 // Use the following when debugging:
 // node --inspect-brk test/code/hapi-vision.js
@@ -39,16 +39,17 @@ class Tester {
 
   static async defaultEnginePartialFetchHttpServer() {
     const opts = baseOptions();
-    const svr = await Main.httpsServer(opts.compile);
-    opts.render.contextURL = svr.url;
-    opts.render.templateURL = svr.url;
-    opts.render.partialsURL = svr.url;
+    tmplServer = await Main.httpsServer(opts.compile);
+    // need URLs for capture during rendering
+    opts.render.contextURL = tmplServer.url;
+    opts.render.templateURL = tmplServer.url;
+    opts.render.partialsURL = tmplServer.url;
     const engine = new Engine(opts.compile, HtmlFrmt, JsFrmt, LOGGER);
     // Hapi will not be happy with rendering options that are not part of the vision options
     // when calling: h.view('index', context, renderOpts);
     // Need to set the legacy render options instead
     engine.legacyRenderOptions = opts.render;
-    return reqAndValidate(engine, opts.compile, `${svr.url}text.html`);
+    return reqAndValidate(engine, opts.compile, `${tmplServer.url}text.html`);
   }
 
   static async levelDbEngine() {
@@ -95,6 +96,17 @@ function baseOptions(dynamicIncludeURL) {
 }
 
 async function stopServer() {
+  if (tmplServer) {
+    try {
+      if (LOGGER.info) LOGGER.info(`HTTPS template server stopping @ ${tmplServer.url}`);
+      await tmplServer.close();
+      if (LOGGER.info) LOGGER.info(`HTTPS template server stopped @ ${tmplServer.url}`);
+      tmplServer = null;
+    } catch (err) {
+      if (LOGGER.error) LOGGER.error(`HTTPS template server cannot be stopped @ ${tmplServer.url}`, err);
+      throw err;
+    }
+  }
   if (!server) return;
   await server.stop({ timeout: 3000 });
   if (LOGGER.debug) LOGGER.debug(`Hapi.js server stopped @ ${server.info.uri}`);

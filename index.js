@@ -89,7 +89,8 @@ class Engine {
 
   /**
    * Compiles a template and returns a function that renders the template results using the passed `context` object
-   * @param {String} [content] The raw template content. Omit to load the template content from cache.
+   * @param {(String | Boolean)} [content] The raw template content, `true` to read from cache before compilation.
+   * Omit to load the template content from cache when the returned rendering function is called.
    * @param {Object} [opts] The options sent for compilation (omit to use the options set on the {@link Engine})
    * @param {URLSearchParams} [params] Any URL search parmeters that will be passed when capturing the primary `template` and/or
    * `context` when needed. Parameters can be excluded from the invocation by replacing `params` with a `callback` (e.g.
@@ -273,7 +274,8 @@ module.exports = Engine;
  * Compiles a templated segment and returns a redering function (__assumes partials are already transpiled- see {@link compile} for partial support__)
  * @private
  * @param {Object} ns The namespace of the template engine
- * @param {String} content The raw template content
+ * @param {(String | Boolean)} [content] The raw template content, `true` to read from cache before compilation.
+ * Omit to load the template content from cache when the returned rendering function is called.
  * @param {URLSearchParams} [params] Any URL search parmeters that will be passed when capturing the primary `template` and/or `context` when needed
  * @param {TemplateOpts} [options] The options that overrides the default engine options
  * @param {Object} [ropts] The object definition to be used in the template

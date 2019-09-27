@@ -128,12 +128,12 @@ class Main {
         const isContext = !isMainTmpl && req.url.endsWith(`${topts.defaultContextName}.json`);
         const baseFilePath = `${PATH_RELATIVE_TO}/${isMainTmpl ? PATH_VIEWS_DIR : isContext ? PATH_HTML_CONTEXT_DIR : PATH_HTML_PARTIALS_DIR}`;
         const mthd = req.method.toUpperCase();
+        let file, contents;
         try {
           const urlo = new URL(`${url}${req.url}`), prms = urlo.searchParams, type = prms.get('type');
           const name = `${urlo.pathname.replace(/^\/+/, '').split('.').shift()}${urlo.search}`;
           calls[name] = (calls[name] || 0) + 1;
           if (log.info) log.info(`HTTPS server received: ${url}${req.url} (name: ${name}, count: ${calls[name]})`);
-          let contents, file;
           if (name === NO_FILE_NAME) {
             file = NO_FILE_ID;
             contents = NO_FILE_HTML;
@@ -158,7 +158,7 @@ class Main {
           if (log.error) log.error(err);
           res.statusCode = 400;
           res.setHeader('Content-Type', 'text/html');
-          res.end(`Failed to ${mthd} for: ${url}${req.url}, ERROR: ${err.message} STACK: ${err.stack}`);
+          res.end(`Failed to ${mthd} for: ${url}${req.url} on file: ${file}, ERROR: ${err.message} STACK: ${err.stack}`);
         }
       });
       server.listen(port, hostname, () => {
@@ -247,11 +247,20 @@ class Main {
 
   /**
    * Runs the primary set of tests for an `Engine` for either {@link Main.expectDOM} for HTML output or {@link Main.expectJSON} for JSON output
+   * @param {Object} opts The test options
+   * @param {Boolean} [opts.read] The read flag to pass into {@link Engine.register}
+   * @param {Boolean} [opts.write] The write flag to pass into {@link Engine.register}
+   * @param {Boolean} [opts.writeTemplate] The write flag to indicate if the primary template content will be included in the passed write `data`.
+   * Only included when `opts.write` is _truthy_ (passed into {@link Engine.register}).
+   * @param {Boolean} [opts.writeContext] The write flag to indicate if the context will be included in the passed write `data`.
+   * Only included when `opts.write` is _truthy_ (passed into {@link Engine.register}).
+   * @param {Boolean} [opts.sendTemplate] The flag that indicates that the test will read/set the primary template content that
+   * will be passed into {@link Engine.compile}
+   * @param {Boolean} [opts.sendContext] The flag that indicates that the test will read/set the context that will be passed into
+   * the __rendering function__ returned from {@link Engine.compile}
    * @param {Object} [compileOpts] The options to use when calling {@link Main.init}
    * @param {Engine} [engine] The `Engine` to use when calling {@link Main.init}
    * @param {Object} [data] The template, partials and/or context to pass into {@link Engine.register}
-   * @param {Boolean} [readPartials] The read flag to pass into {@link Engine.register}
-   * @param {Boolean} [writePartials] The write flag to pass into {@link Engine.register}
    * @param {Object} [renderOpts] The options to pass into the rendering function generated from {@link Engine.compile}
    * @param {Object} [extraContext] Key/value pairs to add to the extracted context JSON
    * @returns {Object} The test object parameters that contain property/values from {@link Main.init} as well as the following:
@@ -259,26 +268,49 @@ class Main {
    * - `fn` - The rendering funtion returned from {@link Engine.compile}
    * - `result` - The rendered result from calling the rendering function
    */
-  static async baseTest(compileOpts, engine, data, readPartials, writePartials, renderOpts, extraContext) {
+  static async baseTest(opts, compileOpts, engine, data, renderOpts, extraContext) {
     const test = await Main.init(compileOpts, engine);
-    const opts = test.engine.options;
-    if (!/^html$|^json$/.test(opts.defaultExtension)) throw new Error(`Invalid TEST compileOpts.defaultExtension -> ${opts.defaultExtension}`);
-    const isJSON = opts.defaultExtension === 'json';
-    test.registerResult = data || readPartials ? await test.engine.register(data, readPartials, writePartials) : null;
-    if (log.info) log.info(`>> Compiling the "${engine.options.defaultTemplateName}" ${isJSON ? 'JSON' : 'HTML'} template...`);
-    test.fn = await test.engine.compile(isJSON ? test.json : test.html);
-    if (log.info) log.info(`<< Compiling of the "${engine.options.defaultTemplateName}" ${isJSON ? 'JSON' : 'HTML'} template complete!`);
-    expect(test.fn).to.be.function();
+    const eopts = test.engine.options;
+    if (!/^html$|^json$/.test(eopts.defaultExtension)) throw new Error(`Invalid TEST compileOpts.defaultExtension -> ${eopts.defaultExtension}`);
+    const isJSON = eopts.defaultExtension === 'json';
 
-    var context;
-    if (isJSON) context = test.jsonContext = test.jsonContext || {};
-    else context = test.htmlContext = test.htmlContext || {};
-    if (typeof extraContext === 'object') { // add extra context values
+    let context, expectedCtx = (isJSON ? test.jsonContext : test.htmlContext) || {};
+    if (expectedCtx && typeof extraContext === 'object') { // add extra context values
       for (let prop in extraContext) {
         if (!extraContext.hasOwnProperty(prop)) continue;
-        context[prop] = extraContext[prop];
+        expectedCtx[prop] = extraContext[prop];
       }
     }
+    if (opts.sendContext) context = expectedCtx;
+
+    let tmpl = isJSON ? test.json : test.html;
+    if (data || opts.read) {
+      // write the primary template and/or context when registering?
+      if (opts.write && (opts.writeTemplate || opts.writeContext)) {
+        let tmplData = opts.writeTemplate && {
+          name: engine.options.defaultTemplateName,
+          content: tmpl
+        };
+        let ctxData = opts.writeContext && {
+          name: engine.options.defaultContextName,
+          content: expectedCtx
+        };
+        if (data) {
+          data = data.slice();
+          if (tmplData) data.splice(0, 0, tmplData);
+          if (ctxData) data.push(ctxData);
+        } else data = tmplData && octxData ? [tmplData, ctxData] : tmplData ? [tmplData] : [ctxData];
+      }
+      let regInfo = log.info ? `(write: ${opts.write ? (data && data.length) || 0 : false}, read: ${opts.read}) for "${engine.options.defaultTemplateName}" ${isJSON ? 'JSON' : 'HTML'} template...` : null;
+      if (regInfo) log.info(`>> Registering ${regInfo}`);
+      test.registerResult = await test.engine.register(data, opts.read, opts.write);
+      if (regInfo) log.info(`<< Registered ${regInfo}`);
+    }
+
+    if (log.info) log.info(`>> Compiling the "${engine.options.defaultTemplateName}" ${isJSON ? 'JSON' : 'HTML'} template...`);
+    test.fn = await test.engine.compile(opts.sendTemplate ? tmpl : null);
+    if (log.info) log.info(`<< Compiling of the "${engine.options.defaultTemplateName}" ${isJSON ? 'JSON' : 'HTML'} template complete!`);
+    expect(test.fn).to.be.function();
 
     if (log.info) log.info(`>> Rendering the "${engine.options.defaultTemplateName}" ${isJSON ? 'JSON' : 'HTML'} template...`);
     test.result = await test.fn(context, renderOpts);
@@ -286,8 +318,8 @@ class Main {
       (log.debug || log.info)(`<< Rendering of the "${engine.options.defaultTemplateName}" ${isJSON ? 'JSON' : 'HTML'} template complete!`
       + (log.debug ? ` result:\n${test.result}` : ''));
     }
-    if (isJSON) Main.expectJSON(test.result, context);
-    else Main.expectDOM(test.result, context);
+    if (isJSON) Main.expectJSON(test.result, expectedCtx);
+    else Main.expectDOM(test.result, expectedCtx);
     return test;
   }
 
@@ -543,14 +575,14 @@ class Main {
    * @param {TemplateOpts} [opts.compileOpts] The compile options
    * @param {TemplateOpts} [opts.renderOpts] The render options
    * @param {Object[]} [data] Template, partials and/or context passed into {@link Engine.register}
-   * @param {Boolean} [readPartials] Passes the `read` flag into {@link Engine.register}
-   * @param {Boolean} [writePartials] Passes the `write` flag into {@link Engine.register}
+   * @param {Boolean} [read] Passes the `read` flag into {@link Engine.register}
+   * @param {Boolean} [write] Passes the `write` flag into {@link Engine.register}
    * @param {Cachier} [cachier] A {@link Cachier} that will be passed into {@link Engine.create}
    * @param {Boolean} [useServer] `true` to serve partials via {@link Main.httpsServer} and validate the call count
    * @param {Boolean} [closeServer] `true` to close the server when complete
    * @returns {Object} `test` The passed test object
    */
-  static async paramsTest(test, opts, data, readPartials, writePartials, cachier, useServer = true, closeServer = true) {
+  static async paramsTest(test, opts, data, read, write, cachier, useServer = true, closeServer = true) {
     const idPrefix = useServer ? 'inclParamFromServer_' : '';
     opts = opts || { render: {} };
     test.files = test.files || await Main.getTemplateFiles();
@@ -564,8 +596,8 @@ class Main {
         opts.render.partialsURL = test.server.url;
       }
       test.engine = test.engine || (cachier || test.cachier ? Engine.create(cachier || test.cachier) : new Engine(opts.compile, HtmlFrmt, JsFrmt, log));
-      if (data || readPartials || writePartials) {
-        await test.engine.register(data, readPartials, writePartials);
+      if (data || read || write) {
+        await test.engine.register(data, read, write);
       }
       test.renderer = test.renderer || await test.engine.compile(test.template);
       test.result = test.result || await test.renderer(test.files.htmlContext, opts.render);

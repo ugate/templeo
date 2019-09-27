@@ -30,7 +30,7 @@ console.log(rslt);
 // <html><body>Hello World!</body></html>
 ```
 
-You may have noticed that there isn't much difference between the _raw_ template example above and the _compiled_/_rendered_ template example. One advantage that an `Engine` has over parsing raw template literals is reusability. Parsing raw templates requires both the template and the context to be known up-front and leaves the template exposed to any variables that may be in scope. Using an `Engine` isolates the template variables to global scope (and `require`, when available). The rendering function can also be serialized/deserialized to a file system or other persistent source. __Although you'd typically would not need to manually serialize/deserialize rendering functions__, the example below demonstrates a simplified serialization/deserialization sequence that is typically performed by the [Cachier](Cachier.html) assigned to an `Engine`.
+You may have noticed that there isn't much difference between the _raw_ template example above and the _compiled_/_rendered_ template example. One advantage that an `Engine` has over parsing raw template literals is reusability. Parsing raw templates requires both the template and the context to be known up-front and leaves the template exposed to any variables that may be in scope. Using an `Engine` isolates the template variables to global scope (and `require`, when available). The rendering function can also be serialized/deserialized to a file system or other persistent source. __Although you'd typically would not need to manually serialize/deserialize rendering functions__, the example below demonstrates a simplified serialization/deserialization sequence that is typically performed by the [Cachier](Cachier.html) assigned to an `Engine`. There are also [other ways](#primary-template-read) to read and/or write the template content and context instead of passing them in as arguements.
 
 ```js
 // Demo purposes only:
@@ -45,10 +45,10 @@ There are many other advantages to using an `Engine` over raw template literals 
 
 #### 📃 Metadata and Context <sub id="meta-context"></sub>
 
-Each template has a finite set of variable data that is accessible from within the template itself. As seen in the previous example, there is the `context` variable that is passed into the `renderer`. Other than the supplied [directive functions](#directives), there are a few variables that are defined within scope of each template:
-- `context` The variable passed into the rendering function that is accessible to both the template being rendered and any child/partial templates that may be included within it. Also available via the [`options.varName`](module-templeo_options.html#.Options) alias (defaults to `it`).
-- `metadata` Contains metadata about the template such as the _name_ assigned to the template, _parent_ metadata when the template is nested and other data pertaining to the template compilation/rendering.
-- `params` Any [include parameters](#include-params) passed into the template. The `params` name may vary depending upon [options.includesParametersName](module-templeo_options.html#.Options).
+Each template has a finite set of variable data that is accessible from within the template scope. As seen in the previous example, there is the `context` variable that is passed into the `renderer`. Other than the supplied [directive functions](#directives), there are a few variables that are defined within scope of each template:
+- __`context`__ The variable passed into the rendering function that is accessible to both the template being rendered and any child/partial templates that may be included within it. Also available via the [`options.varName`](module-templeo_options.html#.Options) alias (defaults to `it`, e.g. `renderer({ myVar: 'Hello' })` would be accessed via `${ it.myVar } World!` and interpolated into `Hello World!`).
+- __`metadata`__ Contains metadata about the template such as the _name_ assigned to the template, _parent_ metadata when the template is nested and other data pertaining to the template compilation/rendering.
+- __`params`__ Any [include parameters](#include-params) passed into the template. The `params` name may vary depending upon [options.includesParametersName](module-templeo_options.html#.Options).
 
 ## ⚡ Directives <sub id="directives"></sub>
 
@@ -102,24 +102,28 @@ Although, we are not limited to just HTML, we'll start with some simple HTML tem
 }
 ```
 
-__Partials (render-time)__<br/>
-Assuming that the aforementioned sources are accessible from an HTTP server, we can assign a server URL to the [`options.partialsURL`](module-templeo_options.html#.Options). Any partial template that is not registered when calling [`Engine.register`](module-templeo.Engine.html#register) will be fetched from the server by appending the partial name from the include to the `partialsURL`. For example, with `partialsURL = 'https://localhost:8080'` and an `` include`first/item` ``, a read/fetch will be made to `https://localhost:8080/first/item.html` (the file extension is determined by [`options.defaultExtension`](module-templeo_options.html#.Options)).
+__The primary template (compile-time or render-time)__ <sub id="primary-template-read"></sub><br/>
+Using the example sources above, when `true` is passed as the template _content_ when calling [`Engine.compile(true)`](module-templeo.Engine.html#compile), an attempt will be made to read the primary template content __during compilation__ and will be reused for each call to the generated `renderer`. When the template _content_ is __not of type `string`__, an attempt will be made to read/fetch the content from `https://localhost:8080/template.html` _every time_ the `renderer` is called. The "template" name can be configured using [`options.defaultTemplateName`](module-templeo_options.html#.Options) and the file extension is determined by [`options.defaultExtension`](module-templeo_options.html#.Options).
 
-__The primary template (compile-time)__<br/>
-Likewise, if template _content_ is __not__ specified when calling [`Engine.compile(content)`](module-templeo.Engine.html#compile), an atempt will be made to read/fetch the content from `https://localhost:8080/template.html` during compilation. The "template" name can be configured using [`options.defaultTemplateName`](module-templeo_options.html#.Options).
+__Partials (compile-time or render-time)__<br/>
+Assuming that the aforementioned sources are accessible from an HTTP server, we can assign a server URL to the [`options.partialsURL`](module-templeo_options.html#.Options). Any partial template that are __not__ registered during compilation by calling [`Engine.register`](module-templeo.Engine.html#register) will be fetched from the server by appending the partial name from the include to the `partialsURL`. For example, with `partialsURL = 'https://localhost:8080'` and an `` include`first/item` ``, a read/fetch will be made to `https://localhost:8080/first/item.html`. The file extension is determined by [`options.defaultExtension`](module-templeo_options.html#.Options).
 
 __The context (render-time)__<br/>
-The same read/fetch criteria applies to the _context_ used when invoking the rendering function. If no context is specified when calling `renderer(context)`, an attempt will be made to read/fetch `https://localhost:9000/context.json` at render-time (assuming that [`options.contextURL`](module-templeo_options.html#.Options) is set to `https://localhost:9000`). The "context" name can be configured using [`options.defaultContextName`](module-templeo_options.html#.Options).
+The same read/fetch criteria applies to the _context_ used when invoking the rendering function. If no context is specified when calling `renderer(context)`, an attempt will be made to read/fetch `https://localhost:9000/context.json` when the renderer is called (assuming that [`options.contextURL`](module-templeo_options.html#.Options) is set to `https://localhost:9000`). The "context" name can be configured using [`options.defaultContextName`](module-templeo_options.html#.Options) and the file extension is determined by [`options.defaultContextExtension`](module-templeo_options.html#.Options).
 
 ```js
 // read the template at compile-time, the template context at render-time
 // and the partial templates as includes are encountered during render-time
 const Engine = require('templeo');
 const engine = new Engine({
-  partialsURL: 'https://localhost:8080',
-  contextURL: 'https://localhost:9000'
+  contextURL: 'https://localhost:9000',
+  partialsURL: 'https://localhost:8080'
 });
-const renderer = await engine.compile();
+// Read the template a single time during compilation
+// and use it each time the renderer is called:
+const renderer = await engine.compile(true);
+// Defer reads until the renderer is called:
+// const renderer = await engine.compile();
 const rslt = await renderer();
 console.log(rslt);
 ```
@@ -253,8 +257,8 @@ Using the sources above, the JSON could be rendered doing:
 // and the partial templates as includes are encountered during render-time
 const Engine = require('templeo');
 const engine = new Engine({
-  partialsURL: 'https://localhost:8080',
-  contextURL: 'https://localhost:9000'
+  contextURL: 'https://localhost:9000',
+  partialsURL: 'https://localhost:8080'
 });
 const renderer = await engine.compile();
 const rslt = await renderer();

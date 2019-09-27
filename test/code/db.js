@@ -36,10 +36,11 @@ class Tester {
     const engine = Engine.create(cachier);
     engines.push(engine);
     const partials = await Main.getFiles(Main.PATH_HTML_PARTIALS_DIR);
-    // write partials to DB at compile-time
-    return Main.baseTest(opts.compile, engine, partials, false, true, opts.render);
+    // write template and partials to DB at compile-time
+    return Main.baseTest({ write: true, writeTemplate: true, writeContext: true, sendTemplate: true, sendContext: true }, opts.compile, engine, partials, opts.render);
   }
 
+  // read DB entries from prior test 
   static async levelDbFromPartialsInDbCompileTimeRead() {
     const opts = baseOptions(meta);
     // partials should still be cached from previous test w/register
@@ -47,7 +48,7 @@ class Tester {
     const engine = Engine.create(cachier);
     engines.push(engine);
     // read partials from DB at compile-time
-    return Main.baseTest(opts.compile, engine, null, true, false, opts.render);
+    return Main.baseTest({ read: true }, opts.compile, engine, null, opts.render);
   }
 
   static async levelDbFromPartialsInDbRenderTimeRead() {
@@ -57,7 +58,7 @@ class Tester {
     const engine = Engine.create(cachier);
     engines.push(engine);
     // read partials from DB at render-time
-    return Main.baseTest(opts.compile, engine, null, false, false, opts.render);
+    return Main.baseTest({}, opts.compile, engine, null, opts.render);
   }
 
   static async levelDbFromPartialsInDbRenderTimeReadAndClose() {
@@ -68,7 +69,7 @@ class Tester {
     const engine = Engine.create(cachier);
     engines.push(engine);
     // read partials from DB at render-time
-    return Main.baseTest(opts.compile, engine, null, false, false, opts.render);
+    return Main.baseTest({}, opts.compile, engine, null, opts.render);
   }
 
   static async levelDbFromPartialsInDbRenderTimeReadWithSearchParams() { // test requires prior DB write from prior tests
