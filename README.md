@@ -21,7 +21,7 @@ For more details check out the tutorials and API docs!
 - __💯% PURE__ <br>
 No special syntax required! Everything is baked into the ECMAScript Template Literals specification itself! And since `templeo`/Template Literals are output-agnostic, a single `Engine` instance can output virtually any format (e.g. HTML, DOM Nodes, JSON, YAML, etc.).<br><br>
 - __🌱 Grows with the language__ <br>
-No need to update `templeo` when new features are added to the Template Literal spec. Any feature/syntax changes available within Template Literals are available for immediate use!<br><br>
+No need to update `templeo` when new features are added to the Template Literal spec. Any feature/syntax changes available within [Template Literals](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Template_literals) are available for immediate use!<br><br>
 - __🌐 Stand-Alone Rendering__ <br>
 When a template is compiled into a rendering function it's no longer dependent upon `templeo` internals to render output - making rendering functions fully __portable__! Rendering functions can even be serverd from an HTTP server or any other source without any dependencies or references back to `templeo`!<br><br>
 - __🛡️ Secure__ <br>
@@ -33,7 +33,7 @@ Compiled templates are accessible directly via the VM `sourceURL` or through mod
 - __🧠 Extensible__ <br>
 Template Literals naturally allow for any of your own helper functions to be accessible within the template literal itself as long as they are within scope of the `templeo` generated rendering function execution (or via registration). And since rendering functions are independent of `templeo`, included template content can evolve based upon a given `context` without having to be re-compiled!<br><br>
 - __🛎️ Auto Fetch__ <br>
-By default, partial template fragments can be [fetched](https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API)/[requested](https://nodejs.org/api/https.html#https_https_request_url_options_callback) __automatically__ at _compile-time_ and/or _render-time_ from an HTTP/S server. Render-time includes decouples the included template sources from the renderer allowing for newly dicovered template fragments to be included without re-compiling a new renderer!<br><br>
+By default, template(s) and rendering context can be [fetched](https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API)/[requested](https://nodejs.org/api/https.html#https_https_request_url_options_callback) __automatically__ at _compile-time_ and/or _render-time_ from an HTTP/S server. Also, render-time includes decouples the included template sources from the renderer allowing for newly dicovered template fragments to be included without re-compiling a new renderer!<br><br>
 - __🏧 Caching__ <sub id="caching"></sub><br>
 By default, templates are cached in-memory for the duration of the `Engine`/template lifespan. There are a few other extensions that may be more suitable depending upon your needs.
   - __[IndexedDB (Browser) / LevelDB (Node.js)](https://ugate.github.io/templeo/tutorial-1-cache.html#db)__<br>

@@ -19,9 +19,10 @@ lab.experiment(plan, () => {
 
   lab.test(`${plan}: HTML (cache)`, { timeout: TEST_TKO }, Tester.htmlPartialReadCache);
   lab.test(`${plan}: HTML (no-cache)`, { timeout: TEST_TKO }, Tester.htmlPartialReadNoCache);
-  lab.test(`${plan}: HTML (cache w/watch)`, { timeout: TEST_TKO }, Tester.htmlCacheWithWatch);
   lab.test(`${plan}: HTML (cache w/register)`, { timeout: TEST_TKO }, Tester.htmlCacheWithRegisterPartials);
+  lab.test(`${plan}: HTML (cache w/watch)`, { timeout: TEST_TKO }, Tester.htmlCacheWithWatch);
   lab.test(`${plan}: HTML (render-time cache)`, { timeout: TEST_TKO }, Tester.htmlRenderTimePartialReadCache);
-  lab.test(`${plan}: HTML (render-time w/watch)`, { timeout: TEST_TKO }, Tester.htmlRenderTimeCacheWithWatch);
+  lab.test(`${plan}: HTML (render-time no-cache)`, { timeout: TEST_TKO }, Tester.htmlRenderTimePartialReadNoCache);
   lab.test(`${plan}: HTML (render-time cache read/write)`, { timeout: TEST_TKO }, Tester.htmlRenderTimeReadWrite);
+  lab.test(`${plan}: HTML (render-time w/watch)`, { timeout: TEST_TKO }, Tester.htmlRenderTimeCacheWithWatch);
 });

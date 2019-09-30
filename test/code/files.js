@@ -35,6 +35,12 @@ class Tester {
     return Main.baseTest({ read: true }, opts.compile, engine);
   }
 
+  static async htmlCacheWithRegisterPartials() {
+    const opts = baseOptions();
+    const partials = await Main.getFiles(opts.compile.partialsPath, true);
+    return Main.baseTest({ read: true }, opts.compile, await getFilesEngine(opts.compile), partials);
+  }
+
   static async htmlCacheWithWatch() {
     const opts = baseOptions();
     opts.compile.watchPartials = true;
@@ -49,26 +55,9 @@ class Tester {
   }
 
   static async htmlRenderTimePartialReadNoCache() {
-    const opts = baseOptions(), engine = await getFilesEngine(opts.compile);
+    const opts = baseOptions(true), engine = await getFilesEngine(opts.compile);
     opts.render.cacheRawTemplates = false;
-    return Main.baseTest({}, opts.compile, engine);
-  }
-
-  static async htmlRenderTimeCacheWithWatch() {
-    // TODO : need to fixe render-time file watch test
-    return;
-    const opts = baseOptions(true);
-    opts.render.watchPartials = true;
-    opts.render.renderTimePolicy = 'read-all-on-init-when-empty';
-    opts.render.debugger = true;
-    const test = await Main.init(opts.compile, await getFilesEngine(opts.compile));
-    await partialFragWatch(test, opts.render);
-  }
-
-  static async htmlCacheWithRegisterPartials() {
-    const opts = baseOptions();
-    const partials = await Main.getFiles(opts.compile.partialsPath, true);
-    return Main.baseTest({ read: true }, opts.compile, await getFilesEngine(opts.compile), partials);
+    return Main.baseTest({}, opts.compile, engine, null, opts.render);
   }
 
   static async htmlRenderTimeReadWrite() {
@@ -97,6 +86,16 @@ class Tester {
     await Main.paramsTest(test, opts, null, false, false, cachier, true, true);
     // test.result updated, validate the no file element was added by the server
     Main.noFileValidate(test.dom);
+  }
+
+  static async htmlRenderTimeCacheWithWatch() {
+    // TODO : need to fixe render-time file watch test
+    const opts = baseOptions(true);
+    opts.render.watchPartials = true;
+    opts.render.renderTimePolicy = 'read-all-on-init-when-empty';
+    opts.render.debugger = true;
+    const test = await Main.init(opts.compile, await getFilesEngine(opts.compile));
+    await partialFragWatch(test, opts.render);
   }
 }
 
@@ -171,5 +170,6 @@ async function partialFragWatch(test, renderOpts, elId, name) {
       await renderFunc({}, uopts.render); // should clear the render-time watches
     }
   }
+  if (error) throw error;
   return test;
 }
