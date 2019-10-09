@@ -23,6 +23,28 @@ const params2 = {
 // export
 class Tester {
 
+  static nonCachierEngineCreate() {
+    return new Promise((resolve, reject) => {
+      setImmediate(() => {
+        let err1, err2;
+        try {
+          new Engine();
+          return resolve();
+        } catch (err) {
+          err1 = err;
+        }
+        try {
+          Engine.create({ notCachier: 'should throw error' });
+          return resolve();
+        } catch (err) {
+          err2 = err;
+        }
+        err1.createError = err2;
+        reject(err1);
+      });
+    });
+  }
+
   static async jsonRegisterPartials() {
     const opts = baseOptions();
     opts.compile.defaultExtension = opts.render.defaultExtension = 'json'; // testing json 
@@ -41,7 +63,6 @@ class Tester {
   static async htmlregisterHelper() {
     const opts = baseOptions();
     const engine = new Engine(opts.compile, HtmlFrmt, JsFrmt, LOGGER);
-
     const template = '<html><body>${ hasPerson(it) }</body></html>';
     engine.registerHelper(function hasPerson(it) {
       if (it.person && it.person.name) {
@@ -50,9 +71,7 @@ class Tester {
         return `<input id="personName" placeholder="Please enter your name">`;
       }
     });
-
     const renderer = await engine.compile(template);
-
     const contexts = [{ person: { name: 'World' } }, {}];
     let rslt, dom, els, label;
     for (let ctx of contexts) {
