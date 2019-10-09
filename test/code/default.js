@@ -29,18 +29,11 @@ class Tester {
         let err1, err2;
         try {
           new Engine();
-          return resolve();
-        } catch (err) {
-          err1 = err;
-        }
-        try {
           Engine.create({ notCachier: 'should throw error' });
-          return resolve();
+          resolve();
         } catch (err) {
-          err2 = err;
+          reject(err);
         }
-        err1.createError = err2;
-        reject(err1);
       });
     });
   }
