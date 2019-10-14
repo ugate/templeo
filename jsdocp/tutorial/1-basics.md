@@ -318,7 +318,7 @@ The `comment` directive is a standard [ECMAScript Tagged Template](https://devel
 </div>
 ```
 
-### ⁉️ Conditional Statements <sub id="conditionals"></sub>
+### ↩️ Conditional Statements <sub id="conditionals"></sub>
 
 There isn't any built-in directives for control flow since the syntax is already made available using [ternary operators](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Conditional_Operator) or a [helper directive](#helpers).
 
@@ -334,7 +334,7 @@ There isn't any built-in directives for control flow since the syntax is already
 </div>
 ```
 
-### ❔ Helper Directives <sub id="helpers"></sub>
+### 🖐️ Helper Directives <sub id="helpers"></sub>
 
 Helper directives are serializable named functions that can be accessed within template interpolations. Each function must contain a valid __name__ and should _not_ contain any external scope/closure references other than:
 - _global variables_

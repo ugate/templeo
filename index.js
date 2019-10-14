@@ -203,7 +203,7 @@ class Engine {
   }
 
   /**
-   * Registers and stores a partial template __in-memory__. Use {@link Engine.register} to write partials to cache ({@link Cachier})
+   * Registers and stores a partial template __in-memory__. Use {@link Engine.register} to `write`/_persist_ partials to cache ({@link Cachier})
    * @async
    * @param {String} name The template name that uniquely identifies the template content
    * @param {(String | URLSearchParams)} contentOrParams Either the partial template content __string__ to register _or_ the
