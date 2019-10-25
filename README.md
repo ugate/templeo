@@ -2,9 +2,10 @@
 
 # ![](https://raw.githubusercontent.com/ugate/templeo/master/jsdocp/static/favicon-32x32.png) `templeo`
 
-[![Build Status](https://img.shields.io/travis/com/ugate/templeo/master.svg?style=flat-square)](https://travis-ci.com/ugate/templeo)
-[![Dependency Status](https://img.shields.io/david/ugate/templeo.svg?style=flat-square)](https://david-dm.org/ugate/templeo)
-[![Dev Dependency Status](https://img.shields.io/david/dev/ugate/templeo.svg?style=flat-square)](https://david-dm.org/ugate/templeo?type=dev)
+[![npm version](https://badgen.net/npm/v/templeo?color=orange&icon=npm)](https://www.npmjs.com/package/templeo)
+[![Build Status](https://badgen.net/travis/ugate/templeo?icon=travis)](https://travis-ci.com/ugate/templeo)
+[![Dependency Status](https://badgen.net/david/dep/ugate/templeo)](https://david-dm.org/ugate/templeo)
+[![Dev Dependency Status](https://badgen.net/david/dev/ugate/templeo)](https://david-dm.org/ugate/templeo?type=dev)
 
 </b>
 
