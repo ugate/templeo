@@ -26,7 +26,6 @@ class Tester {
   static nonCachierEngineCreate() {
     return new Promise((resolve, reject) => {
       setImmediate(() => {
-        let err1, err2;
         try {
           new Engine();
           Engine.create({ notCachier: 'should throw error' });
@@ -51,6 +50,13 @@ class Tester {
     const engine = new Engine(opts.compile, HtmlFrmt, JsFrmt, LOGGER);
     const partials = await Main.getFiles(Main.PATH_HTML_PARTIALS_DIR);
     return Main.baseTest({ read: true, sendTemplate: true, sendContext: true }, opts.compile, engine, partials, opts.render);
+  }
+
+  static async htmlRegisterPartialsSerial() {
+    const opts = baseOptions();
+    const engine = new Engine(opts.compile, HtmlFrmt, JsFrmt, LOGGER);
+    const partials = await Main.getFiles(Main.PATH_HTML_PARTIALS_DIR);
+    return Main.baseTest({ read: true, sendTemplate: true, sendContext: true }, opts.compile, engine, partials, opts.render, null, true);
   }
 
   static async htmlregisterHelper() {

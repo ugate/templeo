@@ -1,7 +1,7 @@
 ### 🏧 The Cachier
 The [cachier](Cachier.html) handles transactions that are submitted during [Engine.registerPartial](Cachier.html#registerPartial) (memory), [Engine.register](Cachier.html#register), [Engine.registerHelper](Cachier.html#registerHelper) and any other process that handles template persistence. This also includes any `read`/`write` operations that may be responsible for retrieving or writing to a persistence store. The default `Cachier`'s persistence store is assumed to be maintained externally by an HTTP/S server and will be fetched/read and/or written to accordingly (when configured).
 
-__👓 Reading from persistence storage:__<br/>
+__📖 Reading from persistence storage:__<br/>
 [Engine.register](module-templeo-Engine.html#register) - Reads the all template sources from persistent storage that have a corresponding _name_ in the passed _data_. For example, the following reads _test1_ and _test2_ from persistent storage and stored in __memory__ for use during compilation/rendering.
 
 ```js
@@ -24,11 +24,11 @@ __✏️ Writting to persistence storage:__<br/>
 await engine.register([
   {
     name:'test1',
-    content:'Test template source ${one}'
+    content:'Test template source ${it.one}'
   },
   {
     name:'test2',
-    content:'Test template source ${two}'
+    content:'Test template source ${it.two}'
   }
 ], false, true);
 ```
@@ -37,8 +37,8 @@ __✏️ Writting directly to _memory_:__<br/>
 [Engine.registerPartial](module-templeo-Engine.html#registerPartial) - Stores a template source in __memory only__- bypassing the persistent store altogether. For example, the following will write _test1_ and _test2_ to __memory__ for use during compilation/rendering.
 
 ```js
-await engine.registerPartial('test1', 'Test template source ${one}');
-await engine.registerPartial('test2', 'Test template source ${two}');
+await engine.registerPartial('test1', 'Test template source ${it.one}');
+await engine.registerPartial('test2', 'Test template source ${it.two}');
 ```
 
 __❌ Removing from _memory_:__<br/>
@@ -56,9 +56,9 @@ __❌ Removing everything from _memory_ and persistence storage:__<br/>
 await engine.clear();
 ```
 
-All `Cachier`s inherit a __temporary memory__ space for template sources set during _registration_. The template memory space persists over the lifespan of a rendering function regardless of how many times it's called. However, due to the decoupling of generated rendering functions from depending upon `templeo`, __it's important to note that any template sources that are registered/added/updated/removed after a rendering function has been compiled, will not be reflected during subsequent rendering function calls__.
+All `Cachier`s inherit a _temporary memory_ space for template sources set during _registration_. The template memory space is sourced during compilation and only changes during rendering. In other words, state remains the same from one rendering call to the next regardless of how many times it's called. However, due to the decoupling of generated rendering functions from depending upon `templeo`, __it's important to note that any template sources that are registered/added/updated/removed after a rendering function has been compiled, will not be reflected during subsequent rendering function calls__.
 
-The __temporary memory__ space also prevents multiple fetches/`reads` for any partial that may be included more than once. However, it will not prevent multiple `reads` to includes in subsequent calls to the rendering function unless they were registered prior to compilation. To better understand what happens consider the example below.
+The _temporary memory_ space also prevents multiple fetches/`reads` for any partial that may be included more than once. However, it will not prevent multiple `reads` to includes in subsequent calls to the rendering function unless they were registered prior to compilation. To better understand what happens consider the example below.
 
 ```js
 // assume the following is served from: https://localhost:8080/template.html
@@ -188,7 +188,7 @@ The versatility of `CachierDB` really shines when using different databases/[`op
 
 #### 📁 [File System (Node.js)](https://nodejs.org/api/fs.html) <sub id="fs"></sub>
 
-Using a file system is the recommended caching mechanism to use when processing templates within a Node.js server. It offers many benefits over the default caching. One of which is that it integrates well with view plugins/middleware that expect a file system to be present. There isn't much of a need to manually register partials. Instead, they can be read from a directory/sub-directories during compilation and/or rendering initialization. Another advantage is that the file system can [watch template partial directories](#watchers) for file changes and update template content accordingly without any manual intervention. Calling [Engine.register](Cachier.html#register) with the _read_ flag set to `true` or when an [include](tutorial-1-basics.html#include) is encountered during rendering that does not have a registered template source, the follwing sequence will apply:
+Using a file system is the recommended caching mechanism to use when processing templates within a Node.js server. It offers many benefits over the default caching. One of which is that it integrates well with view plugins/middleware that expect a file system to be present. There isn't much of a need to manually register partials. Instead, they can be read from a directory/sub-directories during compilation and/or rendering initialization. Another advantage is that the file system can [watch template partial directories](#watchers) for file changes and update template content accordingly without any manual intervention. Calling [Engine.register](module-templeo-Engine.html#register) with the _read_ flag set to `true` or when an [include](tutorial-1-basics.html#include) is encountered during rendering that does not have a registered template source, the follwing sequence will apply:
 - An attempt to retrieve the template from the __rendering function's temporary memory__ will be made
 - When not in memory, an attempt to retrieve the template from the __file system__ will be made using [`options.partialsPath`](module-templeo_options.html#.FileOptions)
 - When not in the file system, an attempt to retrieve the template from __the HTTP/S [`options.partialsURL`](module-templeo_options.html#.Options)__
@@ -205,5 +205,5 @@ const cachier = new CachierFiles({
 const engine = Engine.create(cachier);
 ```
 
-__👁️ File/Directory Watchers:<sub id="watchers"></sub>__<br/><br/>
-Template directories can be automatically watched for newly create, updated and removed templates. When a newly created template file is created it will automatically be registered in memory as a new template source using a formatted version of the file name as the registered template name.
+__👁️ File/Directory Watchers:<sub id="watchers"></sub>__<br/>
+_COMING SOON IN FUTURE VERSIONS!_

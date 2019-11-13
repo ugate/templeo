@@ -336,7 +336,7 @@ There isn't any built-in directives for control flow since the syntax is already
 
 ### 🖐️ Helper Directives <sub id="helpers"></sub>
 
-Helper directives are serializable named functions that can be accessed within template interpolations. Each function must contain a valid __name__ and should _not_ contain any external scope/closure references other than:
+Helper directives are __serializable named functions__ that can be accessed within template interpolations. Each function must contain a valid __name__ and should _not_ contain any external scope/closure references other than:
 - _global variables_
 - [metadata](#meta-context)
 - [context](#meta-context)

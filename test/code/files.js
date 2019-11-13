@@ -25,39 +25,41 @@ class Tester {
   }
 
   static async htmlPartialReadCache() {
-    const opts = baseOptions(), engine = await getFilesEngine(opts.compile);
-    return Main.baseTest({ read: true, sendTemplate: true, sendContext: true }, opts.compile, engine);
+    const opts = baseOptions(), init = await initFilesEngine(opts.compile);
+    return Main.baseTest({ read: true, sendTemplate: true, sendContext: true }, opts.compile, init.engine);
   }
 
   static async htmlPartialReadNoCache() {
-    const opts = baseOptions(), engine = await getFilesEngine(opts.compile);
+    const opts = baseOptions(), init = await initFilesEngine(opts.compile);
     opts.compile.cacheRawTemplates = false;
-    return Main.baseTest({ read: true }, opts.compile, engine);
+    return Main.baseTest({ read: true }, opts.compile, init.engine);
   }
 
   static async htmlCacheWithRegisterPartials() {
     const opts = baseOptions();
     const partials = await Main.getFiles(opts.compile.partialsPath, true);
-    return Main.baseTest({ read: true }, opts.compile, await getFilesEngine(opts.compile), partials);
+    const init = await initFilesEngine(opts.compile);
+    return Main.baseTest({ read: true }, opts.compile, init.engine, partials);
   }
 
   static async htmlCacheWithWatch() {
     const opts = baseOptions();
-    opts.compile.watchPartials = true;
-    const test = await Main.init(opts.compile, await getFilesEngine(opts.compile));
+    opts.compile.watchPaths = true;
+    const init = await initFilesEngine(opts.compile);
+    const test = await Main.init(opts.compile, init.engine);
     await test.engine.register(null, true);
-    return partialFragWatch(test, LOGGER);
+    return partialFragWatch(init, test, LOGGER, opts.render);
   }
 
   static async htmlRenderTimePartialReadCache() {
-    const opts = baseOptions(true), engine = await getFilesEngine(opts.compile);
-    return Main.baseTest({}, opts.compile, engine, null, opts.render);
+    const opts = baseOptions(true), init = await initFilesEngine(opts.compile);
+    return Main.baseTest({}, opts.compile, init.engine, null, opts.render);
   }
 
   static async htmlRenderTimePartialReadNoCache() {
-    const opts = baseOptions(true), engine = await getFilesEngine(opts.compile);
+    const opts = baseOptions(true), init = await initFilesEngine(opts.compile);
     opts.render.cacheRawTemplates = false;
-    return Main.baseTest({}, opts.compile, engine, null, opts.render);
+    return Main.baseTest({}, opts.compile, init.engine, null, opts.render);
   }
 
   static async htmlRenderTimeReadWrite() {
@@ -93,10 +95,11 @@ class Tester {
   static async htmlRenderTimeCacheWithWatch() {
     // need to use compile options with paths set so they match the registered test fragment path
     const opts = baseOptions(true), copts = baseOptions();
-    opts.render.watchPartials = true;
+    opts.render.watchPaths = true;
     opts.render.renderTimePolicy = 'read-all-on-init-when-empty';
-    const test = await Main.init(copts.compile, await getFilesEngine(copts.compile));
-    await partialFragWatch(test, LOGGER, opts.render);
+    const init = await initFilesEngine(copts.compile);
+    const test = await Main.init(copts.compile, init.engine);
+    await partialFragWatch(init, test, LOGGER, opts.render);
   }
 }
 
@@ -125,21 +128,21 @@ function baseOptions(renderTime) {
   };
 }
 
-async function getFilesEngine(opts) {
+async function initFilesEngine(opts) {
   if (engine) await engine.clearCache(true); // cleanup temp files
   const cachier = new CachierFiles(opts, HtmlFrmt, JsFrmt, LOGGER);
   engine = Engine.create(cachier);
-  return engine;
+  return { cachier, engine };
 }
 
-async function partialFragWatch(test, log, renderOpts, elId, name) {
+async function partialFragWatch(init, test, log, renderOpts, elId, name) {
   const opts = test.engine.options;
-  if (!opts.watchPartials && (!renderOpts || !renderOpts.watchPartials)) {
-    throw new Error(`The "watchPartials" option must be set on the compile-time or render-time options to test file watches`);
+  if (!opts.watchPaths && (!renderOpts || !renderOpts.watchPaths)) {
+    throw new Error(`The "watchPaths" option must be set on the compile-time or render-time options to test file watches`);
   }
   test.frag = { elementId: elId || 'test-partial-add', name: name || 'watch-test' };
   test.frag.htmlInit = 'pre-watch-fragment';
-  test.frag.html = `<div id="${test.frag.elementId}"></div>`;
+  test.frag.html = `<div id="${test.frag.elementId}">File watcher added data!</div>`;
   /* jSDOM escapes templeo template syntax causing errors
   const udom = new JSDOM(test.html);
   udom.window.document.body.append(`\${ include\`${test.frag.name}\` }`);
@@ -152,50 +155,40 @@ async function partialFragWatch(test, log, renderOpts, elId, name) {
   const relativeTo = (renderOpts && renderOpts.relativeTo) || opts.relativeTo;
   const partialsPath = (renderOpts && renderOpts.partialsPath) || opts.partialsPath;
   test.frag.path = `${Path.join(relativeTo, partialsPath, test.frag.name)}.html`;
-  await Fs.promises.writeFile(test.frag.path, test.frag.htmlInit);
-  const triggerWatch = async isCompile => {
-    if (log && log.info) {
-      log.info(`TEST: ✏️ Changing watched "${test.frag.name}" @ Element ID "${test.frag.elementId}" (${isCompile ? 'compile' : 'render'}-time)`);
-    }
-    await Fs.promises.writeFile(test.frag.path, test.frag.html);
-    // give the watch some time to detect the changes
-    return Main.wait(PARTIAL_DETECT_DELAY_MS);
-  };
+  await writeWatch(test, log, false, opts.watchPaths);
 
-  let renderFunc, error;
+  let renderFunc, error, parts;
   try {
-    if (renderOpts && renderOpts.watchPartials) {
-      // need to register the inital test fragment so it is not read at render-time due to being empty
-      // this will allow the watch to be tested without a render-time read interfering
-      await test.engine.registerPartial(test.frag.name, test.frag.htmlInit);
+    // initial compile test and validation
+    renderFunc = await compileWatchTest(test, log, opts.watchPaths);
+    if (opts.watchPaths) {
+      // change the file contents that should trigger the compile-time watch to update the registered partial
+      await writeWatch(test, log, true, opts.watchPaths);
+      // check that the watch change was captured and reflected in a newly compiled rendering function
+      renderFunc = await compileWatchTest(test, log, true);
+      // render and validate the renderer has the watched changes
+      await renderWatchTest(test, log, renderFunc, renderOpts);
+    } else {
+      parts = {};
+      // render with initial unchanged partial and begin watch
+      await renderWatchTest(test, log, renderFunc, renderOpts, parts);
+      // change the file contents that should trigger the render-time watch to update the registered partial
+      await writeWatch(test, log, true);
+      // check the result and make sure the test partial was detected
+      await renderWatchTest(test, log, renderFunc, null, parts); // null for render opts since we don't need to watch again
     }
-    // compile the HTML with the watched partial
-    renderFunc = await test.engine.compile(test.html);
-    // change the file contents that should trigger the watch to update the registered partial
-    if (opts.watchPartials) await triggerWatch(true);
-    // check the result and make sure the test partial was detected
-    let rslt = await renderFunc(test.htmlContext, renderOpts);
-    let dom = new JSDOM(rslt), prtl = dom.window.document.getElementById(test.frag.elementId);
-    if (renderOpts && renderOpts.watchPartials) {
-      dom = new JSDOM(rslt), prtl = dom.window.document.getElementById(test.frag.elementId);
-      expect(prtl, `File watch for template partial "${test.frag.name}" @ Element ID "${test.frag.elementId}" (pre-change)`).null();
-      await triggerWatch();
-      rslt = await renderFunc(test.htmlContext, renderOpts);
-    }
-    expect(prtl, `File watch for template partial "${test.frag.name}" @ Element ID "${test.frag.elementId}"`).not.null();
-    Main.expectDOM(rslt, test.htmlContext);
   } catch (err) {
     error = err;
   } finally {
     await Fs.promises.unlink(test.frag.path); // remove test fragment
-    if (opts.watchPartials) {
+    if (opts.watchPaths) {
       if (log && log.info) log.info(`TEST: ♻️ Clearing watchers (compile-time)`);
       await engine.clearCache(true); // should clear the compile-time cache/watches
-    } else if (renderFunc && renderOpts && renderOpts.watchPartials) {
+    } else if (renderFunc && renderOpts && renderOpts.watchPaths) {
       try {
         if (log && log.info) log.info(`TEST: ♻️ Clearing watchers (render-time)`);
         const uopts = baseOptions(true);
-        uopts.render.unwatchPartials = true;
+        uopts.render.unwatchPaths = true;
         await renderFunc({}, uopts.render); // should clear the render-time watches
       } catch (err) {
         if (!error) throw err;
@@ -205,4 +198,47 @@ async function partialFragWatch(test, log, renderOpts, elId, name) {
   }
   if (error) throw error;
   return test;
+}
+
+async function compileWatchTest(test, log, isCompileWatch) {
+  if (log && log.info) {
+    log.info(`TEST: 🐞 Compiling for "${test.frag.name}" @ Element ID "${test.frag.elementId}" (${isCompileWatch ? 'compile' : 'render'}-time watch)`);
+  }
+  // need to register the inital test fragment so it is not read at render-time since it will be missing/empty otherwise
+  // this will allow the watch to be tested without a render-time read interfering
+  await test.engine.registerPartial(test.frag.name, test.frag.htmlInit);
+  // compile the HTML with the watched partial
+  const renderFunc = await test.engine.compile(test.html);
+  const reg = await test.engine.getRegistered(test.frag.name);
+  expect(reg && reg.content, `Registered "${test.frag.name}"`).equals(test.frag.htmlInit);
+  expect(renderFunc, `Rendering Function for "${test.frag.name}"`).to.be.function();
+  return renderFunc;
+}
+
+async function writeWatch(test, log, update, isCompileWatch) {
+  if (log && log.info) {
+    log.info(`TEST: 🐞 ${update ? 'Changing' : 'Initializing'} watched "${test.frag.name}" @ Element ID "${test.frag.elementId}" (${isCompileWatch ? 'compile' : 'render'}-time watch)`);
+  }
+  await Fs.promises.writeFile(test.frag.path, update ? test.frag.html : test.frag.htmlInit);
+  // give the watch some time to detect the changes
+  if (update) await Main.wait(PARTIAL_DETECT_DELAY_MS);
+  const reg = await test.engine.getRegistered(test.frag.name);
+  expect(reg && reg.content, `Registered "${test.frag.name}"`).equals(update ? test.frag.html : test.frag.htmlInit);
+}
+
+async function renderWatchTest(test, log, renderFunc, renderOpts, parts) {
+  if (log && log.info) {
+    log.info(`TEST: 🐞 Rendering for "${test.frag.name}" @ Element ID "${test.frag.elementId}" (${!parts ? 'compile' : 'render'}-time watch)`);
+  }
+  let rslt = await renderFunc(test.htmlContext, renderOpts, null, null, parts);
+  let dom = new JSDOM(rslt), prtl = dom.window.document.getElementById(test.frag.elementId);
+  /*if (renderOpts && renderOpts.watchPaths) {
+    dom = new JSDOM(rslt), prtl = dom.window.document.getElementById(test.frag.elementId);
+    expect(prtl, `File watch for template partial "${test.frag.name}" @ Element ID "${test.frag.elementId}" (pre-change)`).null();
+    await writeWatch(test, log);
+    rslt = await renderFunc(test.htmlContext, renderOpts);
+  }*/
+  expect(prtl, `File watch for template partial "${test.frag.name}" @ Element ID "${test.frag.elementId}"`).not.null();
+  Main.expectDOM(rslt, test.htmlContext);
+  return rslt;
 }

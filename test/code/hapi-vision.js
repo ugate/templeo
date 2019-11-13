@@ -3,8 +3,8 @@
 const { LOGGER, Engine, HtmlFrmt, JsFrmt, Main } = require('./_main.js');
 const CachierDB = require('../../lib/cachier-db.js');
 const CachierFiles = require('../../lib/cachier-files.js');
-const Hapi = require('hapi');
-const Vision = require('vision');
+const Hapi = require('@hapi/hapi');
+const Vision = require('@hapi/vision');
 // ESM uncomment the following lines...
 // TODO : import { LOGGER, Engine, HtmlFrmt, JsFrmt, Main } from './_main.mjs';
 // TODO : import * as CachierDB from '../../lib/cachier-db.mjs';

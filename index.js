@@ -95,28 +95,33 @@ class Engine {
    * @param {URLSearchParams} [params] Any URL search parmeters that will be passed when capturing the primary `template` and/or
    * `context` when needed. Parameters can be excluded from the invocation by replacing `params` with a `callback` (e.g.
    * `compile(content, opts, callback)`).
-   * @param {Function} [callback] Optional _callback style_ support __for LEGACY-ONLY APIs__:  
+   * @param {Function} [legacyCallback] Optional _callback style_ support __for LEGACY-ONLY APIs__:  
    * `compile(content, opts, (error, (ctx, opts, cb) => cb(error, results)) => {})` or omit to run via
    * `await compile(content, opts)`. __Omission will return the normal stand-alone renderer that can be serialized/deserialized.
-   * When a _callback function_ is specified, serialization/deserialization of the rendering function will not be possible!__
+   * When a _legacy callback function_ is specified, serialization/deserialization of the rendering function will not be possible!__
+   * In _legacy_ mode {@link Engine.legacyRenderOptions} will be used during any rendering call that does not pass rendering options
+   * or passes rendering options that does not contain any properties.
    * @returns {Function} The rendering `async function` that returns a template result string based upon the provided context.
    * The following arguments apply:
    * 1. _{Object}_ `context` The context JSON that can be used as data during rendering
-   * 1. _{TemplateOpts}_ `[renderOptions]` The rendering options that will superceed any options set on the {@link Engine}
+   * 1. _{TemplateOpts}_ `[renderOptions]` The rendering options that will superceed any __compile-time__ options
    * 1. _{Function}_ `[readFormatter]` The function that will format read partials during include discovery (if any). The
    * formatting function takes 1 or 2 arguments with the first being the content that will be formatted and the second being
    * the `options.readFormatOptions`. The returned result should be a valid string.
    * 1. _{Function}_ `[writeFormatter]` The function that will format written sources during include discovery (if any). The
    * formatting function takes 1 or 2 arguments with the first being the content that will be formatted and the second being
    * the `options.writeFormatOptions`. The returned result should be a valid string.
+   * 1. _{Object}_ `[sharedStore]` An object used for _in-memory_ storage space that can be shared between rendering functions.
+   * This ensures that updated data within a renderer execution will be retained between rendering calls from the same renderer
+   * or different renderers that are passed the same _shared store_.
    */
-  async compile(content, opts, params, callback) { // ensures partials are included in the compilation
+  async compile(content, opts, params, legacyCallback) { // ensures partials are included in the compilation
     const ns = internal(this);
     opts = opts || {};
     var fn, error;
-    callback = typeof params === 'function' ? params : callback;
+    legacyCallback = typeof params === 'function' ? params : legacyCallback;
     params = params instanceof URLSearchParams ? params : null;
-    if (callback) {
+    if (legacyCallback) {
       if (ns.at.cache.log.info) {
         ns.at.cache.log.info('Compiling template w/callback style conventions');
       }
@@ -126,7 +131,7 @@ class Engine {
         error = err;
       }
       // legacy callback-style rendering :(
-      callback(error, async (ctx, opts, cb) => {
+      legacyCallback(error, async (ctx, opts, cb) => {
         try {
           // opts.constructor.isPrototypeOf(ns.at.cache.options.constructor)
           if (!opts || !Object.getOwnPropertyNames(opts).length) {
@@ -161,6 +166,20 @@ class Engine {
   set legacyRenderOptions(opts) {
     const ns = internal(this);
     ns.at.legacyRenderOptions = opts instanceof TemplateOpts ? opts : new ns.at.cache.options.constructor(opts);
+  }
+
+  /**
+   * Retrieves a template, partial or context that resides __in-memory__.
+   * @async
+   * @param {String} name The name that uniquely identifies the template, partial or context
+   * @param {URLSearchParams} [params] Any parameters designated during {@link Engine.registerPartial}
+   * @param {String} [extension=options.defaultExtension] Optional override for a file extension designation
+   * for the template, partial or context designated during {@link Engine.registerPartial}
+   * @returns {Object} A copy of the generated data from {@link Engine.registerPartial}
+   */
+  getRegistered(name, params, extension) {
+    const ns = internal(this);
+    return ns.at.cache.getRegistered(name, params, extension);
   }
 
   /**

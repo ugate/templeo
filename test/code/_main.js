@@ -22,9 +22,9 @@ const Fs = require('fs');
 exports.Fs = Fs;
 const Path = require('path');
 exports.Path = Path;
-const { expect } = require('code');
+const { expect } = require('@hapi/code');
 exports.expect = expect;
-const Lab = require('lab');
+const Lab = require('@hapi/lab');
 exports.Lab = Lab;
 const HtmlFrmt = require('js-beautify').html;
 const JsFrmt = require('js-beautify').js;
@@ -36,6 +36,7 @@ const Level = require('level');
 exports.Level = Level;
 const Engine = require('../../index.js');
 const TemplateOpts = require('../../lib/template-options.js');
+const Sandbox = require('../../lib/sandbox.js');
 exports.Engine = Engine;
 exports.PLAN = 'Template Engine';
 exports.TASK_DELAY = 500;
@@ -263,12 +264,13 @@ class Main {
    * @param {Object} [data] The template, partials and/or context to pass into {@link Engine.register}
    * @param {Object} [renderOpts] The options to pass into the rendering function generated from {@link Engine.compile}
    * @param {Object} [extraContext] Key/value pairs to add to the extracted context JSON
+   * @param {Boolean} [serializeRenderer] Set to true to serialize/deserialize {@link Main.serializeDeserializeRenderer} 
    * @returns {Object} The test object parameters that contain property/values from {@link Main.init} as well as the following:
    * - `registerResult` - Result from calling {@link Engine.register} when called
    * - `fn` - The rendering funtion returned from {@link Engine.compile}
    * - `result` - The rendered result from calling the rendering function
    */
-  static async baseTest(opts, compileOpts, engine, data, renderOpts, extraContext) {
+  static async baseTest(opts, compileOpts, engine, data, renderOpts, extraContext, serializeRenderer) {
     const test = await Main.init(compileOpts, engine);
     const eopts = test.engine.options;
     if (!/^html$|^json$/.test(eopts.defaultExtension)) throw new Error(`Invalid TEST compileOpts.defaultExtension -> ${eopts.defaultExtension}`);
@@ -312,6 +314,11 @@ class Main {
     if (log.info) log.info(`<< Compiling of the "${engine.options.defaultTemplateName}" ${isJSON ? 'JSON' : 'HTML'} template complete!`);
     expect(test.fn).to.be.function();
 
+    if (serializeRenderer) {
+      if (log.info) log.info(`<> Serializing/Deserializing rendering function for "${engine.options.defaultTemplateName}" ${isJSON ? 'JSON' : 'HTML'} template...`);
+      Main.serializeDeserializeRenderer(test);
+    }
+
     if (log.info) log.info(`>> Rendering the "${engine.options.defaultTemplateName}" ${isJSON ? 'JSON' : 'HTML'} template...`);
     test.result = await test.fn(context, renderOpts);
     if (log.info || log.debug) {
@@ -321,6 +328,20 @@ class Main {
     if (isJSON) Main.expectJSON(test.result, expectedCtx);
     else Main.expectDOM(test.result, expectedCtx);
     return test;
+  }
+
+  /**
+   * Serializes/Deserializes the rendering function before rendering execution to ensure a decoupled nature of a generated renderer
+   * @param {Object} test An object generated from {@link Main.init}
+   * @param {Function} test.fn The rendering function that will be serialized/deserialized
+   * @param {Boolean} [useSandbox] Flag to indicate whether or not {@link Sandbox.serialzeFunction} and {@link Sandbox.deserialzeFunction}
+   * are used. Otherwise, _raw_ function serialization/deserialization is used
+   */
+  static serializeDeserializeRenderer(test, useSandbox) {
+    test.fn = useSandbox ? Sandbox.serialzeFunction(test.fn) : test.fn.toString();
+    expect(test.fn).to.be.string();
+    test.fn = useSandbox ? Sandbox.deserialzeFunction(test.fn) : (new Function(`return ${test.fn}`))();
+    expect(test.fn).to.be.function();
   }
 
   /**
