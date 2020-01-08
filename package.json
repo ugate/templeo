@@ -9,9 +9,9 @@
     "jsdocp-deploy": "jsdocp -D ./jsdocp/jsdoc.json"
   },
   "scripts": {
-    "test": "lab -v -c --coverage-exclude lib -t 70 -e prod",
-    "testing": "lab -v -c --coverage-exclude lib -t 70 -e test",
-    "test-debug": "lab -v -c --coverage-exclude lib -t 70 -e dev",
+    "test": "lab -v -c --coverage-exclude lib -t 74 -e prod",
+    "testing": "lab -v -c --coverage-exclude lib -t 74 -e test",
+    "test-debug": "lab -v -c --coverage-exclude lib -t 74 -e dev",
     "jsdocp": "jsdocp ./jsdocp/jsdoc.json",
     "jsdocp-deploy": "jsdocp -D ./jsdocp/jsdoc.json"
   },
@@ -35,11 +35,11 @@
   },
   "dependencies": {},
   "devDependencies": {
-    "express": "^4.17.1",
+    "@hapi/code": "^8.0.1",
     "@hapi/hapi": "^18.4.0",
+    "@hapi/lab": "^22.0.3",
     "@hapi/vision": "^5.5.4",
-    "@hapi/lab": "^21.0.0",
-    "@hapi/code": "^7.0.0",
+    "express": "^4.17.1",
     "js-beautify": "^1.10.2",
     "jsdoc": "^3.6.3",
     "jsdocp": "^1.0.3",
