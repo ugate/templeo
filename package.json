@@ -37,14 +37,14 @@
   "devDependencies": {
     "@hapi/code": "^8.0.1",
     "@hapi/hapi": "^19.1.1",
-    "@hapi/lab": "^22.0.3",
+    "@hapi/lab": "^22.0.4",
     "@hapi/vision": "^6.0.0",
     "express": "^4.17.1",
     "js-beautify": "^1.10.3",
     "jsdoc": "^3.6.3",
     "jsdocp": "^1.0.3",
-    "jsdom": "^16.2.0",
-    "level": "^6.0.0",
+    "jsdom": "^16.2.1",
+    "level": "^6.0.1",
     "minami": "^1.2.3",
     "node-forge": "^0.9.1"
   },
