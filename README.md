@@ -6,6 +6,7 @@
 [![Build Status](https://badgen.net/travis/ugate/templeo?icon=travis)](https://travis-ci.com/ugate/templeo)
 [![Dependency Status](https://badgen.net/david/dep/ugate/templeo)](https://david-dm.org/ugate/templeo)
 [![Dev Dependency Status](https://badgen.net/david/dev/ugate/templeo)](https://david-dm.org/ugate/templeo?type=dev)
+[![Inline docs](https://inch-ci.org/github/ugate/templeo.svg?branch=master)](https://inch-ci.org/github/ugate/templeo)
 
 </b>
 
