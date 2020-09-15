@@ -46,7 +46,7 @@
     "jsdom": "^16.2.2",
     "level": "^6.0.1",
     "minami": "^1.2.3",
-    "node-forge": "^0.9.1"
+    "node-forge": "^0.10.0"
   },
   "files": [
     "/index.js",
