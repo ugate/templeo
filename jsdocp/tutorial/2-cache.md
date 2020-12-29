@@ -206,4 +206,46 @@ const engine = Engine.create(cachier);
 ```
 
 __👁️ File/Directory Watchers:<sub id="watchers"></sub>__<br/>
-_COMING SOON IN FUTURE VERSIONS!_
+_COMING SOON IN FUTURE VERSIONS_
+<!--
+Template directories can be automatically watched for newly create, updated and removed templates. When a newly created template file or existing template file is detected, it will automatically be (re-)[registered](module-templeo-Engine.html#registerPartial) in memory as a new or updated template source using a formatted version of the file name as the registered template name. Likewise, any file that is removed will be [unregistered](module-templeo-Engine.html#unregister).
+
+As mentioned before, each rendering function is isolated from any `templeo` specific implementation. So, in order to capture changes requires a shared resource between compilation resources in the engine and between rendering functions. The way this is handled it through the `watchPaths` flag. When the option is set to _true_, the `watchPaths` option value is set to a mutable array of objects
+
+To illustrate, we can set `watchPaths` to true at _compile-time_ and then update the template sources manually, but typically that would be done by some unknown external source:
+
+```js
+const Fs = require('fs');
+const Engine = require('templeo'), CachierFiles = require('templeo/lib/cachier-files');
+
+const cachier = new CachierFiles({
+  watchPaths: true
+});
+const engine = Engine.create(cachier);
+
+// register old content
+await engine.registerPartial('myTest', 'My test for ${ it.name }');
+const renderer = await test.engine.compile('<html><body>${ await include`myTest` }</body></html>');
+
+// change or create the file contents somehow
+await Fs.promises.writeFile('views/partials/myTest.html', 'My UPDATED test for ${ it.name }');
+// give the watch some time to detect the changes
+await wait(100);
+
+const rslt = await renderer({ name: 'file watchers' });
+// rslt:
+// <html><body>My test for file watchers</body></html>
+
+// demo helper function that simulates delays async
+function wait(delay, val, rejectIt) {
+  return new Promise((resolve, reject) => {
+    setTimeout(() => {
+      if (rejectIt) reject(val instanceof Error ? val : new Error(val));
+      else resolve(val);
+    }, delay);
+  });
+}
+```
+
+It's important to note that since compiled renderering functions are isolated/independent of any `templeo` specific code, that _render-time_ watchers may not operate in the fashion that may be expected. First, the rendering function contains it's own _memory space_. When the `watchPaths` is set at compile-time, it will handle all the file changes for any of the rendering functions that are generated. The exeption would be if the 
+-->
