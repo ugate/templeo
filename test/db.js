@@ -13,7 +13,7 @@ const plan = `${PLAN} IndexedDB`;
 
 // "node_modules/.bin/lab" test/db.js -vi 1
 
-lab.experiment(plan, async () => {
+lab.experiment(plan, () => {
 
   lab.before(Tester.before);
   lab.after(Tester.after);
