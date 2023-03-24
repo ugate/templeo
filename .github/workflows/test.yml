@@ -19,9 +19,5 @@ jobs:
           # always-auth: true
           node-version: ${{ matrix.node-version }}
           registry-url: https://registry.npmjs.org
-      - name: Test Using Node.js ${{ matrix.node-version }} 🐞
-        with:
-          # always-auth: true
-          node-version: ${{ matrix.node-version }}
-          registry-url: https://registry.npmjs.org
+      - name: Test 🐞
         run: npm ci && npm run build --if-present && npm test
