@@ -1,5 +1,7 @@
+# The Basics
+
 ### 🏎️ The Template Engine
-At the heart of template compilation/rendering is the [Template Engine](module-templeo-Engine.html). It handles compiling features, options and any number of nested "_partial_" templates into a __stand-alone__ rendering function that __can be ran in either the same VM in which it was compiled or an entirely new VM!__ Rendering functions are fully independent from _any_ internal or external dependencies and can be serialized/deserialized on-demand. They are responsible for outputting parsed [template literal expressions](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Template_literals) using a specified JSON context as a primary datasource for rendering. The `Engine` handles _partial_ template fragments that may be included/nested within other template(s) that are being rendered. Any distribution of included partial templates can be resolved/loaded/read during __compile-time__ or __render-time__. This flexibility allows for some partial template inclusions to be loaded during compilation while others can be loaded when the template(s) are actually encountered during rendering.
+At the heart of template compilation/rendering is the [Template Engine](/api/engine). It handles compiling features, options and any number of nested "_partial_" templates into a __stand-alone__ rendering function that __can be ran in either the same VM in which it was compiled or an entirely new VM!__ Rendering functions are fully independent from _any_ internal or external dependencies and can be serialized/deserialized on-demand. They are responsible for outputting parsed [template literal expressions](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Template_literals) using a specified JSON context as a primary datasource for rendering. The `Engine` handles _partial_ template fragments that may be included/nested within other template(s) that are being rendered. Any distribution of included partial templates can be resolved/loaded/read during __compile-time__ or __render-time__. This flexibility allows for some partial template inclusions to be loaded during compilation while others can be loaded when the template(s) are actually encountered during rendering.
 
 > TOC
 - [Metadata &amp; Context](#meta-context)
@@ -30,7 +32,7 @@ console.log(rslt);
 // <html><body>Hello World!</body></html>
 ```
 
-You may have noticed that there isn't much difference between the _raw_ template example above and the _compiled_/_rendered_ template example. One advantage that an `Engine` has over parsing raw template literals is reusability. Parsing raw templates requires both the template and the context to be known up-front and leaves the template exposed to any variables that may be in scope. Using an `Engine` isolates the template variables to global scope (and `require`, when available). The rendering function can also be serialized/deserialized to a file system or other persistent source. __Although you'd typically would not need to manually serialize/deserialize rendering functions__, the example below demonstrates a simplified serialization/deserialization sequence that is typically performed by the [Cachier](Cachier.html) assigned to an `Engine`. There are also [other ways](#primary-template-read) to read and/or write the template content and context instead of passing them in as arguements.
+You may have noticed that there isn't much difference between the _raw_ template example above and the _compiled_/_rendered_ template example. One advantage that an `Engine` has over parsing raw template literals is reusability. Parsing raw templates requires both the template and the context to be known up-front and leaves the template exposed to any variables that may be in scope. Using an `Engine` isolates the template variables to global scope (and `require`, when available). The rendering function can also be serialized/deserialized to a file system or other persistent source. __Although you'd typically would not need to manually serialize/deserialize rendering functions__, the example below demonstrates a simplified serialization/deserialization sequence that is typically performed by the [Cachier](/api/lib/cachier) assigned to an `Engine`. There are also [other ways](#primary-template-read) to read and/or write the template content and context instead of passing them in as arguements.
 
 ```js
 // Demo purposes only:
@@ -46,9 +48,9 @@ There are many other advantages to using an `Engine` over raw template literals 
 #### 📃 Metadata and Context <sub id="meta-context"></sub>
 
 Each template has a finite set of variable data that is accessible from within the template scope. As seen in the previous example, there is the `context` variable that is passed into the `renderer`. Other than the supplied [directive functions](#directives), there are a few variables that are defined within scope of each template:
-- __`context`__ The variable passed into the rendering function that is accessible to both the template being rendered and any child/partial templates that may be included within it. Also available via the [`options.varName`](module-templeo_options.html#.Options) alias (defaults to `it`, e.g. `renderer({ myVar: 'Hello' })` would be accessed via `${ it.myVar } World!` and interpolated into `Hello World!`).
+- __`context`__ The variable passed into the rendering function that is accessible to both the template being rendered and any child/partial templates that may be included within it. Also available via the [`options.varName`](/api/lib/template-options) alias (defaults to `it`, e.g. `renderer({ myVar: 'Hello' })` would be accessed via `${ it.myVar } World!` and interpolated into `Hello World!`).
 - __`metadata`__ Contains metadata about the template such as the _name_ assigned to the template, _parent_ metadata when the template is nested and other data pertaining to the template compilation/rendering.
-- __`params`__ Any [include parameters](#include-params) passed into the template. The `params` name may vary depending upon [options.includesParametersName](module-templeo_options.html#.Options).
+- __`params`__ Any [include parameters](#include-params) passed into the template. The `params` name may vary depending upon [options.includesParametersName](/api/lib/template-options).
 
 ## ⚡ Directives <sub id="directives"></sub>
 
@@ -61,9 +63,9 @@ Directives are functions that assist in the templatating process to ease the amo
 
 ### 🔗 include <sub id="include"></sub>
 
-The `include` _directive_ provides a standard [ECMAScript Tagged Template](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Template_literals#Tagged_templates) _async_ function that accepts a template literal and loads/outputs one or more resolved partial templates that have a matching partial `name` used during [registration](module-templeo.Engine.html#registerPartial).
+The `include` _directive_ provides a standard [ECMAScript Tagged Template](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Template_literals#Tagged_templates) _async_ function that accepts a template literal and loads/outputs one or more resolved partial templates that have a matching partial `name` used during [registration](/api/engine).
 
-> There are many different ways an `include` can capture/read template __content__ and/or __context__. The built-in technique is either _manual registration_ or reading/loading them via [HTTP client requests](Cachier.html). Reads can also come from a [file system](index.html#caching), a [database](index.html#caching) or any other desired source. What happens when a `read` takes place is determined by the [Cachier](Cachier.html) used on the `Engine` using [`Engine.create(cachier:Cachier)`](module-templeo.Engine.html#.create).
+> There are many different ways an `include` can capture/read template __content__ and/or __context__. The built-in technique is either _manual registration_ or reading/loading them via [HTTP client requests](/api/lib/cachier). Reads can also come from a [file system](/#caching), a [database](/#caching) or any other desired source. What happens when a `read` takes place is determined by the [Cachier](/api/lib/cachier) used on the `Engine` using [`Engine.create(cachier:Cachier)`](/api/engine).
 
 Although, we are not limited to just HTML, we'll start with some simple HTML templates to illustrate basic `include` usage. Assume that we have the following templates and context...
 
@@ -103,13 +105,13 @@ Although, we are not limited to just HTML, we'll start with some simple HTML tem
 ```
 
 __The primary template (compile-time or render-time)__ <sub id="primary-template-read"></sub><br/>
-Using the example sources above, when `true` is passed as the template _content_ when calling [`Engine.compile(true)`](module-templeo.Engine.html#compile), an attempt will be made to read the primary template content __during compilation__ and will be reused for each call to the generated `renderer`. When the template _content_ is __not of type `string`__, an attempt will be made to read/fetch the content from `https://localhost:8080/template.html` _every time_ the `renderer` is called. The "template" name can be configured using [`options.defaultTemplateName`](module-templeo_options.html#.Options) and the file extension is determined by [`options.defaultExtension`](module-templeo_options.html#.Options).
+Using the example sources above, when `true` is passed as the template _content_ when calling [`Engine.compile(true)`](/api/engine), an attempt will be made to read the primary template content __during compilation__ and will be reused for each call to the generated `renderer`. When the template _content_ is __not of type `string`__, an attempt will be made to read/fetch the content from `https://localhost:8080/template.html` _every time_ the `renderer` is called. The "template" name can be configured using [`options.defaultTemplateName`](/api/lib/template-options) and the file extension is determined by [`options.defaultExtension`](/api/lib/template-options).
 
 __Partials (compile-time or render-time)__<br/>
-Assuming that the aforementioned sources are accessible from an HTTP server, we can assign a server URL to the [`options.partialsURL`](module-templeo_options.html#.Options). Any partial template that are __not__ registered during compilation by calling [`Engine.register`](module-templeo.Engine.html#register) will be fetched from the server by appending the partial name from the include to the `partialsURL`. For example, with `partialsURL = 'https://localhost:8080'` and an `` include`first/item` ``, a read/fetch will be made to `https://localhost:8080/first/item.html`. The file extension is determined by [`options.defaultExtension`](module-templeo_options.html#.Options).
+Assuming that the aforementioned sources are accessible from an HTTP server, we can assign a server URL to the [`options.partialsURL`](/api/lib/template-options). Any partial template that are __not__ registered during compilation by calling [`Engine.register`](/api/engine) will be fetched from the server by appending the partial name from the include to the `partialsURL`. For example, with `partialsURL = 'https://localhost:8080'` and an `` include`first/item` ``, a read/fetch will be made to `https://localhost:8080/first/item.html`. The file extension is determined by [`options.defaultExtension`](/api/lib/template-options).
 
 __The context (render-time)__<br/>
-The same read/fetch criteria applies to the _context_ used when invoking the rendering function. If no context is specified when calling `renderer(context)`, an attempt will be made to read/fetch `https://localhost:9000/context.json` when the renderer is called (assuming that [`options.contextURL`](module-templeo_options.html#.Options) is set to `https://localhost:9000`). The "context" name can be configured using [`options.defaultContextName`](module-templeo_options.html#.Options) and the file extension is determined by [`options.defaultContextExtension`](module-templeo_options.html#.Options).
+The same read/fetch criteria applies to the _context_ used when invoking the rendering function. If no context is specified when calling `renderer(context)`, an attempt will be made to read/fetch `https://localhost:9000/context.json` when the renderer is called (assuming that [`options.contextURL`](/api/lib/template-options) is set to `https://localhost:9000`). The "context" name can be configured using [`options.defaultContextName`](/api/lib/template-options) and the file extension is determined by [`options.defaultContextExtension`](/api/lib/template-options).
 
 ```js
 // read the template at compile-time, the template context at render-time
@@ -146,7 +148,7 @@ OUTPUT:
 </html>
 ```
 
-The same output could also be accomplished by either registering partials _manually_ by passing them into [`Engine.register(data)`](module-templeo.Engine.html#register). Any partials that are not registered will be read/loaded either at __compile-time__ (when calling `register`) or at __render-time__ when an `include` is encountered during rendering that has not yet been registered.
+The same output could also be accomplished by either registering partials _manually_ by passing them into [`Engine.register(data)`](/api/engine). Any partials that are not registered will be read/loaded either at __compile-time__ (when calling `register`) or at __render-time__ when an `include` is encountered during rendering that has not yet been registered.
 
 ```js
 // OPTION 1:
@@ -178,8 +180,8 @@ const rslt = await renderer(contextJSON);
 #### Parameter Passing <sub id="include-params"></sub>
 
 Not only can _includes_ load/`read` template and context at compile-time or render-time, but they can also contain __parameters__ obtained during [interpolation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Template_literals#Expression_interpolation). There are two types of parameters that can be passed into an `include`:
-- [`URLSearchParams`](https://developer.mozilla.org/en-US/docs/Web/API/URLSearchParams) - When an expression being passed into the `include` interpolates into a `URLSearchParams` instance, either the partial template content from a prior include with the same parameters/values is used __or__ the parameters are passed into the [`read` operation](Cachier.html#read) in order to fetch a new copy of the raw partial template contents.
-- `JSON` - When an expression interpolates into an ordinary JSON object, the object will be in accessible __only__ within the partial for which it is being included into. Access is made available via the [`options.includesParametersName`](module-templeo_options.html#.Options) alias (defaults to "`params`"). JSON parameters are never passed when fetching/reading partial content.
+- [`URLSearchParams`](https://developer.mozilla.org/en-US/docs/Web/API/URLSearchParams) - When an expression being passed into the `include` interpolates into a `URLSearchParams` instance, either the partial template content from a prior include with the same parameters/values is used __or__ the parameters are passed into the [`read` operation](/api/lib/cachier) in order to fetch a new copy of the raw partial template contents.
+- `JSON` - When an expression interpolates into an ordinary JSON object, the object will be in accessible __only__ within the partial for which it is being included into. Access is made available via the [`options.includesParametersName`](/api/lib/template-options) alias (defaults to "`params`"). JSON parameters are never passed when fetching/reading partial content.
 
 This makes for some interesting capabilities. `URLSearchParams` can be used to dynamically generate template sources based on parameters being passed, while JSON parameters can dynamically generate template sources within the partial template itself. Consider the following examples.
 
@@ -343,7 +345,7 @@ Helper directives are __serializable named functions__ that can be accessed with
 - [built-in directives](#directives)
 - `require` (when available)
 
-They can be registered as _synchronous_ or _`async`hronous_ functions at compile-time using [`Engine.registerHelper`](module-templeo.Engine.html#registerHelper) and should return a value that will be interpolated. Below is an example of how a helper directive can be used to produce conditional template sources.
+They can be registered as _synchronous_ or _`async`hronous_ functions at compile-time using [`Engine.registerHelper`](/api/engine) and should return a value that will be interpolated. Below is an example of how a helper directive can be used to produce conditional template sources.
 
 ```js
 const Engine = require('templeo');
