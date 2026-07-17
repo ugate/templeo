@@ -1,9 +1,9 @@
 'use strict';
 
-const Assert = require('node:assert/strict');
-const { describe, test } = require('node:test');
-const { PLAN, TEST_TKO, LOGGER } = require('./code/_main.js');
-const Tester = require('./code/default');
+import * as Assert from 'node:assert/strict';
+import { describe, test } from 'node:test';
+import { PLAN, TEST_TKO, LOGGER } from './code/_main.js';
+import Tester from './code/default.js';
 
 const plan = `${PLAN} Default`;
 

@@ -1,8 +1,8 @@
 'use strict';
 
-const { afterEach, beforeEach, describe, test } = require('node:test');
-const { PLAN, TEST_TKO } = require('./code/_main');
-const Tester = require('./code/express');
+import { afterEach, beforeEach, describe, test } from 'node:test';
+import { PLAN, TEST_TKO } from './code/_main.js';
+import Tester from './code/express.js';
 
 const plan = `${PLAN} Express`;
 

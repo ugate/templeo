@@ -69,7 +69,7 @@ The _temporary memory_ space also prevents multiple fetches/`reads` for any part
 // <b>partial for ${ it.name }</b>
 // assume the following is served from: https://localhost:9000/context.json
 // { "name": "DEMO" }
-const Engine = require('templeo');
+import Engine from 'templeo';
 const engine = new Engine({
   partialsURL: 'https://localhost:8080',
   contextURL: 'https://localhost:9000'
@@ -110,7 +110,8 @@ The [CachierDB constructor](/api/lib/cachier-db) takes an optional [LevelDB inst
 Just like any other type of `Cachier`, templates can be __written__ to _cache_ via [Engine.register](/api/lib/cachier). For simplicity's sake we'll use some basic in-line templates to demonstrate using `CachierDB`:
 
 ```js
-const Engine = require('templeo'), CachierDB = require('templeo/lib/cachier-db');
+import Engine from 'templeo';
+import CachierDB from 'templeo/lib/cachier-db.js';
 const cachier = new CachierDB({ dbLocName: 'my-indexed-db-name' });
 const engine = Engine.create(cachier);
 
@@ -169,7 +170,8 @@ const rslt = await renderer({
 Now that the template, partials and context are written to the database, we can use the written content as default values when a template, partial and/or context are not specified. This decouples stored content from any single `Engine` instance or rederering function.
 
 ```js
-const Engine = require('templeo'), CachierDB = require('templeo/lib/cachier-db');
+import Engine from 'templeo';
+import CachierDB from 'templeo/lib/cachier-db.js';
 const cachier = new CachierDB({ dbLocName: 'my-indexed-db-name' });
 const engine = Engine.create(cachier);
 
@@ -197,7 +199,8 @@ Using a file system is the recommended caching mechanism to use when processing 
 - When no `options.partialsURL` is set or retrieval fails, an error is thrown
 
 ```js
-const Engine = require('templeo'), CachierFiles = require('templeo/lib/cachier-files');
+import Engine from 'templeo';
+import CachierFiles from 'templeo/lib/cachier-files.js';
 // create a cachier for the file system that uses the current directory
 // for HTML partials
 const cachier = new CachierFiles({
@@ -217,8 +220,9 @@ As mentioned before, each rendering function is isolated from any `templeo` spec
 To illustrate, we can set `watchPaths` to true at _compile-time_ and then update the template sources manually, but typically that would be done by some unknown external source:
 
 ```js
-const Fs = require('fs');
-const Engine = require('templeo'), CachierFiles = require('templeo/lib/cachier-files');
+import * as Fs from 'node:fs';
+import Engine from 'templeo';
+import CachierFiles from 'templeo/lib/cachier-files.js';
 
 const cachier = new CachierFiles({
   watchPaths: true

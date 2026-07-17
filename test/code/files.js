@@ -1,10 +1,7 @@
 'use strict';
 
-const { expect, LOGGER, Engine, JSDOM, Path, Fs, HtmlFrmt, JsFrmt, Main } = require('./_main');
-const CachierFiles = require('../../lib/cachier-files.js');
-// ESM uncomment the following lines...
-// TODO : import { expect, LOGGER, Engine, JSDOM, Path, Fs, HtmlFrmt, JsFrmt, Main } from './_main.mjs';
-// TODO : import * as CachierFiles from '../../lib/cachier-files.mjs';
+import { expect, LOGGER, Engine, JSDOM, Path, Fs, HtmlFrmt, JsFrmt, Main } from './_main.js';
+import CachierFiles from '../../lib/cachier-files.js';
 
 const PARTIAL_DETECT_DELAY_MS = 200;
 var engine;
@@ -16,8 +13,6 @@ var engine;
 // LOGGING Single Test: Use the following
 // node test/code/files.js -NODE_ENV=test htmlPartialReadCache
 
-// TODO : ESM uncomment the following line...
-// export
 class Tester {
 
   static async after() {
@@ -103,8 +98,7 @@ class Tester {
   }
 }
 
-// TODO : ESM remove the following line...
-module.exports = Tester;
+export default Tester;
 
 // when not ran in a test runner execute static Tester functions (excluding what's passed into Main.run) 
 if (!Main.usingTestRunner()) {

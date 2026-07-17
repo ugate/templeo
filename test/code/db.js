@@ -1,10 +1,7 @@
 'use strict';
 
-const { expect, LOGGER, Engine, HtmlFrmt, JsFrmt, JSDOM, Main } = require('./_main.js');
-const CachierDB = require('../../lib/cachier-db.js');
-// ESM uncomment the following lines...
-// TODO : import { expect, LOGGER, Engine, HtmlFrmt, JsFrmt, JSDOM, Main } from './_main.mjs';
-// TODO : import * as CachierDB from '../../lib/cachier-db.mjs';
+import { expect, LOGGER, Engine, HtmlFrmt, JsFrmt, JSDOM, Main } from './_main.js';
+import CachierDB from '../../lib/cachier-db.js';
 
 var meta, engines = [];
 
@@ -15,8 +12,6 @@ var meta, engines = [];
 // LOGGING Single Test: Use the following
 // node test/code/db.js -NODE_ENV=test <name_of_func_to_run_here>
 
-// TODO : ESM uncomment the following line...
-// export
 class Tester {
 
   static async before() {
@@ -178,8 +173,7 @@ class Tester {
   }
 }
 
-// TODO : ESM remove the following line...
-module.exports = Tester;
+export default Tester;
 
 // when not ran in a test runner execute static Tester functions (excluding what's passed into Main.run) 
 if (!Main.usingTestRunner()) {

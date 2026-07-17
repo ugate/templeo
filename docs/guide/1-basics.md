@@ -22,7 +22,7 @@ const it = { name: 'World' };
 console.log(`<html><body>Hello ${ it.name }!</body></html>`);
 
 // Compiled/Rendered Template Literals using an Engine
-const Engine = require('templeo');
+import Engine from 'templeo';
 const engine = new Engine();
 const renderer = await engine.compile('<html><body>Hello ${ it.name }!</body></html>');
 const rslt = renderer({ name: 'World' });
@@ -116,7 +116,7 @@ The same read/fetch criteria applies to the _context_ used when invoking the ren
 ```js
 // read the template at compile-time, the template context at render-time
 // and the partial templates as includes are encountered during render-time
-const Engine = require('templeo');
+import Engine from 'templeo';
 const engine = new Engine({
   contextURL: 'https://localhost:9000',
   partialsURL: 'https://localhost:8080'
@@ -278,7 +278,7 @@ Using the sources above, the JSON could be rendered doing:
 ```js
 // read the template at compile-time, the template context at render-time
 // and the partial templates as includes are encountered during render-time
-const Engine = require('templeo');
+import Engine from 'templeo';
 const engine = new Engine({
   contextURL: 'https://localhost:9000',
   partialsURL: 'https://localhost:8080'
@@ -369,7 +369,7 @@ Helper directives are __serializable named functions__ that can be accessed with
 They can be registered as _synchronous_ or _`async`hronous_ functions at compile-time using [`Engine.registerHelper`](/api/engine) and should return a value that will be interpolated. Below is an example of how a helper directive can be used to produce conditional template sources.
 
 ```js
-const Engine = require('templeo');
+import Engine from 'templeo';
 const engine = new Engine();
 
 const template = '<html><body>${ hasPerson(it) }</body></html>';

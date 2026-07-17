@@ -1,7 +1,7 @@
 'use strict';
 
-const { spawnSync } = require('node:child_process');
-const Path = require('node:path');
+import { spawnSync } from 'node:child_process';
+import * as Path from 'node:path';
 
 const mode = process.argv[2] || 'prod';
 const args = [

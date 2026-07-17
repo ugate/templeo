@@ -1,24 +1,18 @@
 'use strict';
 
-// TODO : ESM remove the following lines...
-const TemplateOpts = require('./lib/template-options');
-const Cachier = require('./lib/cachier');
-const Sandbox = require('./lib/sandbox');
-// TODO : ESM uncomment the following lines...
-// TODO : import * as TemplateOpts from './lib/template-options.mjs';
-// TODO : import * as Cachier from './lib/cachier.mjs';
-// TODO : import * as Sandbox from './lib/sandbox.mjs';
+import TemplateOpts from './lib/template-options.js';
+import Cachier from './lib/cachier.js';
+import Sandbox from './lib/sandbox.js';
 
 /**
  * Micro rendering template engine
  * @module templeo
  * @example
  * // Hapi.js example:
- * const Hapi = require('hapi');
- * const Vision = require('vision');
- * const HtmlFrmt = require('js-beautify').html;
- * const JsFrmt = require('js-beautify').js;
- * const Engine = require('templeo');
+ * import Hapi from 'hapi';
+ * import Vision from 'vision';
+ * import { html as HtmlFrmt, js as JsFrmt } from 'js-beautify';
+ * import Engine from 'templeo';
  * const econf = {
  *   partialsURL: 'https://example.com', // partial reads from a server?
  *   contextURL: 'https://example.com', // context read from a server?
@@ -55,7 +49,6 @@ const Sandbox = require('./lib/sandbox');
  * });
  */
 class Engine {
-// TODO : ESM use... export class Engine {
 
   /**
    * Creates a template literal engine
@@ -286,8 +279,7 @@ class Engine {
   }
 }
 
-// TODO : ESM remove the following lines...
-module.exports = Engine;
+export default Engine;
 
 /**
  * Compiles a templated segment and returns a redering function (__assumes partials are already transpiled- see {@link compile} for partial support__)

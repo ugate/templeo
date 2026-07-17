@@ -1,15 +1,10 @@
 'use strict';
 
-const { LOGGER, Engine, HtmlFrmt, JsFrmt, Main, Fs } = require('./_main.js');
-const Cachier = require('../../lib/cachier.js');
-const CachierDB = require('../../lib/cachier-db.js');
-const CachierFiles = require('../../lib/cachier-files.js');
-const Express = require('express');
-// ESM uncomment the following lines...
-// TODO : import { LOGGER, Engine, HtmlFrmt, JsFrmt, Main } from './_main.mjs';
-// TODO : import * as CachierDB from '../../lib/cachier-db.mjs';
-// TODO : import * as CachierFiles from '../../lib/cachier-files.mjs';
-// TODO : import * as Express from 'express';
+import { LOGGER, Engine, HtmlFrmt, JsFrmt, Main, Fs } from './_main.js';
+import Cachier from '../../lib/cachier.js';
+import CachierDB from '../../lib/cachier-db.js';
+import CachierFiles from '../../lib/cachier-files.js';
+import Express from 'express';
 
 var server, tmplServer;
 const PORT = 0, HOST = '127.0.0.1', connections = [];
@@ -20,8 +15,6 @@ const PORT = 0, HOST = '127.0.0.1', connections = [];
 // node --inspect-brk test/code/express.js -NODE_ENV=test defaultEnginePartialFetchHttpServer
 // node test/code/express.js -NODE_ENV=test defaultEnginePartialFetchHttpServer
 
-// TODO : ESM uncomment the following line...
-// export
 class Tester {
 
   static async beforeEach() {
@@ -76,8 +69,7 @@ class Tester {
   }
 }
 
-// TODO : ESM remove the following line...
-module.exports = Tester;
+export default Tester;
 
 // when not ran in a test runner execute static Tester functions (excluding what's passed into Main.run) 
 if (!Main.usingTestRunner()) {

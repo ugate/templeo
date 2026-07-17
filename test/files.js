@@ -1,8 +1,8 @@
 'use strict';
 
-const { after, describe, test } = require('node:test');
-const { PLAN, TEST_TKO } = require('./code/_main.js');
-const Tester = require('./code/files');
+import { after, describe, test } from 'node:test';
+import { PLAN, TEST_TKO } from './code/_main.js';
+import Tester from './code/files.js';
 
 const plan = `${PLAN} Files`;
 

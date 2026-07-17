@@ -7,3 +7,5 @@
 - In **Settings → Pages**, use **Deploy from a branch**, select `gh-pages`, and publish from `/ (root)`.
 - The VitePress base path remains `/templeo/` for `https://ugate.github.io/templeo/`.
 - `vitepress-jsdoc` runs before each documentation build and writes API pages under `docs/api/`.
+- Version `2.0.0` is ECMAScript Module-only: package and test imports use native `import`/`export`, and the browser-safe root module no longer depends on CommonJS loading.
+- Pushing tag `v2.0.0` runs `.github/workflows/release.yml`, repeats the full test and documentation build, deploys the generated site to `gh-pages`, and publishes `templeo@2.0.0` to npm using the existing `NPM_TOKEN` secret convention.

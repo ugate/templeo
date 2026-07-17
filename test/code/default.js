@@ -1,8 +1,6 @@
 'use strict';
 
-const { expect, LOGGER, Engine, HtmlFrmt, JsFrmt, Main, JSDOM } = require('./_main.js');
-// ESM uncomment the following lines...
-// TODO : import { expect, LOGGER, Engine, HtmlFrmt, JsFrmt, Main, JSDOM } from './_main.mjs';
+import { expect, LOGGER, Engine, HtmlFrmt, JsFrmt, Main, JSDOM } from './_main.js';
 
 // DEBUGGING: Use the following
 // node --inspect-brk test/code/default.js
@@ -19,8 +17,6 @@ const params2 = {
   someParam: 'someParamValue'
 };
 
-// TODO : ESM uncomment the following line...
-// export
 class Tester {
 
   static nonCachierEngineCreate() {
@@ -245,8 +241,7 @@ class Tester {
   }
 }
 
-// TODO : ESM comment the following line...
-module.exports = Tester;
+export default Tester;
 
 // when not ran in a test runner execute static Tester functions (excluding what's passed into Main.run) 
 if (!Main.usingTestRunner()) {

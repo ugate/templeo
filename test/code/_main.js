@@ -11,56 +11,28 @@ const argv = process.argv.slice(2);
 const log = process.env.NODE_ENV === 'test' || argv.includes('-NODE_ENV=test') ?
   { info: console.info, warn: console.warn, error: console.error } : 
   process.env.NODE_ENV === 'dev' || argv.includes('-NODE_ENV=dev') ? console : {};
-const Assert = require('node:assert/strict');
-const Crypto = require('node:crypto');
-const Http = require('node:http');
-exports.Http = Http;
-const Https = require('node:https');
-exports.Https = Https;
-const Os = require('node:os');
-exports.Os = Os;
-const Fs = require('node:fs');
-exports.Fs = Fs;
-const Path = require('node:path');
-exports.Path = Path;
-exports.expect = expect;
+import * as Assert from 'node:assert/strict';
+import * as Crypto from 'node:crypto';
+import * as Http from 'node:http';
+import * as Https from 'node:https';
+import * as Os from 'node:os';
+import * as Fs from 'node:fs';
+import * as Path from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { JSDOM } from 'jsdom';
+import Level from 'level';
+import Engine from '../../index.js';
+import TemplateOpts from '../../lib/template-options.js';
+import Sandbox from '../../lib/sandbox.js';
+
+const __dirname = Path.dirname(fileURLToPath(import.meta.url));
 const HtmlFrmt = value => value;
 const JsFrmt = value => value;
-exports.HtmlFrmt = HtmlFrmt;
-exports.JsFrmt = JsFrmt;
-const { JSDOM } = require('jsdom');
-exports.JSDOM = JSDOM;
-const Level = require('level');
-exports.Level = Level;
-
-const Engine = require('../../index.js');
-const TemplateOpts = require('../../lib/template-options.js');
-const Sandbox = require('../../lib/sandbox.js');
-exports.Engine = Engine;
-exports.PLAN = 'Template Engine';
-exports.TASK_DELAY = 500;
-exports.TEST_TKO = 20000;
-exports.LOGGER = log;
-// TODO : ESM uncomment the following lines...
-// TODO : import * as http from 'https';
-// export * as Https from https;
-// TODO : import * as Os from 'os';
-// export * as Os from Os;
-// TODO : import * as Fs from 'fs';
-// export * as Fs from Fs;
-// TODO : import * as Path from 'path';
-// export * as Path from Path;
-// TODO : import { JSDOM } as JSDOM from 'jsdom';
-// export * as JSDOM from JSDOM;
-// TODO : import * as Level from 'level';
-// export * as Level from Level;
-// TODO : import * as Engine from '../../index.mjs';
-// TODO : import * as TemplateOpts from '../../lib/template-options.mjs';
-// export * as Engine from Engine;
-// export const PLAN = 'Template Engine';
-// export const TASK_DELAY = 500;
-// export const TEST_TKO = 20000;
-// export const LOGGER = log;
+export { Http, Https, Os, Fs, Path, expect, HtmlFrmt, JsFrmt, JSDOM, Level, Engine };
+export const PLAN = 'Template Engine';
+export const TASK_DELAY = 500;
+export const TEST_TKO = 20000;
+export const LOGGER = log;
 
 const Fsp = Fs.promises;
 const PATH_RELATIVE_TO = '.';
@@ -83,8 +55,6 @@ const NO_FILE_ID = `${NO_FILE_NAME}.${NO_FILE_EXT}`;
 const NO_FILE_VAL = 'NO FILE TEST INCLUDE VALUE';
 const NO_FILE_HTML = `<input name="${NO_FILE_NAME}" value="${NO_FILE_VAL}" />`;
 
-// TODO : ESM uncomment the following line...
-// export
 class Main {
 
   /**
@@ -829,8 +799,7 @@ class Main {
   }
 }
 
-// TODO : ESM remove the following line...
-exports.Main = Main;
+export { Main };
 
 /**
  * Validates that the supplied DOM contains the color values from the context data
