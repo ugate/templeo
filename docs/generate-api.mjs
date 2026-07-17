@@ -12,6 +12,13 @@ async function rmrf(target) {
   await fs.rm(target, { recursive: true, force: true });
 }
 
+
+async function cleanGeneratedDocs() {
+  await rmrf(apiDir);
+  await rmrf(path.join(docsDir, 'api__index__.md'));
+  await rmrf(path.join(docsDir, 'apitypedefs.md'));
+}
+
 async function ensureDir(target) {
   await fs.mkdir(target, { recursive: true });
 }
@@ -428,6 +435,7 @@ async function postProcessMarkdown() {
 
 async function main() {
   try {
+    await cleanGeneratedDocs();
     await stageSources();
     await runGenerator();
     await normalizeOutput();

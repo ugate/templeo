@@ -1,51 +1,42 @@
 'use strict';
 
-const { expect, Lab, PLAN, TEST_TKO, LOGGER, Engine } = require('./code/_main.js');
+const Assert = require('node:assert/strict');
+const { describe, test } = require('node:test');
+const { PLAN, TEST_TKO, LOGGER } = require('./code/_main.js');
 const Tester = require('./code/default');
-const lab = Lab.script();
-exports.lab = lab;
-// ESM uncomment the following lines...
-// TODO : import { expect, Lab, PLAN, TEST_TKO, LOGGER, Engine } from './code/_main.mjs';
-// TODO : import * as Tester from './code/default.mjs';
-// TODO : export * as lab from lab;
 
 const plan = `${PLAN} Default`;
 
-// "node_modules/.bin/lab" test/default.js -vi 1
-
-lab.experiment(plan, () => {
-
-  lab.test(`${plan}: JSON - Engine.create (ERROR not Cachier)`, { timeout: TEST_TKO }, 
-    expectFailure('onUnhandledRejection', null, Tester.nonCachierEngineCreate));
-  lab.test(`${plan}: JSON - register`, { timeout: TEST_TKO }, Tester.jsonRegisterPartials);
-  lab.test(`${plan}: HTML - register`, { timeout: TEST_TKO }, Tester.htmlRegisterPartials);
-  lab.test(`${plan}: HTML - registerHelper`, { timeout: TEST_TKO }, Tester.htmlregisterHelper);
-  lab.test(`${plan}: HTML - Partials Fetch From HTTPS Server (compile-time)`, { timeout: TEST_TKO }, Tester.htmlPartialsFetchHttpsServerCompiletimeRead);
-  lab.test(`${plan}: HTML - Partials Fetch From HTTPS Server (compile-time ERROR missing "options.partialsURL")`, { timeout: TEST_TKO },
-    expectFailure('onUnhandledRejection', 'ERR_INVALID_URL', Tester.htmlPartialsFetchHttpsServerCompiletimeReadNoPathError));
-  lab.test(`${plan}: HTML - Partials Fetch From HTTPS Server (render-time)`, { timeout: TEST_TKO }, Tester.htmlPartialsFetchHttpsServerRendertimeRead);
-  lab.test(`${plan}: HTML - Partials Fetch From HTTPS Server (render-time ERROR missing "options.partialsURL")`, { timeout: TEST_TKO },
-    expectFailure('onUnhandledRejection', 'ERR_INVALID_URL', Tester.htmlPartialsFetchHttpsServerRendertimeReadNoPathError));
-  lab.test(`${plan}: HTML - Template/Context Fetch From HTTPS Server (compile-time/render-time)`, { timeout: TEST_TKO }, Tester.htmlTmplAndContextFetchHttpsServerRead);
-  lab.test(`${plan}: HTML - Include With One URLSearchParams From HTTPS Server (render-time)`, { timeout: TEST_TKO }, Tester.htmlIncludeSearchParamsHttpsServerRead);
-  lab.test(`${plan}: HTML - Include With Multiple Same URLSearchParams From HTTPS Server (render-time)`, { timeout: TEST_TKO }, Tester.htmlIncludeMultiSameSearchParamsHttpsServerRead);
-  lab.test(`${plan}: HTML - Include With Multiple Different URLSearchParams From HTTPS Server (render-time)`, { timeout: TEST_TKO }, Tester.htmlIncludeMultiDiffSearchParamsHttpsServerRead);
-  lab.test(`${plan}: HTML - Include With One URLSearchParams, One JSON Params From HTTPS Server (render-time)`, { timeout: TEST_TKO }, Tester.htmlIncludeOneSearchOneJsonParamsHttpsServerRead);
-  lab.test(`${plan}: HTML - Include With Multiple Different JSON Params From HTTPS Server (render-time)`, { timeout: TEST_TKO }, Tester.htmlIncludeMultiDiffJsonParamsHttpsServerRead);
+describe(plan, { concurrency: false }, () => {
+  test(`${plan}: JSON - Engine.create (ERROR not Cachier)`, { timeout: TEST_TKO },
+    expectFailure(null, Tester.nonCachierEngineCreate));
+  test(`${plan}: JSON - register`, { timeout: TEST_TKO }, Tester.jsonRegisterPartials);
+  test(`${plan}: HTML - register`, { timeout: TEST_TKO }, Tester.htmlRegisterPartials);
+  test(`${plan}: HTML - registerHelper`, { timeout: TEST_TKO }, Tester.htmlregisterHelper);
+  test(`${plan}: HTML - Partials Fetch From HTTPS Server (compile-time)`, { timeout: TEST_TKO }, Tester.htmlPartialsFetchHttpsServerCompiletimeRead);
+  test(`${plan}: HTML - Partials Fetch From HTTPS Server (compile-time ERROR missing "options.partialsURL")`, { timeout: TEST_TKO },
+    expectFailure('ERR_INVALID_URL', Tester.htmlPartialsFetchHttpsServerCompiletimeReadNoPathError));
+  test(`${plan}: HTML - Partials Fetch From HTTPS Server (render-time)`, { timeout: TEST_TKO }, Tester.htmlPartialsFetchHttpsServerRendertimeRead);
+  test(`${plan}: HTML - Partials Fetch From HTTPS Server (render-time ERROR missing "options.partialsURL")`, { timeout: TEST_TKO },
+    expectFailure('ERR_INVALID_URL', Tester.htmlPartialsFetchHttpsServerRendertimeReadNoPathError));
+  test(`${plan}: HTML - Template/Context Fetch From HTTPS Server (compile-time/render-time)`, { timeout: TEST_TKO }, Tester.htmlTmplAndContextFetchHttpsServerRead);
+  test(`${plan}: HTML - Include With One URLSearchParams From HTTPS Server (render-time)`, { timeout: TEST_TKO }, Tester.htmlIncludeSearchParamsHttpsServerRead);
+  test(`${plan}: HTML - Include With Multiple Same URLSearchParams From HTTPS Server (render-time)`, { timeout: TEST_TKO }, Tester.htmlIncludeMultiSameSearchParamsHttpsServerRead);
+  test(`${plan}: HTML - Include With Multiple Different URLSearchParams From HTTPS Server (render-time)`, { timeout: TEST_TKO }, Tester.htmlIncludeMultiDiffSearchParamsHttpsServerRead);
+  test(`${plan}: HTML - Include With One URLSearchParams, One JSON Params From HTTPS Server (render-time)`, { timeout: TEST_TKO }, Tester.htmlIncludeOneSearchOneJsonParamsHttpsServerRead);
+  test(`${plan}: HTML - Include With Multiple Different JSON Params From HTTPS Server (render-time)`, { timeout: TEST_TKO }, Tester.htmlIncludeMultiDiffJsonParamsHttpsServerRead);
 });
 
-function expectFailure(type, code, func) {
-  return flags => {
-    return new Promise(resolve => {
-      flags[type] = err => {
-        if (LOGGER.info || LOGGER.debug) {
-          (LOGGER.debug || LOGGER.info)(`Expected error message received for${code ? ` (code ${err.code})` : ''}: ${err.message}`, LOGGER.debug ? err : '');
-        }
-        expect(err).to.be.error();
-        if (code) expect(err.code).to.equal(code);
-        resolve();
-      };
-      return func();
+function expectFailure(code, func) {
+  return async () => {
+    await Assert.rejects(func, err => {
+      if (LOGGER.info || LOGGER.debug) {
+        (LOGGER.debug || LOGGER.info)(`Expected error message received for${code ? ` (code ${err.code})` : ''}: ${err.message}`,
+          LOGGER.debug ? err : '');
+      }
+      Assert.ok(err instanceof Error);
+      if (code) Assert.equal(err.code, code);
+      return true;
     });
   };
 }

@@ -2,8 +2,8 @@
 
 // run tests:
 // npm test
-// generate jsdoc:
-// npm run gen-docs
+// build documentation:
+// npm run docs:build
 
 const TEST_FILES = {};
 const DB = {};
@@ -11,29 +11,28 @@ const argv = process.argv.slice(2);
 const log = process.env.NODE_ENV === 'test' || argv.includes('-NODE_ENV=test') ?
   { info: console.info, warn: console.warn, error: console.error } : 
   process.env.NODE_ENV === 'dev' || argv.includes('-NODE_ENV=dev') ? console : {};
-const Forge = require('node-forge');
-const Http = require('http');
+const Assert = require('node:assert/strict');
+const Crypto = require('node:crypto');
+const Http = require('node:http');
 exports.Http = Http;
-const Https = require('https');
+const Https = require('node:https');
 exports.Https = Https;
-const Os = require('os');
+const Os = require('node:os');
 exports.Os = Os;
-const Fs = require('fs');
+const Fs = require('node:fs');
 exports.Fs = Fs;
-const Path = require('path');
+const Path = require('node:path');
 exports.Path = Path;
-const { expect } = require('@hapi/code');
 exports.expect = expect;
-const Lab = require('@hapi/lab');
-exports.Lab = Lab;
-const HtmlFrmt = require('js-beautify').html;
-const JsFrmt = require('js-beautify').js;
+const HtmlFrmt = value => value;
+const JsFrmt = value => value;
 exports.HtmlFrmt = HtmlFrmt;
 exports.JsFrmt = JsFrmt;
 const { JSDOM } = require('jsdom');
 exports.JSDOM = JSDOM;
 const Level = require('level');
 exports.Level = Level;
+
 const Engine = require('../../index.js');
 const TemplateOpts = require('../../lib/template-options.js');
 const Sandbox = require('../../lib/sandbox.js');
@@ -43,7 +42,6 @@ exports.TASK_DELAY = 500;
 exports.TEST_TKO = 20000;
 exports.LOGGER = log;
 // TODO : ESM uncomment the following lines...
-// TODO : import * as Forge from 'node-forge';
 // TODO : import * as http from 'https';
 // export * as Https from https;
 // TODO : import * as Os from 'os';
@@ -52,16 +50,6 @@ exports.LOGGER = log;
 // export * as Fs from Fs;
 // TODO : import * as Path from 'path';
 // export * as Path from Path;
-// TODO : import * as code from 'code';
-// export * as code from code;
-// TODO : import * as expect from 'expect';
-// export * as expect from expect;
-// TODO : import * as Lab from 'lab';
-// export * as Lab from Lab;
-// TODO : import { html } as HtmlFrmt from 'js-beautify';
-// export * as HtmlFrmt from HtmlFrmt;
-// TODO : import { js } as JsFrmt from 'js-beautify';
-// export * as JsFrmt from JsFrmt;
 // TODO : import { JSDOM } as JSDOM from 'jsdom';
 // export * as JSDOM from JSDOM;
 // TODO : import * as Level from 'level';
@@ -789,7 +777,7 @@ class Main {
    * @returns {Boolean} `true` when the process is being ran from a _test utility_
    */
   static usingTestRunner() {
-    return process.mainModule.filename.endsWith('lab');
+    return Boolean(process.env.NODE_TEST_CONTEXT);
   }
 
   static get NO_FILE_NAME() {
@@ -866,31 +854,72 @@ function expectColorDOM(dom, data, prefix) {
 }
 
 /**
- * Generates a self-signed certificate
- * @param {Boolean} publicKey `true` to generate a __public__ key or _falsy_ to return a __private__ key
- * @returns {Object} The `{ key, cert }` The object that contains the key (public or private) and the certificate
+ * Returns the static self-signed certificate used by the local HTTPS test server.
+ * @param {Boolean} publicKey `true` to return the public key or _falsy_ to return the private key
+ * @returns {Object} The `{ key, cert }` object
  */
 function selfSignedCert(publicKey) {
-  Forge.options.usePureJavaScript = true;
-  const pki = Forge.pki, keys = pki.rsa.generateKeyPair(2048), cert = pki.createCertificate();
-  cert.publicKey = keys.publicKey;
-  cert.serialNumber = '01';
-  cert.validity.notBefore = new Date();
-  cert.validity.notAfter = new Date();
-  cert.validity.notAfter.setFullYear(cert.validity.notBefore.getFullYear() + 1);
-  const attrs = [
-    {name:'commonName',value:'example.org'}
-   ,{name:'countryName',value:'US'}
-   ,{shortName:'ST',value:'Arizona'}
-   ,{name:'localityName',value:'Tucson'}
-   ,{name:'organizationName',value:'Test'}
-   ,{shortName:'OU',value:'Test'}
-  ];
-  cert.setSubject(attrs);
-  cert.setIssuer(attrs);
-  cert.sign(keys.privateKey);
-  return {
-    key: publicKey ? pki.publicKeyToPem(keys.publicKey) : pki.privateKeyToPem(keys.privateKey),
-    cert: pki.certificateToPem(cert)
+  const certDir = Path.join(__dirname, '..', 'cert');
+  const privateKey = Fs.readFileSync(Path.join(certDir, 'localhost-key.pem'), 'utf8');
+  const cert = Fs.readFileSync(Path.join(certDir, 'localhost-cert.pem'), 'utf8');
+  const key = publicKey ? Crypto.createPublicKey(privateKey).export({ type: 'spki', format: 'pem' }) : privateKey;
+  return { key, cert };
+}
+
+/**
+ * Minimal compatibility assertion used by the existing tests, backed entirely by node:assert.
+ * @param {*} actual The actual value
+ * @param {String} [message] Optional assertion message
+ * @returns {Proxy} Chainable assertion compatibility object
+ */
+function expect(actual, message) {
+  let negated = false;
+  let chain;
+
+  const check = (condition, fallbackMessage) => {
+    Assert.ok(negated ? !condition : condition, message || fallbackMessage);
+    return chain;
   };
+
+  const equal = expected => {
+    if (negated) Assert.notDeepStrictEqual(actual, expected, message);
+    else Assert.deepStrictEqual(actual, expected, message);
+    return chain;
+  };
+
+  const handlers = {
+    equal,
+    equals: equal,
+    match: pattern => check(pattern.test(actual), `Expected value to ${negated ? 'not ' : ''}match ${pattern}`),
+    includes: value => check(actual != null && typeof actual.includes === 'function' && actual.includes(value),
+      `Expected value to ${negated ? 'not ' : ''}include ${value}`),
+    true: () => check(actual === true, `Expected ${actual} to ${negated ? 'not ' : ''}be true`),
+    false: () => check(actual === false, `Expected ${actual} to ${negated ? 'not ' : ''}be false`),
+    null: () => check(actual === null, `Expected value to ${negated ? 'not ' : ''}be null`),
+    function: () => check(typeof actual === 'function', `Expected value to ${negated ? 'not ' : ''}be a function`),
+    string: () => check(typeof actual === 'string', `Expected value to ${negated ? 'not ' : ''}be a string`),
+    object: () => check(actual !== null && typeof actual === 'object', `Expected value to ${negated ? 'not ' : ''}be an object`),
+    error: () => check(actual instanceof Error, `Expected value to ${negated ? 'not ' : ''}be an Error`),
+    empty: () => {
+      const empty = actual == null ||
+        (typeof actual === 'string' || Array.isArray(actual) ? actual.length === 0 :
+          actual instanceof Map || actual instanceof Set ? actual.size === 0 :
+            typeof actual === 'object' ? Object.keys(actual).length === 0 : false);
+      return check(empty, `Expected value to ${negated ? 'not ' : ''}be empty`);
+    }
+  };
+
+  chain = new Proxy({}, {
+    get(_target, property) {
+      if (property === 'to' || property === 'be') return chain;
+      if (property === 'not') {
+        negated = !negated;
+        return chain;
+      }
+      if (Object.prototype.hasOwnProperty.call(handlers, property)) return handlers[property];
+      throw new Error(`Unsupported assertion property: ${String(property)}`);
+    }
+  });
+
+  return chain;
 }

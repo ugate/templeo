@@ -41,12 +41,16 @@ By default, templates are cached in-memory for the duration of the `Engine`/temp
 
 ```sh
 git clone https://github.com/ugate/templeo.git
+cd templeo
+npm ci
+npm test
 ```
+
+The 33-test suite uses Node.js 24's native test runner, assertions, coverage, HTTPS, crypto, filesystem, and child-process APIs. The only direct development dependencies retained are the packages needed for Express integration, DOM validation, LevelDB validation, and VitePress documentation.
 
 ## Local docs workflow
 
 ```bash
-npm install
 npm run docs:dev
 ```
 

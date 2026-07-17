@@ -7,10 +7,10 @@
     "test": "test"
   },
   "scripts": {
-    "test": "lab -v -c --coverage-exclude lib -t 60 -e prod -I \"FinalizationRegistry,WeakRef\"",
-    "testing": "lab -v -c --coverage-exclude lib -t 60 -e test -I \"FinalizationRegistry,WeakRef\"",
-    "test-debug": "lab -v -c --coverage-exclude lib -t 60 -e dev -I \"FinalizationRegistry,WeakRef\"",
-    "docs:api": "rm -rf docs/api docs/api__index__.md docs/apitypedefs.md && node ./docs/generate-api.mjs",
+    "test": "node test/run.js prod",
+    "testing": "node test/run.js test",
+    "test-debug": "node test/run.js dev",
+    "docs:api": "node ./docs/generate-api.mjs",
     "docs:dev": "npm run docs:api && vitepress dev docs",
     "docs:build": "npm run docs:api && vitepress build docs",
     "docs:preview": "vitepress preview docs"
@@ -35,15 +35,9 @@
   },
   "dependencies": {},
   "devDependencies": {
-    "@hapi/code": "^8.0.2",
-    "@hapi/hapi": "^20.0.3",
-    "@hapi/lab": "^24.1.0",
-    "@hapi/vision": "^6.0.1",
     "express": "^4.17.1",
-    "js-beautify": "^1.13.0",
     "jsdom": "^16.4.0",
     "level": "^6.0.0",
-    "node-forge": "^0.10.0",
     "vitepress": "^1.6.4",
     "vitepress-jsdoc": "^1.0.4"
   },

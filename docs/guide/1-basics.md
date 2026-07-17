@@ -236,19 +236,19 @@ ${ await include`first/item ${ new URLSearchParams(it.my1stParams) } second/item
 
 So far, the inclusion examples we've used have been on HTML, but any format that can be represented as a string value can be processed by Template Literals. Lets take a look at an example using the `include` directive with `json`.
 
-```jsdocp test/views/template.jsont
+```js test/views/template.jsont
 // https://localhost:8080/template.json
 ```
-```jsdocp test/views/partials/json/one.jsont
+```js test/views/partials/json/one.jsont
 // https://localhost:8080/one.json
 ```
-```jsdocp test/views/partials/json/two.jsont
+```js test/views/partials/json/two.jsont
 // https://localhost:8080/two.json
 ```
-```jsdocp test/views/partials/json/three.jsont
+```js test/views/partials/json/three.jsont
 // https://localhost:8080/three.json
 ```
-```jsdocp test/context/json/context.json
+```js test/context/json/context.json
 // https://localhost:9000/context.json
 ```
 
