@@ -365,6 +365,7 @@ Helper directives are __serializable named functions__ that can be accessed with
 - [context](#meta-context)
 - [built-in directives](#directives)
 - `require` (when available)
+- `importModule` for native dynamic `import()` in Node.js and browsers
 
 They can be registered as _synchronous_ or _`async`hronous_ functions at compile-time using [`Engine.registerHelper`](/api/engine) and should return a value that will be interpolated. Below is an example of how a helper directive can be used to produce conditional template sources.
 
@@ -386,4 +387,32 @@ engine.registerHelper(function hasPerson(it) {
 const rslt = await renderer({ person: { name: 'World' } });
 console.log(rslt);
 // <html><body><h1> Hello World! </h1></body></html>
+```
+
+Helper directives can load native ECMAScript modules with the injected `importModule(specifier)` function. It is a thin wrapper around dynamic `import()`, so it always returns a `Promise`. Return that promise from the helper and use `await` where the helper is interpolated. Use an absolute URL or a URL composed from `import.meta.url` so the module location is unambiguous in both Node.js and browsers.
+
+```js
+// ./helpers/labels.js
+export function label(value) {
+  return `Label: ${ value }`;
+}
+```
+
+```js
+import Engine from 'templeo';
+
+const engine = new Engine();
+engine.registerHelper(function moduleLabel(moduleURL, value) {
+  return importModule(moduleURL).then(({ label }) => label(value));
+});
+
+const renderer = await engine.compile(
+  '<span>${ await moduleLabel(it.moduleURL, it.value) }</span>'
+);
+const rslt = await renderer({
+  moduleURL: new URL('./helpers/labels.js', import.meta.url).href,
+  value: 'Templeo'
+});
+console.log(rslt);
+// <span>Label: Templeo</span>
 ```

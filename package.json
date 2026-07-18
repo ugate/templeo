@@ -1,6 +1,6 @@
 {
   "name": "templeo",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "description": "Micro template engine with cache and debugging support",
   "main": "index.js",
   "directories": {
@@ -42,6 +42,7 @@
     "vitepress-jsdoc": "^1.0.4"
   },
   "files": [
+    "/CHANGELOG.md",
     "/index.js",
     "/lib/**/*"
   ],

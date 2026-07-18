@@ -1,6 +1,7 @@
 'use strict';
 
-import { expect, LOGGER, Engine, HtmlFrmt, JsFrmt, Main, JSDOM } from './_main.js';
+import { expect, LOGGER, Engine, HtmlFrmt, JsFrmt, Main, JSDOM, Fs, Path } from './_main.js';
+import { pathToFileURL } from 'node:url';
 
 // DEBUGGING: Use the following
 // node --inspect-brk test/code/default.js
@@ -84,6 +85,54 @@ class Tester {
         expect(els, label).to.not.be.null();
         expect(els.placeholder, label).to.be.equal('Please enter your name');
       }
+    }
+  }
+
+  /**
+   * Verifies that a serialized helper directive can dynamically import a native Node.js ESM module.
+   * @returns {Promise<void>} Resolves after the imported module value is rendered and validated.
+   */
+  static async nodeEsmImportModule() {
+    const engine = new Engine();
+    const moduleURL = pathToFileURL(Path.resolve('test/modules/node-import.js')).href;
+    engine.registerHelper(function loadNodeModule(specifier) {
+      return importModule(specifier).then(module => module.runtime);
+    });
+    const renderer = await engine.compile('${ await loadNodeModule(it.moduleURL) }');
+    const result = await renderer({ moduleURL });
+    expect(result, 'Node.js ESM import result').to.equal('node-esm');
+  }
+
+  /**
+   * Verifies that a serialized helper directive can dynamically import a browser-compatible ESM module
+   * from a browser realm where CommonJS `require` is unavailable. The imported helper is executed from
+   * an included partial so the render-time partial sandbox is validated in addition to the primary renderer.
+   * @returns {Promise<void>} Resolves after the browser-rendered module value is validated.
+   */
+  static async browserEsmImportModule() {
+    const dom = new JSDOM('<!DOCTYPE html><html><body></body></html>', {
+      runScripts: 'outside-only',
+      url: 'https://templeo.test/'
+    });
+    try {
+      dom.window.eval(await browserBundle());
+      const moduleURL = `data:text/javascript,${encodeURIComponent("export const runtime = 'browser-esm';")}`;
+      const script = [
+        '(async () => {',
+        '  const engine = new globalThis.TempleoEngine();',
+        '  engine.registerHelper(function loadBrowserModule(specifier) {',
+        '    return importModule(specifier).then(module => module.runtime);',
+        '  });',
+        "  await engine.registerPartial('module-import', '${ await loadBrowserModule(it.moduleURL) }');",
+        "  const renderer = await engine.compile('${ await include`module-import` }');",
+        `  return renderer({ moduleURL: ${JSON.stringify(moduleURL)} });`,
+        '})()'
+      ].join('\n');
+      const result = await dom.window.eval(script);
+      expect(result, 'Browser ESM import result').to.equal('browser-esm');
+      expect(typeof dom.window.require, 'Browser CommonJS require').to.equal('undefined');
+    } finally {
+      dom.window.close();
     }
   }
 
@@ -239,6 +288,29 @@ class Tester {
       }]
     }, baseOptions());
   }
+}
+
+/**
+ * Creates a browser-executable bundle from Templeo's native ESM source without changing production files.
+ * Each source module is isolated in an IIFE so its private module variables remain independent.
+ * @returns {Promise<String>} The script that exposes `TempleoEngine` on the browser global object.
+ */
+async function browserBundle() {
+  const modules = [
+    ['Director', 'lib/director.js'],
+    ['TemplateOpts', 'lib/template-options.js'],
+    ['Sandbox', 'lib/sandbox.js'],
+    ['Cachier', 'lib/cachier.js'],
+    ['Engine', 'index.js']
+  ];
+  let bundle = '';
+  for (const [name, relativePath] of modules) {
+    let source = await Fs.promises.readFile(Path.resolve(relativePath), 'utf8');
+    source = source.replace(/^import\s+.+?;\s*$/gm, '');
+    source = source.replace(new RegExp(`export\\s+default\\s+${name};`), '');
+    bundle += `const ${name}=(()=>{${source}\nreturn ${name};\n})();\n`;
+  }
+  return `${bundle}globalThis.TempleoEngine=Engine;`;
 }
 
 export default Tester;
