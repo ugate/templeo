@@ -4,6 +4,28 @@ All notable changes to Templeo are documented in this file.
 
 The historical entries below are consolidated from the repository commit history. Repeated dependency updates, documentation corrections, test maintenance, and closely related refactors are grouped into their corresponding release instead of being listed commit-by-commit.
 
+## [2.2.0] - 2026-08-06
+
+### Added
+
+- Added opt-in native Node.js `fs.watch` support to `CachierFiles` through the existing `watchPaths` option.
+- Added automatic registration for created files, re-registration for changed files, and unregistration for deleted files.
+- Added dynamic watcher management for newly created, renamed, and removed partial subdirectories.
+- Added shared render-time watcher state so updates persist across renderer calls that use the same shared-store object.
+- Added `watchedDirs` to `CachierFiles.metadata` and documented compile-time and render-time watcher lifecycles.
+- Added native Node.js tests for file changes, directory changes, render-time shared updates, and `unwatchPaths` cleanup.
+
+### Fixed
+
+- Fixed watched partial deletion so the correct cache key is unregistered.
+- Fixed file reads under a non-default `relativeTo` directory by using resolved source paths.
+- Fixed render-time watcher registration so changed content updates the renderer's shared cache.
+
+### Compatibility
+
+- Watchers remain disabled by default and introduce no runtime dependency.
+- Native watchers use `{ persistent: false }`, so they do not keep the Node.js process running.
+
 ## [2.1.0] - 2026-07-18
 
 ### Added
@@ -83,6 +105,7 @@ The historical entries below are consolidated from the repository commit history
 - Converted compilation and inclusion processing to asynchronous operation.
 - Simplified the engine, cache, director, and testing APIs during the initial development cycle.
 
+[2.2.0]: https://github.com/ugate/templeo/compare/v2.1.0...v2.2.0
 [2.1.0]: https://github.com/ugate/templeo/compare/v2.0.0...v2.1.0
 [2.0.0]: https://github.com/ugate/templeo/compare/v1.0.0...v2.0.0
 [1.0.0]: https://github.com/ugate/templeo/compare/v0.1.0...v1.0.0

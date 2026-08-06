@@ -211,13 +211,23 @@ const engine = Engine.create(cachier);
 ```
 
 __👁️ File/Directory Watchers:<sub id="watchers"></sub>__<br/>
-_COMING SOON IN FUTURE VERSIONS_
-<!--
-Template directories can be automatically watched for newly create, updated and removed templates. When a newly created template file or existing template file is detected, it will automatically be (re-)[registered](/api/engine) in memory as a new or updated template source using a formatted version of the file name as the registered template name. Likewise, any file that is removed will be [unregistered](/api/engine).
 
-As mentioned before, each rendering function is isolated from any `templeo` specific implementation. So, in order to capture changes requires a shared resource between compilation resources in the engine and between rendering functions. The way this is handled it through the `watchPaths` flag. When the option is set to _true_, the `watchPaths` option value is set to a mutable array of objects
+`CachierFiles` can use native Node.js [`fs.watch`](https://nodejs.org/api/fs.html#fswatchfilename-options-listener) to monitor `partialsPath`. Watchers are opt-in through `watchPaths: true` and require no additional dependency.
 
-To illustrate, we can set `watchPaths` to true at _compile-time_ and then update the template sources manually, but typically that would be done by some unknown external source:
+While active, Templeo:
+
+- registers files created under `partialsPath`;
+- re-registers changed files;
+- unregisters deleted files;
+- begins watching newly created subdirectories and their files;
+- closes removed subdirectory watchers and unregisters their contents;
+- debounces duplicate operating-system events and verifies each path before changing the cache.
+
+The watchers use `{ persistent: false }`, so they do not prevent Node.js from exiting. Node.js watcher behavior is still dependent on the underlying operating system and file system.
+
+##### Compile-time watchers
+
+Compile-time watchers update the `CachierFiles` registration cache. Renderers compiled before a file changes remain stand-alone and unchanged, so compile again when the updated partial should be embedded in a new renderer.
 
 ```js
 import * as Fs from 'node:fs';
@@ -225,33 +235,62 @@ import Engine from 'templeo';
 import CachierFiles from 'templeo/lib/cachier-files.js';
 
 const cachier = new CachierFiles({
+  relativeTo: '.',
+  partialsPath: 'views/partials',
   watchPaths: true
 });
 const engine = Engine.create(cachier);
 
-// register old content
-await engine.registerPartial('myTest', 'My test for ${ it.name }');
-const renderer = await test.engine.compile('<html><body>${ await include`myTest` }</body></html>');
+// Read the current partial tree and start native file-system watchers.
+await engine.register(null, true);
 
-// change or create the file contents somehow
-await Fs.promises.writeFile('views/partials/myTest.html', 'My UPDATED test for ${ it.name }');
-// give the watch some time to detect the changes
-await wait(100);
+await Fs.promises.writeFile(
+  'views/partials/greeting.html',
+  'Hello ${ it.name }'
+);
 
-const rslt = await renderer({ name: 'file watchers' });
-// rslt:
-// <html><body>My test for file watchers</body></html>
-
-// demo helper function that simulates delays async
-function wait(delay, val, rejectIt) {
-  return new Promise((resolve, reject) => {
-    setTimeout(() => {
-      if (rejectIt) reject(val instanceof Error ? val : new Error(val));
-      else resolve(val);
-    }, delay);
-  });
+// fs.watch notifications are asynchronous; wait until the cache reflects the event.
+while ((await engine.getRegistered('greeting'))?.content !== 'Hello ${ it.name }') {
+  await new Promise(resolve => setTimeout(resolve, 25));
 }
+
+const renderer = await engine.compile('<body>${ await include`greeting` }</body>');
+const result = await renderer({ name: 'Templeo' });
+// <body>Hello Templeo</body>
+
+// Closes all compile-time watchers and clears the file cache output.
+await engine.clearCache();
 ```
 
-It's important to note that since compiled renderering functions are isolated/independent of any `templeo` specific code, that _render-time_ watchers may not operate in the fashion that may be expected. First, the rendering function contains it's own _memory space_. When the `watchPaths` is set at compile-time, it will handle all the file changes for any of the rendering functions that are generated. The exeption would be if the 
--->
+##### Render-time watchers
+
+Render-time watchers update the renderer's shared cache. Pass the same object as the renderer's fifth argument on every call that should share watcher updates. Set `unwatchPaths: true` in a later rendering call to close those watchers; that call returns an empty string without rendering.
+
+```js
+const sharedStore = {};
+const renderOptions = {
+  relativeTo: '.',
+  partialsPath: 'views/partials',
+  watchPaths: true,
+  renderTimePolicy: 'read-all-on-init-when-empty'
+};
+
+const first = await renderer({}, renderOptions, null, null, sharedStore);
+
+await Fs.promises.writeFile('views/partials/greeting.html', 'Welcome ${ it.name }');
+
+while (!Object.values(sharedStore).some(value => value?.content === 'Welcome ${ it.name }')) {
+  await new Promise(resolve => setTimeout(resolve, 25));
+}
+
+const second = await renderer({ name: 'Templeo' }, {}, null, null, sharedStore);
+
+await renderer(
+  {},
+  { ...renderOptions, watchPaths: false, unwatchPaths: true },
+  null,
+  null,
+  sharedStore
+);
+```
+

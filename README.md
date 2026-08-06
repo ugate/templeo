@@ -35,7 +35,7 @@ By default, templates are cached in-memory for the duration of the `Engine`/temp
   - __[IndexedDB (Browser) / LevelDB (Node.js)](https://ugate.github.io/templeo/guide/2-cache#db)__<br>
   __Recommended when templates need to be persistent between usage.__ Compiled templates are cached in either an [IndexedDB](https://developer.mozilla.org/en-US/docs/Web/API/IndexedDB_API) store or a [LevelDB](https://www.npmjs.com/package/level) store.
   - __[File System (Node.js)](https://ugate.github.io/templeo/guide/2-cache#fs)__<br>
-  __Recommended when running on the server.__ Compiled templates are cached within the [file system](https://nodejs.org/api/fs.html) and __are loaded as modules so they can be debugged just like any other module__. If template _partials_/fragments are used the corresponding files can be _registered_ by providing a _base_ directory to be _scanned_. The _base_ directory can also be [_watched_ for changes](https://ugate.github.io/templeo/api/lib/template-options) that will automaticaly reregister _partials_ with the updated _partial_ content!
+  __Recommended when running on the server.__ Compiled templates are cached within the [file system](https://nodejs.org/api/fs.html) and __are loaded as modules so they can be debugged just like any other module__. If template _partials_/fragments are used the corresponding files can be _registered_ by providing a _base_ directory to be _scanned_. The _base_ directory can also be [watched with native Node.js file-system watchers](https://ugate.github.io/templeo/guide/2-cache#watchers), automatically registering created or changed partials and unregistering removed partials and directories!
 
 ## Dev
 
@@ -46,7 +46,7 @@ npm ci
 npm test
 ```
 
-The 33-test suite uses Node.js 24's native test runner, assertions, coverage, HTTPS, crypto, filesystem, and child-process APIs. The only direct development dependencies retained are the packages needed for Express integration, DOM validation, LevelDB validation, and VitePress documentation.
+The 38-test suite uses Node.js 24's native test runner, assertions, coverage, HTTPS, crypto, filesystem, and child-process APIs. The only direct development dependencies retained are the packages needed for Express integration, DOM validation, LevelDB validation, and VitePress documentation.
 
 ## Local docs workflow
 

@@ -15,7 +15,8 @@ const args = [
   'test/db.js',
   'test/default.js',
   'test/express.js',
-  'test/files.js'
+  'test/files.js',
+  'test/watchers.js'
 ];
 
 const result = spawnSync(process.execPath, args, {
