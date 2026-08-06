@@ -54,6 +54,23 @@ describe('CachierFiles native watchers', { concurrency: false }, () => {
     await waitFor(() => fixture.cachier.metadata.watchedDirs.length === 1);
   });
 
+
+  test('ignores generated JavaScript modules discovered beside template partials', { timeout: TEST_TIMEOUT_MS }, async () => {
+    const fixture = await createFixture();
+    await Fs.promises.writeFile(Path.join(fixture.partialsPath, 'source.html'), 'template-source');
+    await Fs.promises.writeFile(Path.join(fixture.partialsPath, 'source.js'), 'export default async function source() {}');
+    await Fs.promises.writeFile(Path.join(fixture.partialsPath, 'compiled.cjs'), 'module.exports = async function compiled() {}');
+    await Fs.promises.writeFile(Path.join(fixture.partialsPath, 'compiled.mjs'), 'export default async function compiled() {}');
+    await fixture.engine.register(null, true);
+    Assert.equal((await fixture.engine.getRegistered('source')).content, 'template-source');
+    Assert.equal(await fixture.engine.getRegistered('source', null, 'js'), null);
+    Assert.equal(await fixture.engine.getRegistered('compiled', null, 'cjs'), null);
+    Assert.equal(await fixture.engine.getRegistered('compiled', null, 'mjs'), null);
+    await Fs.promises.writeFile(Path.join(fixture.partialsPath, 'source.js'), 'export default async function sourceUpdated() {}');
+    await delay(150);
+    Assert.equal(await fixture.engine.getRegistered('source', null, 'js'), null);
+  });
+
   test('shares render-time watcher updates and closes them with unwatchPaths', { timeout: TEST_TIMEOUT_MS }, async () => {
     const fixture = await createFixture(false);
     const watchedPath = Path.join(fixture.partialsPath, 'watched.html');

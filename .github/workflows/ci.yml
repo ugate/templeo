@@ -13,6 +13,10 @@ jobs:
       - uses: actions/setup-node@v6
         with:
           node-version: 24
-          cache: npm
-      - run: npm ci
-      - run: npm test
+      - name: Install dependencies
+        run: |
+          if [ -f package-lock.json ]; then npm ci; else npm install; fi
+      - name: Audit published runtime dependencies
+        run: npm audit --omit=dev
+      - name: Run tests
+        run: npm test

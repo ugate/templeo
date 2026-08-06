@@ -20,7 +20,6 @@ import * as Fs from 'node:fs';
 import * as Path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { JSDOM } from 'jsdom';
-import Level from 'level';
 import Engine from '../../index.js';
 import TemplateOpts from '../../lib/template-options.js';
 import Sandbox from '../../lib/sandbox.js';
@@ -28,7 +27,7 @@ import Sandbox from '../../lib/sandbox.js';
 const __dirname = Path.dirname(fileURLToPath(import.meta.url));
 const HtmlFrmt = value => value;
 const JsFrmt = value => value;
-export { Http, Https, Os, Fs, Path, expect, HtmlFrmt, JsFrmt, JSDOM, Level, Engine };
+export { Http, Https, Os, Fs, Path, expect, HtmlFrmt, JsFrmt, JSDOM, Engine };
 export const PLAN = 'Template Engine';
 export const TASK_DELAY = 500;
 export const TEST_TKO = 20000;
@@ -327,6 +326,8 @@ class Main {
    */
   static async getFiles(dir, readContent = true, rmBasePartial = true, includeSubDirs = true, _initDir = null) {
     if (!_initDir) _initDir = dir.replace(/[\/\\]/g, Path.sep);
+    const expectedExtension = _initDir === PATH_HTML_PARTIALS_DIR.replace(/[\/\\]/g, Path.sep) ? '.html' :
+      _initDir === PATH_JSON_PARTIALS_DIR.replace(/[\/\\]/g, Path.sep) ? '.jsont' : null;
     const sdirs = await Fs.promises.readdir(dir);
     var spth, stat, sfiles, files = [], filed, named;
     for (let sdir of sdirs) {
@@ -335,6 +336,7 @@ class Main {
         sfiles = await Main.getFiles(spth, readContent, rmBasePartial, includeSubDirs, _initDir);
         files = sfiles && sfiles.length ? files.length ? files.concat(sfiles) : sfiles : files;
       } else if (stat.isFile()) {
+        if (expectedExtension && Path.extname(spth).toLowerCase() !== expectedExtension) continue;
         named = rmBasePartial ? spth.replace(_initDir, '').replace(/^[\.\/\\]+/, '') : spth;
         filed = {
           name: named.replace(/\..+$/, '').replace(/\\+/g, '/'),

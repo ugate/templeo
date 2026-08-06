@@ -12,10 +12,13 @@ const args = [
   '--test-coverage-include=index.js',
   '--test-coverage-exclude=lib/**',
   '--test-coverage-lines=60',
+  'test/docs.js',
   'test/db.js',
   'test/default.js',
   'test/express.js',
+  'test/level-modern.js',
   'test/files.js',
+  'test/regressions.js',
   'test/watchers.js'
 ];
 

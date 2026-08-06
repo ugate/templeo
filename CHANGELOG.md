@@ -4,6 +4,60 @@ All notable changes to Templeo are documented in this file.
 
 The historical entries below are consolidated from the repository commit history. Repeated dependency updates, documentation corrections, test maintenance, and closely related refactors are grouped into their corresponding release instead of being listed commit-by-commit.
 
+## [2.2.2] - 2026-08-06
+
+### Changed
+
+- Replaced the unmaintained `vitepress-jsdoc` integration with JSDoc's structured `--explain` output and a dependency-free, project-owned Markdown renderer while retaining the existing VitePress API page layout.
+- Upgraded the direct development dependencies to stable releases: Express `5.2.1`, JSDoc `4.0.5`, JSDOM `30.0.1`, and Level `10.0.0`; retained VitePress `1.6.4` as the current stable VitePress release.
+- Pinned direct development dependency versions exactly, overrode JSDoc's transitive `underscore` dependency to the fixed `1.13.8` release, and documented the two required install-time scripts through `allowScripts` for `classic-level` and `esbuild`.
+- Added `audit:runtime` and `audit:development` scripts and made the published runtime audit a CI and release gate.
+- Updated GitHub Actions to use `npm ci` when a refreshed lock file is present and fall back to `npm install` when consuming this lock-free archive.
+
+### Fixed
+
+- Fixed Level 10 module loading when the package exposes a non-callable default namespace alongside the named `Level` constructor.
+- Ignored generated `.js`, `.mjs`, and `.cjs` renderer artifacts during raw partial-directory scans and watcher updates unless JavaScript is the configured template extension.
+- Made the test fixture loader deterministic when stale generated renderer files are present beside HTML or JSON partials.
+
+### Compatibility
+
+- Added support for the modern named `Level` class export, explicit database opening, `status`-based open detection, and async `iterator()` record enumeration while preserving the legacy LevelUP initializer and `createReadStream()` paths.
+- Updated the legacy stream path to wait for asynchronous record processing before completing.
+- No production dependency or public Templeo API was added or changed.
+
+### Documentation
+
+- Added source-tag validation so documentation builds fail rather than silently dropping unsupported JSDoc tags.
+- Filtered JSDoc's undocumented implementation doclets from public API output and rendered signatures as inline code so internal names such as `<anonymous>` cannot be interpreted as Vue/HTML elements during the VitePress build.
+- Normalized JSDoc symbolic links such as `./Engine.compile` and `./Director.toString()` to their generated API pages and added stable explicit anchors to every documented class, member, function, constant, and typedef.
+- Assigned deterministic numeric suffixes to duplicate accessor/member anchors on the same API page while keeping symbolic links pointed at the first canonical occurrence.
+- Resolved class references to their API page heading when JSDoc marks the class declaration undocumented but publishes its documented members.
+- Preserved descriptions, parameters, properties, return values, examples, inheritance, and cross-reference links in the generated API pages.
+
+### Tests
+
+- Added native tests for API Markdown generation, unsupported-tag detection, inherited documentation, undocumented-symbol filtering, safe signature rendering, duplicate accessor anchors, symbolic-link normalization, and the modern Level class/iterator interface.
+
+## [2.2.1] - 2026-08-06
+
+### Fixed
+
+- Fixed `registerPartial()` so `URLSearchParams` values are retained and used when generating parameterized cache keys.
+- Fixed `Cachier.waiter()` so rejected promises preserve their error code, combined stack, captured result position, and subsequent successful results.
+- Fixed generated renderers so compile-time partials are copied into a supplied shared store without overwriting entries already present in that store.
+- Fixed in-memory writes so string template content is retained, compiled source strings/functions are formatted with `writeFormatOptions`, and formatted source is deserialized back into a rendering function.
+- Fixed Fetch API reads so response bodies are consumed exactly once and read formatters operate on the resolved response text.
+- Fixed browser Fetch API writes so Templeo does not depend on Node.js `Buffer` or manually set the restricted `Content-Length` header.
+
+### Tests
+
+- Added seven native Node.js regression tests covering parameterized registration, cumulative promise errors, shared-store initialization, memory content/source writes, formatted fetch reads, and browser-compatible fetch writes.
+
+### Compatibility
+
+- This patch does not add dependencies or change the public API.
+
 ## [2.2.0] - 2026-08-06
 
 ### Added
@@ -105,6 +159,8 @@ The historical entries below are consolidated from the repository commit history
 - Converted compilation and inclusion processing to asynchronous operation.
 - Simplified the engine, cache, director, and testing APIs during the initial development cycle.
 
+[2.2.2]: https://github.com/ugate/templeo/compare/v2.2.1...v2.2.2
+[2.2.1]: https://github.com/ugate/templeo/compare/v2.2.0...v2.2.1
 [2.2.0]: https://github.com/ugate/templeo/compare/v2.1.0...v2.2.0
 [2.1.0]: https://github.com/ugate/templeo/compare/v2.0.0...v2.1.0
 [2.0.0]: https://github.com/ugate/templeo/compare/v1.0.0...v2.0.0

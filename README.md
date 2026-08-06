@@ -42,11 +42,13 @@ By default, templates are cached in-memory for the duration of the `Engine`/temp
 ```sh
 git clone https://github.com/ugate/templeo.git
 cd templeo
-npm ci
+npm install
 npm test
+npm run audit:runtime
+npm run docs:dev -- --host 0.0.0.0
 ```
 
-The 38-test suite uses Node.js 24's native test runner, assertions, coverage, HTTPS, crypto, filesystem, and child-process APIs. The only direct development dependencies retained are the packages needed for Express integration, DOM validation, LevelDB validation, and VitePress documentation.
+The 49-test suite uses Node.js 24's native test runner, assertions, coverage, HTTPS, crypto, filesystem, and child-process APIs. The direct development dependencies are limited to Express integration, JSDOM validation, Level validation, JSDoc parsing, and VitePress documentation. API Markdown is rendered by the project-owned `docs/generate-api.mjs` script from JSDoc JSON doclets.
 
 ## Local docs workflow
 

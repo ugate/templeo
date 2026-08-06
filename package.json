@@ -1,6 +1,6 @@
 {
   "name": "templeo",
-  "version": "2.2.0",
+  "version": "2.2.2",
   "description": "Micro template engine with cache and debugging support",
   "main": "index.js",
   "directories": {
@@ -13,7 +13,9 @@
     "docs:api": "node ./docs/generate-api.mjs",
     "docs:dev": "npm run docs:api && vitepress dev docs",
     "docs:build": "npm run docs:api && vitepress build docs",
-    "docs:preview": "vitepress preview docs"
+    "docs:preview": "vitepress preview docs",
+    "audit:runtime": "npm audit --omit=dev",
+    "audit:development": "npm audit"
   },
   "repository": {
     "type": "git",
@@ -35,16 +37,23 @@
   },
   "dependencies": {},
   "devDependencies": {
-    "express": "^4.17.1",
-    "jsdom": "^16.4.0",
-    "level": "^6.0.0",
-    "vitepress": "^1.6.4",
-    "vitepress-jsdoc": "^1.0.4"
+    "express": "5.2.1",
+    "jsdoc": "4.0.5",
+    "jsdom": "30.0.1",
+    "level": "10.0.0",
+    "vitepress": "1.6.4"
   },
   "files": [
     "/CHANGELOG.md",
     "/index.js",
     "/lib/**/*"
   ],
-  "type": "module"
+  "type": "module",
+  "allowScripts": {
+    "classic-level": true,
+    "esbuild": true
+  },
+  "overrides": {
+    "underscore": "1.13.8"
+  }
 }

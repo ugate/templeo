@@ -1,451 +1,293 @@
+import { spawn } from 'node:child_process';
 import fs from 'node:fs/promises';
 import path from 'node:path';
-import { spawn } from 'node:child_process';
-
+import { pathToFileURL } from 'node:url';
 const root = process.cwd();
-const stageRoot = path.join(root, 'vpjsdocsrc');
-const stageSource = path.join(stageRoot, 'src');
-const docsDir = path.join(root, 'docs');
-const apiDir = path.join(docsDir, 'api');
-
-async function rmrf(target) {
-  await fs.rm(target, { recursive: true, force: true });
+const apiDir = path.join(root, 'docs', 'api');
+const sources = ['index.js', 'lib/cachier.js', 'lib/cachier-db.js', 'lib/cachier-files.js', 'lib/director.js', 'lib/sandbox.js', 'lib/template-options.js', 'lib/template-db-options.js', 'lib/template-file-options.js'];
+const pages = new Map([
+  ['index.js', { file: 'engine.md', title: 'Engine' }],
+  ['cachier.js', { file: 'lib/cachier.md', title: 'Cachier' }],
+  ['cachier-db.js', { file: 'lib/cachier-db.md', title: 'CachierDB' }],
+  ['cachier-files.js', { file: 'lib/cachier-files.md', title: 'CachierFiles' }],
+  ['director.js', { file: 'lib/director.md', title: 'Director' }],
+  ['sandbox.js', { file: 'lib/sandbox.md', title: 'Sandbox' }],
+  ['template-options.js', { file: 'lib/template-options.md', title: 'Template options' }],
+  ['template-db-options.js', { file: 'lib/template-db-options.md', title: 'Database template options' }],
+  ['template-file-options.js', { file: 'lib/template-file-options.md', title: 'File template options' }]
+]);
+const supportedTags = new Set(['async', 'example', 'ignore', 'inheritdoc', 'link', 'module', 'override', 'param', 'private', 'property', 'protected', 'return', 'returns', 'see', 'typedef']);
+async function ensureDir(dir) { await fs.mkdir(dir, { recursive: true }); }
+function normalizeLinks(value) {
+  if (value == null) return '';
+  return String(value)
+    .replace(/\{@linkcode\s+([^}|\s]+)(?:\s*[| ]\s*([^}]+))?\}/g, (_m, target, label) => `[\`${(label || target).trim()}\`](${target})`)
+    .replace(/\{@link(?:plain)?\s+([^}|\s]+)(?:\s*[| ]\s*([^}]+))?\}/g, (_m, target, label) => `[${(label || target).trim()}](${target})`);
 }
-
-
-async function cleanGeneratedDocs() {
-  await rmrf(apiDir);
-  await rmrf(path.join(docsDir, 'api__index__.md'));
-  await rmrf(path.join(docsDir, 'apitypedefs.md'));
-}
-
-async function ensureDir(target) {
-  await fs.mkdir(target, { recursive: true });
-}
-
-async function exists(target) {
-  try {
-    await fs.access(target);
-    return true;
-  } catch {
-    return false;
-  }
-}
-
-async function copyFile(src, dest) {
-  await ensureDir(path.dirname(dest));
-  await fs.copyFile(src, dest);
-}
-
-async function copyJsTree(srcDir, destDir) {
-  const entries = await fs.readdir(srcDir, { withFileTypes: true });
-  for (const entry of entries) {
-    const src = path.join(srcDir, entry.name);
-    const dest = path.join(destDir, entry.name);
-    if (entry.isDirectory()) {
-      await copyJsTree(src, dest);
-    } else if (entry.isFile() && entry.name.endsWith('.js')) {
-      await copyFile(src, dest);
-    }
-  }
-}
-
-async function walkFiles(dir, filter, results = []) {
-  if (!(await exists(dir))) return results;
-  const entries = await fs.readdir(dir, { withFileTypes: true });
-  for (const entry of entries) {
-    const full = path.join(dir, entry.name);
-    if (entry.isDirectory()) {
-      await walkFiles(full, filter, results);
-    } else if (entry.isFile() && filter(full)) {
-      results.push(full);
-    }
-  }
-  return results;
-}
-
 function slug(value) {
   return String(value)
-    .trim()
-    .toLowerCase()
-    .replace(/<[^>]+>/g, '')
-    .replace(/[^\w\s.-]/g, '')
-    .replace(/[.\s/]+/g, '-')
-    .replace(/-+/g, '-')
-    .replace(/^-|-$/g, '');
+    .normalize('NFKD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[\u0000-\u001f]/g, '')
+    .replace(/[\s~`!@#$%^&*()_+=[\]{}|\\;:"'“”‘’<>,.?/-]+/g, '-')
+    .replace(/-{2,}/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .replace(/^(\d)/, '_$1')
+    .toLowerCase();
 }
-
-function headingTextToAutoId(title) {
-  return slug(title);
+function typeText(type) { return type?.names?.map(name => `\`${String(name).replace(/\|/g, '\\|')}\``).join(' \\| ') || ''; }
+function tableText(value) { return normalizeLinks(value == null ? '' : value).replace(/\r?\n+/g, '<br>').replace(/\|/g, '\\|'); }
+function parameterName(param) {
+  const dflt = Object.prototype.hasOwnProperty.call(param, 'defaultvalue') ? `=${param.defaultvalue}` : '';
+  return param.optional ? `[${param.name}${dflt}]` : param.name;
 }
-
-function relDocLink(fromFile, toFile, anchor = '') {
-  if (path.resolve(fromFile) === path.resolve(toFile)) {
-    return anchor ? `#${anchor}` : '#';
+function parameterList(params) { return (params || []).filter(param => param.name && !param.name.includes('.')).map(parameterName).join(', '); }
+function ownerName(value) { const parts = String(value || '').replace(/^module:/, '').split(/[~#.]/); return parts[parts.length - 1] || ''; }
+function instanceName(value) { return value ? value.charAt(0).toLowerCase() + value.slice(1) : ''; }
+function pageForDoclet(doclet) { return pages.get(path.basename(doclet?.meta?.filename || '')); }
+function isPublished(doclet) { return Boolean(doclet && !doclet.undocumented && pageForDoclet(doclet) && !doclet.ignore && doclet.access !== 'private' && ['module', 'class', 'function', 'member', 'constant', 'typedef'].includes(doclet.kind)); }
+function returnType(doclet) { return (doclet.returns || []).map(item => typeText(item.type)).filter(Boolean).join(' \\| '); }
+function inlineCode(value) { return `\`${String(value).replace(/`/g, '\\`')}\``; }
+function heading(doclet) {
+  const className = ownerName(doclet.memberof);
+  const owner = doclet.scope === 'static' ? className : instanceName(className);
+  let text;
+  if (doclet.kind === 'class') text = `new ${doclet.name}(${parameterList(doclet.params)})`;
+  else if (doclet.kind === 'function') text = `${owner ? `${owner}.` : ''}${doclet.name}(${parameterList(doclet.params)})`;
+  else text = `${owner ? `${owner}.` : ''}${doclet.name}`;
+  const returns = returnType(doclet);
+  return returns ? `${inlineCode(text)} ⇒ ${returns}` : inlineCode(text);
+}
+function docletAnchor(doclet) {
+  if (doclet.kind === 'class') return slug(`new-${doclet.name}`);
+  const className = ownerName(doclet.memberof);
+  const owner = doclet.scope === 'static' ? className : instanceName(className);
+  return slug(owner ? `${owner}-${doclet.name}` : doclet.name);
+}
+function renderTable(title, items) {
+  if (!items?.length) return [];
+  const hasDefaults = items.some(item => Object.prototype.hasOwnProperty.call(item, 'defaultvalue'));
+  const lines = ['', `#### ${title}`, ''];
+  lines.push(hasDefaults ? '| Name | Type | Default | Description |' : '| Name | Type | Description |');
+  lines.push(hasDefaults ? '| --- | --- | --- | --- |' : '| --- | --- | --- |');
+  for (const item of items) {
+    const row = [tableText(parameterName(item)), typeText(item.type), tableText(item.description)];
+    if (hasDefaults) row.splice(2, 0, tableText(item.defaultvalue));
+    lines.push(`| ${row.join(' | ')} |`);
   }
-
-  const fromDir = path.dirname(fromFile);
-  let rel = path.relative(fromDir, toFile).replace(/\\/g, '/');
-  rel = rel.replace(/\.md$/i, '');
-  if (rel === 'index') rel = './';
-  else if (!rel.startsWith('.')) rel = './' + rel;
-  return anchor ? `${rel}#${anchor}` : rel;
+  return lines;
 }
-
-function addSymbolAlias(symbolIndex, symbol, entry) {
-  if (!symbol) return;
-
-  const aliases = new Set([
-    symbol,
-    symbol.replace(/^module:/, ''),
-    symbol.replace(/~/g, '.'),
-    symbol.replace(/^module:templeo[./-]?/, ''),
-    symbol.replace(/^module:templeo\/options[./-]?/, ''),
-    symbol.replace(/^templeo[./-]?/, '')
-  ]);
-
-  for (const alias of aliases) {
-    if (!alias) continue;
-    symbolIndex.set(alias, entry);
-
-    const member = /^([a-z][A-Za-z0-9_$]*)\.(.+)$/.exec(alias);
-    if (member) {
-      const owner = member[1];
-      const capOwner = owner.charAt(0).toUpperCase() + owner.slice(1);
-      symbolIndex.set(`${owner}.${member[2]}`, entry);
-      symbolIndex.set(`${capOwner}.${member[2]}`, entry);
+function renderReturns(items) {
+  if (!items?.length) return [];
+  return ['', '#### Returns', '', ...items.map(item => `- ${typeText(item.type)}${item.description ? ` — ${normalizeLinks(item.description)}` : ''}`)];
+}
+function renderExamples(items) {
+  if (!items?.length) return [];
+  const lines = ['', '#### Examples', ''];
+  for (const example of items) lines.push('```js', String(example).replace(/^<caption>[\s\S]*?<\/caption>\s*/i, '').trimEnd(), '```', '');
+  return lines;
+}
+function renderDoclet(doclet, level, anchor = docletAnchor(doclet)) {
+  const lines = [`${'#'.repeat(level)} ${heading(doclet)} {#${anchor}}`, ''];
+  const description = normalizeLinks(doclet.classdesc || doclet.description || '');
+  if (description) lines.push(description, '');
+  if (doclet.augments?.length) lines.push(`**Extends:** ${doclet.augments.map(item => `\`${item}\``).join(', ')}`, '');
+  if (doclet.access && doclet.access !== 'public') lines.push(`**Access:** ${doclet.access}`, '');
+  if (doclet.async) lines.push('**Async:** yes', '');
+  if (doclet.kind === 'typedef' && typeText(doclet.type)) lines.push(`**Type:** ${typeText(doclet.type)}`, '');
+  lines.push(...renderTable('Parameters', doclet.params));
+  lines.push(...renderTable('Properties', doclet.properties));
+  lines.push(...renderReturns(doclet.returns));
+  lines.push(...renderExamples(doclet.examples));
+  if (doclet.see?.length) lines.push('', '#### See also', '', ...doclet.see.map(item => `- ${normalizeLinks(item)}`));
+  return lines;
+}
+function assignDocletAnchors(doclets) {
+  const counts = new Map();
+  const anchors = new Map();
+  for (const doclet of doclets) {
+    const page = pageForDoclet(doclet);
+    const base = doclet.kind === 'module' ? slug(page.title) : docletAnchor(doclet);
+    const key = `${page.file}\0${base}`;
+    const count = (counts.get(key) || 0) + 1;
+    counts.set(key, count);
+    anchors.set(doclet, count === 1 ? base : `${base}-${count}`);
+  }
+  return anchors;
+}
+function validateUniqueAnchors(markdown, file) {
+  const seen = new Set();
+  for (const match of markdown.matchAll(/\{#([^}]+)}/g)) {
+    if (seen.has(match[1])) throw new Error(`Duplicate API anchor "${match[1]}" in ${file}`);
+    seen.add(match[1]);
+  }
+}
+function findParentMember(doclet, doclets, classIndex, visited = new Set()) {
+  const key = doclet.longname || `${doclet.memberof}.${doclet.name}`;
+  if (!doclet.memberof || visited.has(key)) return undefined;
+  visited.add(key);
+  const owner = classIndex.get(doclet.memberof) || classIndex.get(ownerName(doclet.memberof));
+  for (const parentName of owner?.augments || []) {
+    const parent = classIndex.get(parentName) || classIndex.get(ownerName(parentName));
+    if (!parent) continue;
+    const found = doclets.find(item => item.name === doclet.name && item.scope === doclet.scope && (item.memberof === parent.longname || item.memberof === parent.name));
+    if (found) return found;
+    const nested = findParentMember({ ...doclet, memberof: parent.longname || parent.name }, doclets, classIndex, visited);
+    if (nested) return nested;
+  }
+  return undefined;
+}
+function resolveInheritedDoclets(doclets) {
+  const classIndex = new Map();
+  for (const doclet of doclets) {
+    if (doclet.kind === 'class') {
+      classIndex.set(doclet.name, doclet);
+      classIndex.set(doclet.longname, doclet);
     }
   }
-}
-
-function deriveHeadingSymbols(title) {
-  const clean = title.replace(/`/g, '').trim();
-  const symbols = new Set([clean]);
-
-  const token = clean.match(/^([A-Za-z][A-Za-z0-9_$]*(?:\.[A-Za-z0-9_$]+)*)/);
-  if (token) {
-    const value = token[1];
-    symbols.add(value);
-
-    const member = /^([a-z][A-Za-z0-9_$]*)\.(.+)$/.exec(value);
-    if (member) {
-      const owner = member[1];
-      const capOwner = owner.charAt(0).toUpperCase() + owner.slice(1);
-      symbols.add(`${owner}.${member[2]}`);
-      symbols.add(`${capOwner}.${member[2]}`);
+  return doclets.map(doclet => {
+    if (!doclet.inheritdoc && !doclet.override) return doclet;
+    const parent = findParentMember(doclet, doclets, classIndex);
+    if (!parent) return doclet;
+    const merged = { ...doclet };
+    for (const key of ['description', 'params', 'returns', 'properties', 'examples', 'see', 'type']) {
+      if (merged[key] == null || merged[key] === '' || (Array.isArray(merged[key]) && !merged[key].length)) merged[key] = parent[key];
     }
-
-    if (value.startsWith('typedefs.')) {
-      symbols.add(value.slice('typedefs.'.length));
-    }
-  }
-
-  return [...symbols];
-}
-
-function knownSymbolTarget(symbol) {
-  const normalized = String(symbol)
-    .replace(/^module:/, '')
-    .replace(/~/g, '.')
-    .replace(/^templeo[./-]?/, '')
-    .replace(/^options[./-]?/, '');
-
-  if (normalized === 'Engine' || normalized.startsWith('Engine.')) {
-    return path.join(apiDir, 'engine.md');
-  }
-  if (normalized === 'CachierDB' || normalized.startsWith('CachierDB.')) {
-    return path.join(apiDir, 'lib', 'cachier-db.md');
-  }
-  if (normalized === 'CachierFiles' || normalized.startsWith('CachierFiles.')) {
-    return path.join(apiDir, 'lib', 'cachier-files.md');
-  }
-  if (normalized === 'Cachier' || normalized.startsWith('Cachier.')) {
-    return path.join(apiDir, 'lib', 'cachier.md');
-  }
-  if (normalized === 'Director' || normalized.startsWith('Director.')) {
-    return path.join(apiDir, 'lib', 'director.md');
-  }
-  if (normalized === 'Sandbox' || normalized.startsWith('Sandbox.')) {
-    return path.join(apiDir, 'lib', 'sandbox.md');
-  }
-  if (normalized === 'DBOptions' || normalized === 'TemplateDBOpts' || normalized.startsWith('DBOptions.')) {
-    return path.join(apiDir, 'lib', 'template-db-options.md');
-  }
-  if (normalized === 'FileOptions' || normalized === 'TemplateFileOpts' || normalized.startsWith('FileOptions.')) {
-    return path.join(apiDir, 'lib', 'template-file-options.md');
-  }
-  if (normalized === 'Options' || normalized === 'TemplateOpts' || normalized.startsWith('Options.')) {
-    return path.join(apiDir, 'lib', 'template-options.md');
-  }
-  return null;
-}
-
-async function stageSources() {
-  await rmrf(stageRoot);
-  await ensureDir(stageSource);
-
-  for (const file of ['index.js']) {
-    const src = path.join(root, file);
-    if (await exists(src)) await copyFile(src, path.join(stageSource, file));
-  }
-
-  const libDir = path.join(root, 'lib');
-  if (await exists(libDir)) await copyJsTree(libDir, path.join(stageSource, 'lib'));
-
-  const files = await walkFiles(stageSource, file => file.endsWith('.js'));
-  if (!files.length) throw new Error(`No staged source files found in ${stageSource}`);
-}
-
-async function runGenerator() {
-  const args = [
-    'vitepress-jsdoc',
-    '--source', './vpjsdocsrc/src',
-    '--dist', './docs',
-    '--folder', 'api',
-    '--title', 'API Reference',
-    '--readme', './README.md'
-  ];
-
-  await new Promise((resolve, reject) => {
-    const child = spawn(process.platform === 'win32' ? 'npx.cmd' : 'npx', args, {
-      cwd: root,
-      stdio: 'inherit',
-      shell: false
-    });
-    child.on('exit', code => code === 0 ? resolve() : reject(new Error(`vitepress-jsdoc exited with code ${code}`)));
-    child.on('error', reject);
+    return merged;
   });
 }
-
-async function moveIfExists(fromRel, toRel) {
-  const from = path.join(root, fromRel);
-  const to = path.join(root, toRel);
-  if (!(await exists(from))) return false;
-  await ensureDir(path.dirname(to));
-  if (await exists(to)) await rmrf(to);
-  await fs.rename(from, to);
-  return true;
+function symbolAliases(value) {
+  if (!value) return [];
+  const original = String(value).trim();
+  const withoutRelativePrefix = original.replace(/^\.\//, '');
+  const withoutCall = withoutRelativePrefix.replace(/\(\)$/, '');
+  const withoutModule = withoutCall.replace(/^module:/, '');
+  const dotted = withoutModule.replace(/[~#]/g, '.');
+  const withoutPackage = dotted.replace(/^templeo(?:\/options)?[./-]?/, '').replace(/^\.+/, '');
+  const aliases = new Set([original, withoutRelativePrefix, withoutCall, withoutModule, dotted, withoutPackage]);
+  if (withoutPackage.includes('.')) aliases.add(withoutPackage.split('.').slice(-2).join('.'));
+  return [...aliases].filter(Boolean);
 }
-
-async function writeApiIndex() {
-  const apiIndex = path.join(apiDir, 'index.md');
-  const lines = [
-    '# API Reference',
-    '',
-    'Generated API pages:',
-    '',
-    '- [Engine](/api/engine)',
-    '- [Cachier](/api/lib/cachier)',
-    '- [CachierDB](/api/lib/cachier-db)',
-    '- [CachierFiles](/api/lib/cachier-files)',
-    '- [Director](/api/lib/director)',
-    '- [Sandbox](/api/lib/sandbox)',
-    '- [Template options](/api/lib/template-options)',
-    '- [Database template options](/api/lib/template-db-options)',
-    '- [File template options](/api/lib/template-file-options)',
-    ''
-  ];
-  await ensureDir(path.dirname(apiIndex));
-  await fs.writeFile(apiIndex, lines.join('\n'), 'utf8');
-}
-
-async function normalizeOutput() {
-  await ensureDir(path.join(apiDir, 'lib'));
-
-  const moves = [
-    ['docs/api__index__.md', 'docs/api/engine.md'],
-    ['docs/api/__index__.md', 'docs/api/engine.md']
-  ];
-
-  for (const [fromRel, toRel] of moves) {
-    await moveIfExists(fromRel, toRel);
+function addAlias(index, value, entry) {
+  for (const alias of symbolAliases(value)) {
+    if (!index.has(alias)) index.set(alias, entry);
   }
-
-  await rmrf(path.join(apiDir, 'README.md'));
-  await rmrf(path.join(apiDir, '__index__.md'));
-
-  await writeApiIndex();
 }
-
-function decodeHtmlEntities(value) {
-  return value
-    .replace(/&#x27;/gi, "'")
-    .replace(/&#39;/g, "'")
-    .replace(/&quot;/gi, '"')
-    .replace(/&lt;/gi, '<')
-    .replace(/&gt;/gi, '>')
-    .replace(/&amp;/gi, '&');
+function findLinkTarget(index, target) {
+  for (const alias of symbolAliases(target)) {
+    const found = index.get(alias);
+    if (found) return found;
+  }
+  return undefined;
 }
-
-function normalizeInlineCodeTags(md) {
-  return md.replace(/<code>([\s\S]*?)<\/code>/gi, (_match, content) => {
-    const decoded = decodeHtmlEntities(content);
-    const runs = decoded.match(/`+/g) || [];
-    const width = Math.max(1, ...runs.map(run => run.length + 1));
-    const fence = '`'.repeat(width);
-    return `${fence}${decoded}${fence}`;
+function relativeLink(fromFile, toFile, anchor) {
+  if (path.resolve(fromFile) === path.resolve(toFile)) return `#${anchor}`;
+  let rel = path.relative(path.dirname(fromFile), toFile).replace(/\\/g, '/').replace(/\.md$/, '');
+  if (!rel.startsWith('.')) rel = `./${rel}`;
+  return `${rel}#${anchor}`;
+}
+function rewriteLinks(markdown, file, index) {
+  let result = markdown.replace(/\[([^\]]+)]\(([^()\s]+(?:\(\))?)\)/g, (match, label, target) => {
+    const found = findLinkTarget(index, target);
+    if (found) return `[${label}](${relativeLink(file, found.file, found.anchor)})`;
+    if (/^(?:https?:|mailto:|\/|\.\/|\.\.\/|#)/.test(target)) return match;
+    return match;
   });
-}
-
-function normalizeGuideLinks(md) {
-  md = md.replace(
-    '[Engine.register](module-templeo-Engine.html#register __or__ when an [include](tutorial-1-basics.html#include)',
-    '[Engine.register](/api/engine) or when an [include](/guide/1-basics#include)'
-  );
-
   const replacements = [
     [/https:\/\/ugate\.github\.io\/templeo\/tutorial-1-basics\.html/g, '/guide/1-basics'],
-    [/https:\/\/ugate\.github\.io\/templeo\/tutorial-1-cache\.html/g, '/guide/2-cache'],
-    [/https:\/\/ugate\.github\.io\/templeo\/tutorial-2-cache\.html/g, '/guide/2-cache'],
+    [/https:\/\/ugate\.github\.io\/templeo\/tutorial-(?:1|2)-cache\.html/g, '/guide/2-cache'],
     [/https:\/\/ugate\.github\.io\/templeo\/tutorial-3-examples\.html/g, '/guide/3-examples'],
-    [/https:\/\/ugate\.github\.io\/templeo\/module-templeo-Engine\.html(?:#[A-Za-z0-9_.-]+)?/g, '/api/engine'],
     [/tutorial-1-basics\.html/g, '/guide/1-basics'],
-    [/tutorial-1-cache\.html/g, '/guide/2-cache'],
-    [/tutorial-2-cache\.html/g, '/guide/2-cache'],
-    [/tutorial-3-examples\.html/g, '/guide/3-examples'],
-    [/index\.html#caching/g, '/#caching'],
-    [/module-templeo(?:-|\.)Engine\.html(?:#[A-Za-z0-9_.-]+)?/g, '/api/engine'],
-    [/CachierDB\.html(?:#[A-Za-z0-9_.-]+)?/g, '/api/lib/cachier-db'],
-    [/CachierFiles\.html(?:#[A-Za-z0-9_.-]+)?/g, '/api/lib/cachier-files'],
-    [/Cachier\.html(?:#[A-Za-z0-9_.-]+)?/g, '/api/lib/cachier'],
-    [/module-templeo_options\.html#\.DBOptions/g, '/api/lib/template-db-options'],
-    [/module-templeo_options\.html#\.FileOptions/g, '/api/lib/template-file-options'],
-    [/module-templeo_options\.html(?:#\.Options)?/g, '/api/lib/template-options']
+    [/tutorial-(?:1|2)-cache\.html/g, '/guide/2-cache'],
+    [/tutorial-3-examples\.html/g, '/guide/3-examples']
   ];
-
-  for (const [pattern, replacement] of replacements) {
-    md = md.replace(pattern, replacement);
-  }
-  return md;
+  for (const [pattern, replacement] of replacements) result = result.replace(pattern, replacement);
+  return result;
 }
-
-async function buildSymbolIndex(mdFiles) {
-  const symbolIndex = new Map();
-  const rewritten = new Map();
-
-  for (const file of mdFiles) {
-    let md = await fs.readFile(file, 'utf8');
-
-    md = md.replace(
-      /<a\s+(?:name|id)="([^"]+)"><\/a>\s*\n(#{1,6})\s+(.+)$/gm,
-      (_m, symbol, hashes, title) => {
-        const cleanTitle = title.trim();
-        const id = headingTextToAutoId(cleanTitle);
-
-        addSymbolAlias(symbolIndex, symbol, { file, id });
-        for (const alias of deriveHeadingSymbols(cleanTitle)) {
-          addSymbolAlias(symbolIndex, alias, { file, id });
-        }
-
-        return `${hashes} ${cleanTitle}`;
+async function renderApiDocsFromDoclets(rawDoclets, outputDir = apiDir) {
+  const doclets = resolveInheritedDoclets(rawDoclets).filter(isPublished);
+  const groups = new Map([...pages.values()].map(page => [page.file, []]));
+  for (const doclet of doclets) groups.get(pageForDoclet(doclet).file).push(doclet);
+  for (const group of groups.values()) group.sort((a, b) => (a.meta?.lineno || 0) - (b.meta?.lineno || 0));
+  const orderedDoclets = [...groups.values()].flat();
+  const anchors = assignDocletAnchors(orderedDoclets);
+  await fs.rm(outputDir, { recursive: true, force: true });
+  await ensureDir(outputDir);
+  const targets = new Map([...pages.values()].map(page => [page.file, path.join(outputDir, page.file)]));
+  const index = new Map();
+  for (const doclet of orderedDoclets) {
+    const page = pageForDoclet(doclet);
+    const entry = { file: targets.get(page.file), anchor: anchors.get(doclet) };
+    addAlias(index, doclet.name, entry);
+    addAlias(index, doclet.longname, entry);
+    addAlias(index, doclet.memberof && `${doclet.memberof}.${doclet.name}`, entry);
+    addAlias(index, doclet.memberof && `${ownerName(doclet.memberof)}.${doclet.name}`, entry);
+  }
+  for (const page of pages.values()) {
+    addAlias(index, page.title, { file: targets.get(page.file), anchor: slug(page.title) });
+  }
+  for (const page of pages.values()) {
+    const file = targets.get(page.file);
+    const group = groups.get(page.file);
+    const lines = ['---', `title: ${page.title}`, '---', '', `# ${page.title}`, ''];
+    for (const moduleDoc of group.filter(item => item.kind === 'module')) {
+      if (moduleDoc.description) lines.push(normalizeLinks(moduleDoc.description), '');
+      lines.push(...renderExamples(moduleDoc.examples));
+    }
+    const classes = group.filter(item => item.kind === 'class');
+    const consumed = new Set();
+    for (const classDoc of classes) {
+      lines.push(...renderDoclet(classDoc, 2, anchors.get(classDoc)));
+      for (const member of group.filter(item => item.memberof === classDoc.longname || item.memberof === classDoc.name)) {
+        consumed.add(member);
+        lines.push(...renderDoclet(member, 3, anchors.get(member)));
       }
-    );
-
-    md = md.replace(/<a\s+(?:name|id)="([^"]+)"><\/a>/g, (_m, symbol) => {
-      addSymbolAlias(symbolIndex, symbol, {
-        file,
-        id: headingTextToAutoId(symbol)
-      });
-      return '';
-    });
-
-    md.replace(/^(#{1,6})\s+(.+?)\s*$/gm, (_m, _h, title) => {
-      const cleanTitle = title.trim();
-      const entry = { file, id: headingTextToAutoId(cleanTitle) };
-
-      for (const alias of deriveHeadingSymbols(cleanTitle)) {
-        addSymbolAlias(symbolIndex, alias, entry);
-      }
-
-      return _m;
-    });
-
-    rewritten.set(file, md);
+    }
+    for (const doclet of group.filter(item => item.kind !== 'module' && !classes.includes(item) && !consumed.has(item))) lines.push(...renderDoclet(doclet, 2, anchors.get(doclet)));
+    const markdown = rewriteLinks(lines.join('\n').replace(/\n{4,}/g, '\n\n\n').trimEnd() + '\n', file, index);
+    validateUniqueAnchors(markdown, page.file);
+    await ensureDir(path.dirname(file));
+    await fs.writeFile(file, markdown, 'utf8');
   }
-
-  for (const [file, md] of rewritten.entries()) {
-    await fs.writeFile(file, md, 'utf8');
-  }
-
-  return symbolIndex;
+  const indexLines = ['# API Reference', '', 'Generated from Templeo source JSDoc using JSDoc JSON doclets and the project-owned Markdown renderer.', '', ...[...pages.values()].map(page => `- [${page.title}](/api/${page.file.replace(/\.md$/, '')})`), ''];
+  await fs.writeFile(path.join(outputDir, 'index.md'), indexLines.join('\n'), 'utf8');
+  return { docletCount: doclets.length, pageCount: pages.size + 1 };
 }
-
-function rewriteLinks(md, file, symbolIndex) {
-  md = md.replace(/\(#([A-Za-z0-9_$.:-]+)\)/g, (_m, frag) => {
-    const found = symbolIndex.get(frag);
-    return `(#${found ? found.id : headingTextToAutoId(frag)})`;
-  });
-
-  md = md.replace(/href="#([A-Za-z0-9_$.:-]+)"/g, (_m, frag) => {
-    const found = symbolIndex.get(frag);
-    return `href="#${found ? found.id : headingTextToAutoId(frag)}"`;
-  });
-
-  md = md.replace(/\]\((?:\.\/|\/)?typedefs\.([A-Za-z0-9_$.:-]+)\)/g, (m, symbol) => {
-    const full = `typedefs.${symbol}`;
-    const found = symbolIndex.get(full) || symbolIndex.get(symbol);
-    if (found) return `](${relDocLink(file, found.file, found.id)})`;
-    return m;
-  });
-
-  md = md.replace(/\[([^\]]+)\]\((\.\/)?([A-Za-z][A-Za-z0-9_$.:-]*)\)/g, (m, text, _prefix, symbol) => {
-    if (
-      symbol.includes('/') ||
-      symbol.startsWith('http') ||
-      symbol.endsWith('.md') ||
-      symbol.endsWith('.html')
-    ) {
-      return m;
-    }
-
-    const found = symbolIndex.get(symbol) || symbolIndex.get(`typedefs.${symbol}`);
-    if (found) {
-      return `[${text}](${relDocLink(file, found.file, found.id)})`;
-    }
-
-    const fallback = knownSymbolTarget(symbol);
-    if (!fallback) return m;
-    if (fallback.startsWith('http')) return `[${text}](${fallback})`;
-    return `[${text}](${relDocLink(file, fallback)})`;
-  });
-
-  return md;
-}
-
-async function postProcessMarkdown() {
-  const mdFiles = await walkFiles(docsDir, file => file.endsWith('.md'));
-  const symbolIndex = await buildSymbolIndex(mdFiles);
-
-  for (const file of mdFiles) {
-    const rel = path.relative(docsDir, file).replace(/\\/g, '/');
-    let md = await fs.readFile(file, 'utf8');
-    const original = md;
-
-    md = normalizeGuideLinks(md);
-    md = rewriteLinks(md, file, symbolIndex);
-    if (file.startsWith(apiDir + path.sep)) {
-      md = normalizeInlineCodeTags(md);
-    }
-
-    if (md !== original) {
-      await fs.writeFile(file, md, 'utf8');
+function validateSupportedTags(source, filename) {
+  for (const block of source.match(/\/\*\*[\s\S]*?\*\//g) || []) {
+    const regex = /^\s*\*\s*@([A-Za-z][\w-]*)/gm;
+    let match;
+    while ((match = regex.exec(block))) {
+      if (!supportedTags.has(match[1])) throw new Error(`Unsupported JSDoc tag "@${match[1]}" in ${filename}`);
     }
   }
 }
-
+async function generateDoclets() {
+  const jsdoc = path.join(root, 'node_modules', 'jsdoc', 'jsdoc.js');
+  const args = [jsdoc, '--explain', ...sources.map(file => path.join(root, file))];
+  const stdout = await new Promise((resolve, reject) => {
+    const child = spawn(process.execPath, args, { cwd: root, shell: false });
+    let output = '';
+    let errors = '';
+    child.stdout.setEncoding('utf8');
+    child.stderr.setEncoding('utf8');
+    child.stdout.on('data', chunk => { output += chunk; });
+    child.stderr.on('data', chunk => { errors += chunk; });
+    child.on('error', reject);
+    child.on('exit', code => code === 0 ? resolve(output) : reject(new Error(`JSDoc exited with code ${code}${errors ? `\n${errors}` : ''}`)));
+  });
+  return JSON.parse(stdout);
+}
 async function main() {
-  try {
-    await cleanGeneratedDocs();
-    await stageSources();
-    await runGenerator();
-    await normalizeOutput();
-    await postProcessMarkdown();
-  } finally {
-    await rmrf(stageRoot);
-  }
+  for (const sourceFileName of sources) validateSupportedTags(await fs.readFile(path.join(root, sourceFileName), 'utf8'), sourceFileName);
+  const result = await renderApiDocsFromDoclets(await generateDoclets());
+  if (!result.docletCount) throw new Error('JSDoc did not produce any publishable API doclets');
+  console.log(`Generated ${result.docletCount} API doclets across ${result.pageCount} Markdown pages.`);
 }
-
-main().catch(err => {
-  console.error(err);
-  process.exit(1);
-});
+export { assignDocletAnchors, pageForDoclet, renderApiDocsFromDoclets, resolveInheritedDoclets, typeText, validateSupportedTags, validateUniqueAnchors };
+if (process.argv[1] && import.meta.url === pathToFileURL(path.resolve(process.argv[1])).href) {
+  main().catch(error => {
+    console.error(error);
+    process.exit(1);
+  });
+}
