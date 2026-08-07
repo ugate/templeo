@@ -52,10 +52,10 @@ await engine.unregister('test2');
 ```
 
 __❌ Removing everything from _memory_ and persistence storage:__<br/>
-[Engine.clear](/api/engine) - Removes all template sources from __memory__ as well as the persistence store. For example, the following will remove _everything_ from __memory__ and the persistence store, making them unavaliable for use during compilation/rendering.
+[Engine.clearCache](/api/engine) - Removes all template sources from __memory__ as well as the persistence store. For example, the following will remove _everything_ from __memory__ and the persistence store, making them unavaliable for use during compilation/rendering.
 
 ```js
-await engine.clear();
+await engine.clearCache();
 ```
 
 All `Cachier`s inherit a _temporary memory_ space for template sources set during _registration_. The template memory space is sourced during compilation and only changes during rendering. In other words, state remains the same from one rendering call to the next regardless of how many times it's called. However, due to the decoupling of generated rendering functions from depending upon `templeo`, __it's important to note that any template sources that are registered/added/updated/removed after a rendering function has been compiled, will not be reflected during subsequent rendering function calls__.
@@ -96,6 +96,44 @@ When using the default [`Cachier`](/api/lib/cachier) and a _read_ is flagged whe
 - An attempt to retrieve the template from the __rendering function's temporary memory__ will be made.
 - When not in memory, an attempt to retrieve the template from __the HTTP/S [`options.partialsURL`](/api/lib/template-options)__
 - When no `options.partialsURL` is set or retrieval fails, an error is thrown
+
+#### Cache coordination, limits and statistics <sub id="mechanics"></sub>
+
+Templeo 2.3 adds cache coordination without changing the default unlimited behavior. Equivalent `URLSearchParams` are normalized into the same cache name, and concurrent reads, writes, or compiles for the same resource share one in-flight operation.
+
+Optional in-memory limits are available on every `Cachier`:
+
+```js
+const engine = new Engine({
+  maxCacheEntries: 500,       // 0 = unlimited
+  maxCacheBytes: 8 * 1024 * 1024,
+  cacheTTL: 5 * 60 * 1000    // idle milliseconds; 0 = disabled
+});
+```
+
+When a configured entry or byte limit is exceeded, the least-recently-used entry is evicted. A successful cache access refreshes `cacheTTL`. Approximate content and renderer sizes are used for byte accounting.
+
+Use `engine.cacheStats` to inspect cache activity:
+
+```js
+console.log(engine.cacheStats);
+// {
+//   hits, misses, reads, writes, compiles, deduplicated, evictions,
+//   watcherEvents, entries, bytes, pendingReads, pendingWrites, pendingCompiles
+// }
+
+engine.resetCacheStats();
+```
+
+Cleanup operations are separated by intent:
+
+```js
+await engine.clearMemory(); // raw templates and compiled renderers only
+await engine.close();       // release memory/resources without deleting persistent files
+await engine.clearCache();  // full cache-specific cleanup
+```
+
+For `CachierFiles`, `clearCache()` stops watchers, clears memory and deletes generated renderer files. `cachier.clearGeneratedFiles()` deletes only generated files. For `CachierDB`, `close()` closes the active connection and clears memory without deleting persisted records.
 
 #### 🏦 [IndexedDB](https://developer.mozilla.org/en-US/docs/Web/API/IndexedDB_API) / [LevelDB](https://www.npmjs.com/package/level) <sub id="db"></sub>
 
@@ -221,7 +259,9 @@ While active, Templeo:
 - unregisters deleted files;
 - begins watching newly created subdirectories and their files;
 - closes removed subdirectory watchers and unregisters their contents;
-- debounces duplicate operating-system events and verifies each path before changing the cache.
+- debounces duplicate operating-system events, serializes work per path and verifies each path before changing the cache;
+- records file size, modification time and a monotonic revision for watched entries;
+- supports explicit start, reconciliation and stop lifecycle methods.
 
 The watchers use `{ persistent: false }`, so they do not prevent Node.js from exiting. Node.js watcher behavior is still dependent on the underlying operating system and file system.
 
@@ -244,6 +284,9 @@ const engine = Engine.create(cachier);
 // Read the current partial tree and start native file-system watchers.
 await engine.register(null, true);
 
+// Watchers can also be started explicitly, even when watchPaths was false.
+// await engine.startWatching();
+
 await Fs.promises.writeFile(
   'views/partials/greeting.html',
   'Hello ${ it.name }'
@@ -258,7 +301,13 @@ const renderer = await engine.compile('<body>${ await include`greeting` }</body>
 const result = await renderer({ name: 'Templeo' });
 // <body>Hello Templeo</body>
 
-// Closes all compile-time watchers and clears the file cache output.
+// Reconcile after a file-system watcher interruption or network-volume change.
+await engine.reconcileWatching();
+
+// Close watchers without deleting generated renderer files.
+await engine.stopWatching();
+
+// Full cleanup: watchers, memory and generated renderer files.
 await engine.clearCache();
 ```
 

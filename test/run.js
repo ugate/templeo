@@ -19,6 +19,7 @@ const args = [
   'test/level-modern.js',
   'test/files.js',
   'test/regressions.js',
+  'test/cache-v23.js',
   'test/watchers.js'
 ];
 

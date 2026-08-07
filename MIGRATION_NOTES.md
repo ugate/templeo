@@ -1,13 +1,14 @@
 # Notes
 
-- Version `2.2.2` replaces `vitepress-jsdoc` with JSDoc `--explain` JSON plus the project-owned `docs/generate-api.mjs` Markdown renderer.
-- API generation preserves the existing VitePress routes, excludes JSDoc implementation doclets marked `undocumented`, safely code-wraps generated signatures, and validates every JSDoc tag used by Templeo before writing `docs/api/`.
-- JSDoc symbolic links, including JSDoc's relative forms such as `./Engine.compile`, class references such as `./Director`, and call forms such as `./Director.toString()`, are resolved through the generated API index and written against stable heading anchors. When JSDoc marks a class declaration undocumented but publishes its members, the class reference falls back to the API page heading. Duplicate getter/setter or member doclets receive deterministic `-2`, `-3`, and later suffixes while links retain the first canonical target.
-- Direct development dependencies are pinned to Express `5.2.1`, JSDoc `4.0.5`, JSDOM `30.0.1`, Level `10.0.0`, and VitePress `1.6.4`.
-- `allowScripts` explicitly permits only the install scripts required by `classic-level` and `esbuild`; `underscore` is overridden to the fixed `1.13.8` transitive release.
-- Level-backed tests and runtime adapters now prioritize the modern named `Level` class even when a package also exposes a non-callable default namespace, while retaining the older LevelUP-compatible path.
-- File-backed partial scans and watchers ignore stale generated JavaScript renderer modules unless JavaScript is the configured raw-template extension.
-- The test scope now contains 54 tests across API documentation generation, the default engine, IndexedDB/Level adapters, Express integration, file-system caching, native watchers, and Cachier regressions.
-- GitHub Actions uses Node.js 24, runs the published-runtime audit, executes the full tests, builds VitePress, deploys `gh-pages`, and publishes tagged releases through npm Trusted Publisher/OIDC.
-- This archive intentionally omits `package-lock.json` because the restricted build environment could not resolve the public npm registry. Direct versions are exact, and `npm install` will generate a current lock file on a machine with public npm access. Commit that generated lock file; the workflows automatically use `npm ci` whenever it is present.
-- Pushing tag `v2.2.2` runs `.github/workflows/release.yml`, validates the package/tag version, and publishes `templeo@2.2.2` after all gates pass.
+- Version `2.3.0` adds backward-compatible Cachier coordination, lifecycle and observability improvements.
+- Cache names canonicalize `URLSearchParams` order, while concurrent reads, writes and compiles for the same key share one in-flight promise.
+- `maxCacheEntries`, `maxCacheBytes` and `cacheTTL` are optional and default to `0`, preserving unlimited non-expiring cache behavior.
+- `Cachier.stats` / `Engine.cacheStats` report hits, misses, reads, writes, compiles, deduplicated work, evictions, watcher events, entry/byte totals and pending operations.
+- `clearMemory()`, `close()`, `CachierFiles.clearGeneratedFiles()`, `startWatching()`, `reconcileWatching()` and `stopWatching()` separate cleanup and watcher lifecycle responsibilities. `CachierDB.close()` closes connections without deleting records, while `Engine.clearCache()` uses each cache implementation's default full-cleanup scope and `CachierDB.clear(false)` remains available for connection-only cleanup.
+- File watcher work is debounced and serialized per path, uses abortable native watchers, cancels pending timers during shutdown, and records `mtimeMs`, size and revision metadata.
+- Generated renderer files are written through atomic temporary siblings and deserialized directly from source, avoiding timestamped dynamic imports and unbounded ESM module-cache growth.
+- The test scope contains 65 native tests. Eleven new v2.3 tests cover canonical keys, memory/database read-write-compile in-flight deduplication, entry/byte LRU limits, TTL behavior, statistics, database close semantics, lifecycle separation, explicit watcher reconciliation, watcher sequencing, atomic writes, renderer reloads, serialized database helper scope, and browser bundle module syntax.
+- Serialized `CachierDB` render-time operations now include the transitive `optionValue` helper required by cache pruning, and the browser ESM test bundle includes `cache-utils.js` while stripping multiline static imports without stripping dynamic `import()` calls.
+- Direct development dependencies remain pinned to Express `5.2.1`, JSDoc `4.0.5`, JSDOM `30.0.1`, Level `10.0.0`, and VitePress `1.6.4`.
+- This archive omits `package-lock.json` because the build environment cannot resolve the public npm registry. Retain the lock file from the v2.2.2 checkout or regenerate it with `npm install` before committing.
+- Pushing tag `v2.3.0` runs `.github/workflows/release.yml`, validates the package/tag version, and publishes `templeo@2.3.0` through npm Trusted Publisher/OIDC after all gates pass.

@@ -260,14 +260,73 @@ class Engine {
   }
 
   /**
-   * Clears the underlying cache
+   * Clears the underlying cache.
    * @async
-   * @param {Boolean} [all=false] `true` to clear __ALL unassociated cache instances__ when possible as well as any partials
-   * that have been registered
+   * @param {Boolean} [all] Optional cache-specific scope flag. When omitted, the configured cache's default is used.
    */
-  clearCache(all = false) {
+  clearCache(all) {
     const ns = internal(this);
-    return ns.at.cache.clear(all);
+    return typeof all === 'undefined' ? ns.at.cache.clear() : ns.at.cache.clear(all);
+  }
+
+  /**
+   * Clears only in-memory template content and compiled renderers.
+   * @returns {Promise<*>} The cache cleanup result.
+   */
+  clearMemory() {
+    const ns = internal(this);
+    return ns.at.cache.clearMemory();
+  }
+
+  /**
+   * Starts native file-system watchers when supported by the configured cache.
+   * @returns {Promise<Number>} The number of active watchers.
+   */
+  startWatching() {
+    const ns = internal(this);
+    return typeof ns.at.cache.startWatching === 'function' ? ns.at.cache.startWatching() : Promise.resolve(0);
+  }
+
+  /**
+   * Stops native file-system watchers when supported by the configured cache.
+   * @returns {Promise<Number>} The number of closed watchers.
+   */
+  stopWatching() {
+    const ns = internal(this);
+    return typeof ns.at.cache.stopWatching === 'function' ? ns.at.cache.stopWatching() : Promise.resolve(0);
+  }
+
+  /**
+   * Reconciles native file-system watchers with the current partial tree when supported by the configured cache.
+   * @returns {Promise<Number>} The number of files discovered during reconciliation.
+   */
+  reconcileWatching() {
+    const ns = internal(this);
+    return typeof ns.at.cache.reconcileWatching === 'function' ? ns.at.cache.reconcileWatching() : Promise.resolve(0);
+  }
+
+  /**
+   * Releases cache resources without deleting persistent cache files.
+   * @returns {Promise<*>} The close result.
+   */
+  close() {
+    const ns = internal(this);
+    return ns.at.cache.close();
+  }
+
+  /**
+   * @returns {Object} Cache activity and current cache-size statistics.
+   */
+  get cacheStats() {
+    return internal(this).at.cache.stats;
+  }
+
+  /**
+   * Resets cumulative cache counters while retaining current entry and byte totals.
+   * @returns {Object} The reset statistics.
+   */
+  resetCacheStats() {
+    return internal(this).at.cache.resetStats();
   }
 
   /**

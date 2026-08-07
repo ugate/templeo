@@ -31,7 +31,7 @@ Template Literals naturally allow for any of your own helper functions to be acc
 - __🛎️ Auto Fetch__ <br>
 By default, template(s) and rendering context can be [fetched](https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API)/[requested](https://nodejs.org/api/https.html#https_https_request_url_options_callback) __automatically__ at _compile-time_ and/or _render-time_ from an HTTP/S server. Also, render-time includes decouples the included template sources from the renderer allowing for newly dicovered template fragments to be included without re-compiling a new renderer!<br><br>
 - __🏧 Caching__ <sub id="caching"></sub><br>
-By default, templates are cached in-memory for the duration of the `Engine`/template lifespan. There are a few other extensions that may be more suitable depending upon your needs.
+By default, templates are cached in-memory for the duration of the `Engine`/template lifespan. Concurrent reads, writes, and compiles are deduplicated, cache activity is available through `engine.cacheStats`, and optional LRU entry/byte limits plus idle TTL expiration can be configured. There are a few other extensions that may be more suitable depending upon your needs.
   - __[IndexedDB (Browser) / LevelDB (Node.js)](https://ugate.github.io/templeo/guide/2-cache#db)__<br>
   __Recommended when templates need to be persistent between usage.__ Compiled templates are cached in either an [IndexedDB](https://developer.mozilla.org/en-US/docs/Web/API/IndexedDB_API) store or a [LevelDB](https://www.npmjs.com/package/level) store.
   - __[File System (Node.js)](https://ugate.github.io/templeo/guide/2-cache#fs)__<br>
@@ -48,7 +48,7 @@ npm run audit:runtime
 npm run docs:dev -- --host 0.0.0.0
 ```
 
-The 49-test suite uses Node.js 24's native test runner, assertions, coverage, HTTPS, crypto, filesystem, and child-process APIs. The direct development dependencies are limited to Express integration, JSDOM validation, Level validation, JSDoc parsing, and VitePress documentation. API Markdown is rendered by the project-owned `docs/generate-api.mjs` script from JSDoc JSON doclets.
+The 65-test suite uses Node.js 24's native test runner, assertions, coverage, HTTPS, crypto, filesystem, and child-process APIs. The direct development dependencies are limited to Express integration, JSDOM validation, Level validation, JSDoc parsing, and VitePress documentation. API Markdown is rendered by the project-owned `docs/generate-api.mjs` script from JSDoc JSON doclets.
 
 ## Local docs workflow
 

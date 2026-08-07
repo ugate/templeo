@@ -4,6 +4,40 @@ All notable changes to Templeo are documented in this file.
 
 The historical entries below are consolidated from the repository commit history. Repeated dependency updates, documentation corrections, test maintenance, and closely related refactors are grouped into their corresponding release instead of being listed commit-by-commit.
 
+## [2.3.0] - 2026-08-06
+
+### Added
+
+- Added canonical cache operation keys with stable URL search-parameter ordering.
+- Added in-flight read, write and compile deduplication so concurrent requests for the same resource share one promise.
+- Added optional `maxCacheEntries`, `maxCacheBytes`, and idle `cacheTTL` controls; all default to `0` to preserve unlimited, non-expiring behavior.
+- Added cache statistics through `Cachier.stats` and `Engine.cacheStats`, including hits, misses, reads, writes, compiles, deduplicated work, evictions, watcher events, entry/byte totals, and pending operation counts.
+- Added `resetStats()` / `resetCacheStats()` and separate `clearMemory()` and `close()` lifecycle methods; `CachierDB.close()` closes an active database connection without deleting persisted records.
+- Added `CachierFiles.startWatching()`, `reconcileWatching()`, `stopWatching()`, and `clearGeneratedFiles()` plus matching Engine watcher controls.
+
+### Changed
+
+- In-memory cache storage now uses null-prototype objects and least-recently-used tracking when limits are configured.
+- Native file watchers now use abort signals, cancel pending debounce timers during shutdown, serialize events per path, and record file modification time, size, and revision metadata.
+- Generated renderer files are written atomically through temporary sibling files before rename.
+- Generated CommonJS and ESM renderers are deserialized directly from their source files instead of using timestamped dynamic imports, preventing unbounded Node.js ESM module-cache growth.
+- `CachierFiles` statistics now combine its base-memory and file-operation stores. `clear()` / `Engine.clearCache()` perform full cleanup: stop watchers, clear both memory stores, and remove generated files. `close()` preserves generated files.
+- `Engine.clearCache()` now preserves each cache implementation's own default cleanup scope; `CachierDB.clear()` correctly distinguishes connection-only cleanup from deleting all persisted records.
+
+### Fixed
+
+- Added the transitive `optionValue` cache helper to serialized `CachierDB` render-time operation scopes so LRU and TTL pruning work inside generated renderers.
+- Updated the browser ESM test bundle to include the shared cache utility module and remove multiline static imports without removing dynamic `import()` expressions.
+
+### Tests
+
+- Added eleven native tests covering canonical cache keys, concurrent memory/database read-write-compile deduplication, entry/byte LRU eviction, idle TTL expiration, statistics reset, database close semantics, separated file/watcher lifecycle, explicit reconciliation, rapid watcher updates, atomic writes, repeated renderer reloads, serialized database helper scope, and browser bundle module syntax.
+
+### Compatibility
+
+- All new cache limits and watcher controls are opt-in or additive. Existing unlimited cache behavior and `watchPaths` automation remain the defaults.
+- No runtime dependency was added.
+
 ## [2.2.2] - 2026-08-06
 
 ### Changed
@@ -159,6 +193,7 @@ The historical entries below are consolidated from the repository commit history
 - Converted compilation and inclusion processing to asynchronous operation.
 - Simplified the engine, cache, director, and testing APIs during the initial development cycle.
 
+[2.3.0]: https://github.com/ugate/templeo/compare/v2.2.2...v2.3.0
 [2.2.2]: https://github.com/ugate/templeo/compare/v2.2.1...v2.2.2
 [2.2.1]: https://github.com/ugate/templeo/compare/v2.2.0...v2.2.1
 [2.2.0]: https://github.com/ugate/templeo/compare/v2.1.0...v2.2.0
