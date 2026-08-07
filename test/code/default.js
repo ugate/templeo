@@ -2,7 +2,6 @@
 
 import { expect, LOGGER, Engine, HtmlFrmt, JsFrmt, Main, JSDOM, Fs, Path } from './_main.js';
 import { pathToFileURL } from 'node:url';
-import { browserBundle } from '../browser-bundle.js';
 
 // DEBUGGING: Use the following
 // node --inspect-brk test/code/default.js
@@ -104,38 +103,6 @@ class Tester {
     expect(result, 'Node.js ESM import result').to.equal('node-esm');
   }
 
-  /**
-   * Verifies that a serialized helper directive can dynamically import a browser-compatible ESM module
-   * from a browser realm where CommonJS `require` is unavailable. The imported helper is executed from
-   * an included partial so the render-time partial sandbox is validated in addition to the primary renderer.
-   * @returns {Promise<void>} Resolves after the browser-rendered module value is validated.
-   */
-  static async browserEsmImportModule() {
-    const dom = new JSDOM('<!DOCTYPE html><html><body></body></html>', {
-      runScripts: 'outside-only',
-      url: 'https://templeo.test/'
-    });
-    try {
-      dom.window.eval(await browserBundle());
-      const moduleURL = `data:text/javascript,${encodeURIComponent("export const runtime = 'browser-esm';")}`;
-      const script = [
-        '(async () => {',
-        '  const engine = new globalThis.TempleoEngine();',
-        '  engine.registerHelper(function loadBrowserModule(specifier) {',
-        '    return importModule(specifier).then(module => module.runtime);',
-        '  });',
-        "  await engine.registerPartial('module-import', '${ await loadBrowserModule(it.moduleURL) }');",
-        "  const renderer = await engine.compile('${ await include`module-import` }');",
-        `  return renderer({ moduleURL: ${JSON.stringify(moduleURL)} });`,
-        '})()'
-      ].join('\n');
-      const result = await dom.window.eval(script);
-      expect(result, 'Browser ESM import result').to.equal('browser-esm');
-      expect(typeof dom.window.require, 'Browser CommonJS require').to.equal('undefined');
-    } finally {
-      dom.window.close();
-    }
-  }
 
   static async htmlPartialsFetchHttpsServerCompiletimeRead() {
     const opts = baseOptions();

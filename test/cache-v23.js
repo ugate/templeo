@@ -11,7 +11,6 @@ import Engine from '../index.js';
 import Cachier from '../lib/cachier.js';
 import CachierFiles from '../lib/cachier-files.js';
 import CachierDB from '../lib/cachier-db.js';
-import { browserBundle } from './browser-bundle.js';
 
 const TEST_TIMEOUT_MS = 15000;
 const roots = new Set();
@@ -39,13 +38,6 @@ describe('Cachier v2.3 mechanics', { concurrency: false }, () => {
     const scopes = new CachierDB().operations[0].scopes.map(scope => scope.name);
     Assert.ok(scopes.includes('optionValue'));
     Assert.ok(scopes.indexOf('optionValue') < scopes.indexOf('cachePrune'));
-  });
-
-  test('builds a browser bundle without static ESM declarations', async () => {
-    const bundle = await browserBundle();
-    Assert.doesNotMatch(bundle, /^\s*import\b/m);
-    Assert.doesNotMatch(bundle, /^\s*export\b/m);
-    Assert.doesNotThrow(() => new Function(bundle));
   });
 
   test('deduplicates concurrent reads for the same resource', { timeout: TEST_TIMEOUT_MS }, async () => {

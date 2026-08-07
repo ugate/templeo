@@ -4,6 +4,41 @@ All notable changes to Templeo are documented in this file.
 
 The historical entries below are consolidated from the repository commit history. Repeated dependency updates, documentation corrections, test maintenance, and closely related refactors are grouped into their corresponding release instead of being listed commit-by-commit.
 
+## [3.0.1] - 2026-08-07
+
+### Changed
+
+- Browser and Node.js consumers now use the same public package entry (`templeo`) and the same existing `templeo/lib/*` deep imports; no dedicated browser entry or browser-specific import path is required.
+- `CachierFiles` and `TemplateFileOpts` detect non-Node runtimes before loading Node.js file-system builtins, so unsupported browser imports fail with explicit Templeo Node.js-compatibility errors instead of attempting `node:` module requests.
+- HTTP/S template operations now use the standard Fetch API in both Node.js and browsers; the legacy Node `https.request` fallback was removed from the shared cache path.
+- File-cache generated renderer paths preserve source hierarchy relative to `relativeTo`; the primary renderer remains at the output root and temporary output directories are not duplicated into generated paths.
+- Native IndexedDB operations now use the actual `IDBDatabase` returned by `indexedDB.open()` and standard request/transaction completion semantics.
+
+### Fixed
+
+- Fixed render-time file path extraction when the primary template is outside `partialsPath`; generated renderer names no longer collapse to a bare `.mjs` / `.cjs` path.
+- Fixed render-time file writer routing so generated partial renderers are not flattened or remapped a second time after `readWriteName()` has already selected their destination.
+- Fixed browser IndexedDB discovery to resolve `indexedDB` from `globalThis`.
+- Fixed IndexedDB database upgrades so object stores are created from the opened `IDBDatabase`, and successful opens retain the database handle.
+- Fixed IndexedDB single-record reads, writes, and deletes so they target the correct object stores and always settle instead of leaving a pending Promise.
+- Fixed browser imports of Node-only file modules so Templeo throws its compatibility error before Chromium attempts to load `node:os`, `node:fs`, or `node:path`.
+- Fixed IndexedDB cursor reads/deletes to use the correct transaction mode, treat cursor exhaustion as normal completion, propagate request errors, and await asynchronous registration callbacks.
+- Removed async Promise executors from the database execution path so asynchronous exceptions reject normally rather than hanging indefinitely.
+- Closed IndexedDB handles are now cleared from the cache lifecycle state so later operations do not reuse a closed connection.
+
+### Tests
+
+- Replaced synthetic import-stripping/JSDOM browser checks with Playwright Chromium tests that load Templeo directly as native ESM using the same `templeo` and `templeo/lib/*` specifiers used by applications.
+- Browser coverage verifies the public root/deep imports, direct rendering, local partials, compile-time and render-time Fetch reads, canonical query parameters, Fetch writes, primary template/context Fetch, dynamic ESM helpers, native IndexedDB single-record and persisted reads, browser globals, and explicit Node-only filesystem incompatibility errors.
+- Corrected the IndexedDB single-record browser assertion to follow the established `CachierDB.read()` storage-object return contract used by the LevelDB tests.
+- Added regression coverage for primary templates outside `partialsPath` and for the legacy Files output hierarchy.
+
+### Compatibility
+
+- `CachierFiles` and `TemplateFileOpts` remain Node.js-only. Importing either from a browser throws an explicit incompatibility error rather than requiring a separate browser package entry.
+- Playwright is a development-only test dependency. Browser/system prerequisites are installed explicitly with `npm run test:browser:install`; `npm test` does not install browsers or mutate the host operating system.
+- No production runtime dependency was added.
+
 ## [3.0.0] - 2026-08-06
 
 ### Breaking
@@ -13,7 +48,6 @@ The historical entries below are consolidated from the repository commit history
 ### Changed
 
 - Render-time file-cache renderer writes now use the configured `outputPath` instead of writing generated JavaScript beside raw partial templates.
-- File-cache generated renderer paths preserve source hierarchy relative to `relativeTo`; the primary renderer remains at the output root, and temporary output directories are not duplicated into nested paths.
 - Render-time generated renderer extensions now consistently follow `useCommonJs` for memory, file and database cache operations.
 - Added VitePress `docs/.vitepress/cache/` and `docs/.vitepress/dist/` to `.gitignore`.
 
@@ -26,11 +60,10 @@ The historical entries below are consolidated from the repository commit history
 - Fixed `getRegistered()` so returned `URLSearchParams` remain usable and are copied without mutating the cached instance.
 - Fixed cache naming and HTTP reads when a template name already contains a query string; existing and supplied search parameters are preserved, canonicalized and not duplicated.
 - Fixed render-time extension detection for parameterized include paths so query strings are not mistaken for part of the template extension.
-- Fixed render-time file path extraction when the primary template is outside `partialsPath`; generated renderer names no longer collapse to `.mjs` / `.cjs` and create a directory at that filename.
 
 ### Tests
 
-- Added eleven v3 regression tests covering ESM-default/CommonJS opt-in naming, native import/require loading, query merging, raw-name unregister behavior, `URLSearchParams` copies, memory-only DB registration, DB compile argument forwarding, render-time primary-template path extraction, the legacy Files fixture path shape, and compile/render-time file output placement and extensions.
+- Added nine v3 regression tests covering ESM-default/CommonJS opt-in naming, native import/require loading, query merging, raw-name unregister behavior, `URLSearchParams` copies, memory-only DB registration, DB compile argument forwarding, and compile/render-time file output placement and extensions.
 
 ## [2.3.0] - 2026-08-06
 

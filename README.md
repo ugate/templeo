@@ -29,7 +29,7 @@ Compiled templates are accessible directly via the VM `sourceURL` or through mod
 - __🧠 Extensible__ <br>
 Template Literals naturally allow for any of your own helper functions to be accessible within the template literal itself as long as they are within scope of the `templeo` generated rendering function execution (or via registration). And since rendering functions are independent of `templeo`, included template content can evolve based upon a given `context` without having to be re-compiled!<br><br>
 - __🛎️ Auto Fetch__ <br>
-By default, template(s) and rendering context can be [fetched](https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API)/[requested](https://nodejs.org/api/https.html#https_https_request_url_options_callback) __automatically__ at _compile-time_ and/or _render-time_ from an HTTP/S server. Also, render-time includes decouples the included template sources from the renderer allowing for newly dicovered template fragments to be included without re-compiling a new renderer!<br><br>
+By default, template(s) and rendering context can be [fetched](https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API) __automatically__ at _compile-time_ and/or _render-time_ from an HTTP/S server. Also, render-time includes decouples the included template sources from the renderer allowing for newly dicovered template fragments to be included without re-compiling a new renderer!<br><br>
 - __🏧 Caching__ <sub id="caching"></sub><br>
 By default, templates are cached in-memory for the duration of the `Engine`/template lifespan. Concurrent reads, writes, and compiles are deduplicated, cache activity is available through `engine.cacheStats`, and optional LRU entry/byte limits plus idle TTL expiration can be configured. There are a few other extensions that may be more suitable depending upon your needs.
   - __[IndexedDB (Browser) / LevelDB (Node.js)](https://ugate.github.io/templeo/guide/2-cache#db)__<br>
@@ -43,14 +43,21 @@ By default, templates are cached in-memory for the duration of the `Engine`/temp
 git clone https://github.com/ugate/templeo.git
 cd templeo
 npm install
+npm run test:browser:install
 npm test
 npm run audit:runtime
 npm run docs:dev -- --host 0.0.0.0
 ```
 
-The 74-test suite uses Node.js 24's native test runner, assertions, coverage, HTTPS, crypto, filesystem, and child-process APIs. The direct development dependencies are limited to Express integration, JSDOM validation, Level validation, JSDoc parsing, and VitePress documentation. API Markdown is rendered by the project-owned `docs/generate-api.mjs` script from JSDoc JSON doclets.
+The test suite uses Node.js version 24+ native test runner plus Playwright Chromium for the browser release gate. Install Chromium and its Linux system dependencies once with `npm run test:browser:install`, then run `npm test`. Browser tests use the same public imports as server-side code (`templeo` and `templeo/lib/*`) through native ESM, and exercise rendering, HTTP reads/writes, dynamic ESM helpers, IndexedDB persistence, and explicit incompatibility errors for Node-only filesystem APIs. No bundler or synthetic import rewriting is involved. API Markdown is rendered by the project-owned `docs/generate-api.mjs` script from JSDoc JSON doclets.
 
-Templeo 3 defaults generated renderer modules to native ECMAScript modules (`.mjs`). Set `useCommonJs: true` when CommonJS (`.cjs`) output is required.
+Templeo version 3+ defaults generated renderer modules to native ECMAScript modules (`.mjs`). Set `useCommonJs: true` when CommonJS (`.cjs`) output is required.
+
+Release/publish new versions
+```sh
+# ensure package.json has the proper version bump, then run:
+npm run release
+```
 
 ## Local docs workflow
 

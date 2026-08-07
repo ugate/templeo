@@ -1,10 +1,19 @@
 # Notes
 
+- Version `3.0.1` adds a real Playwright Chromium/native-ESM release gate while keeping the existing public package entry unchanged for Node.js and browsers.
+- Install the Playwright Chromium headless shell and required Linux libraries explicitly with `npm run test:browser:install` before running browser-inclusive tests on a clean host. `npm test` does not install browsers or operating-system packages.
+- Shared HTTP/S template operations now use the standard Fetch API; Node.js 24 and modern browsers provide it natively.
+- `CachierFiles` generated renderer paths now preserve the source hierarchy under `outputPath`, and primary templates outside `partialsPath` no longer collapse to a bare `.mjs` / `.cjs` path.
+- Native IndexedDB persistence is corrected: opens retain the real `IDBDatabase`, stores are created from the upgrade database handle, single-record operations settle against the correct stores, cursor exhaustion is normal completion, asynchronous registration callbacks are awaited, and closed handles are not reused.
+- Direct development dependencies are pinned to Express `5.2.1`, JSDoc `4.0.5`, JSDOM `30.0.1`, Level `10.0.0`, Playwright `1.62.1`, and VitePress `1.6.4`.
+- Playwright is development-only and no production runtime dependency was added.
+- This archive omits `package-lock.json`; retain or regenerate the lock file with `npm install` before committing.
+- Pushing tag `v3.0.1` runs the release workflow, validates the package/tag version, and publishes `templeo@3.0.1` through npm Trusted Publisher/OIDC after all gates pass.
+
 - Version `3.0.0` changes the generated renderer module default from CommonJS to native ECMAScript modules. `useCommonJs` now defaults to `false`, generated ESM files use `.mjs`, and projects that require CommonJS should explicitly set `useCommonJs: true` to generate `.cjs` files.
 - This is the only intentional breaking change in v3. All Cachier coordination, lifecycle, cache-limit and observability APIs added in v2.3 remain available.
 - Function-style option lookup now resolves `useCommonJs` correctly, and both compile-time and render-time generated renderer paths use the selected `.mjs` / `.cjs` extension consistently.
 - `CachierFiles` render-time writers now place generated renderer files under `outputPath` (or the derived temporary output directory) rather than beside raw files under `partialsPath`.
-  Generated partial renderer paths preserve their source hierarchy relative to `relativeTo`; the primary renderer is written at the output root.
 - `CachierDB.compile()` now preserves the inherited `(name, template, params, extension)` signature, and memory-only `CachierDB.register()` calls no longer require a persistence-operation wrapper.
 - `unregister(name)` now resolves raw public names and removes matching parameterized cache variants. `getRegistered()` preserves copied `URLSearchParams` instances.
 - Existing query strings are now merged with supplied `URLSearchParams` for cache names and HTTP reads without generating malformed double-`?` URLs, dropping existing parameters, or duplicating supplied parameters.

@@ -18,5 +18,9 @@ jobs:
           if [ -f package-lock.json ]; then npm ci; else npm install; fi
       - name: Audit published runtime dependencies
         run: npm audit --omit=dev
+
+      - name: Install Playwright Chromium
+        run: npm run test:browser:install
+
       - name: Run tests
         run: npm test

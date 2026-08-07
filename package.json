@@ -1,8 +1,13 @@
 {
   "name": "templeo",
-  "version": "3.0.0",
+  "version": "3.0.1",
   "description": "Micro template engine with cache and debugging support",
   "main": "index.js",
+  "exports": {
+    ".": "./index.js",
+    "./lib/*": "./lib/*",
+    "./package.json": "./package.json"
+  },
   "directories": {
     "test": "test"
   },
@@ -15,7 +20,10 @@
     "docs:build": "npm run docs:api && vitepress build docs",
     "docs:preview": "vitepress preview docs",
     "audit:runtime": "npm audit --omit=dev",
-    "audit:development": "npm audit"
+    "audit:development": "npm audit",
+    "test:browser": "node --test --test-concurrency=1 --test-reporter=spec test/browser.js",
+    "test:browser:install": "playwright install --with-deps --only-shell chromium",
+    "release": "PACKAGE_VERSION=$(node -p \"require('./package.json').version\") && git add -A && git commit -m \"Release v${PACKAGE_VERSION}\" && git push origin master && git tag -a \"v${PACKAGE_VERSION}\" -m \"Release v${PACKAGE_VERSION}\" && git push origin \"v${PACKAGE_VERSION}\""
   },
   "repository": {
     "type": "git",
@@ -41,6 +49,7 @@
     "jsdoc": "4.0.5",
     "jsdom": "30.0.1",
     "level": "10.0.0",
+    "playwright": "1.62.1",
     "vitepress": "1.6.4"
   },
   "files": [

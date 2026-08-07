@@ -21,7 +21,8 @@ const args = [
   'test/regressions.js',
   'test/cache-v23.js',
   'test/v3-regressions.js',
-  'test/watchers.js'
+  'test/watchers.js',
+  'test/browser.js'
 ];
 
 const result = spawnSync(process.execPath, args, {

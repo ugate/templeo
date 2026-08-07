@@ -14,7 +14,6 @@ describe(plan, { concurrency: false }, () => {
   test(`${plan}: HTML - register`, { timeout: TEST_TKO }, Tester.htmlRegisterPartials);
   test(`${plan}: HTML - registerHelper`, { timeout: TEST_TKO }, Tester.htmlregisterHelper);
   test(`${plan}: Helper importModule - Node.js ESM`, { timeout: TEST_TKO }, Tester.nodeEsmImportModule);
-  test(`${plan}: Helper importModule - Native browser ESM`, { timeout: TEST_TKO }, Tester.browserEsmImportModule);
   test(`${plan}: HTML - Partials Fetch From HTTPS Server (compile-time)`, { timeout: TEST_TKO }, Tester.htmlPartialsFetchHttpsServerCompiletimeRead);
   test(`${plan}: HTML - Partials Fetch From HTTPS Server (compile-time ERROR missing "options.partialsURL")`, { timeout: TEST_TKO },
     expectFailure('ERR_INVALID_URL', Tester.htmlPartialsFetchHttpsServerCompiletimeReadNoPathError));
