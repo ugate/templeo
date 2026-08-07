@@ -20,6 +20,7 @@ const args = [
   'test/files.js',
   'test/regressions.js',
   'test/cache-v23.js',
+  'test/v3-regressions.js',
   'test/watchers.js'
 ];
 

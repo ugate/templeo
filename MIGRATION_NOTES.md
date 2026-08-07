@@ -1,5 +1,22 @@
 # Notes
 
+- Version `3.0.0` changes the generated renderer module default from CommonJS to native ECMAScript modules. `useCommonJs` now defaults to `false`, generated ESM files use `.mjs`, and projects that require CommonJS should explicitly set `useCommonJs: true` to generate `.cjs` files.
+- This is the only intentional breaking change in v3. All Cachier coordination, lifecycle, cache-limit and observability APIs added in v2.3 remain available.
+- Function-style option lookup now resolves `useCommonJs` correctly, and both compile-time and render-time generated renderer paths use the selected `.mjs` / `.cjs` extension consistently.
+- `CachierFiles` render-time writers now place generated renderer files under `outputPath` (or the derived temporary output directory) rather than beside raw files under `partialsPath`.
+  Generated partial renderer paths preserve their source hierarchy relative to `relativeTo`; the primary renderer is written at the output root.
+- `CachierDB.compile()` now preserves the inherited `(name, template, params, extension)` signature, and memory-only `CachierDB.register()` calls no longer require a persistence-operation wrapper.
+- `unregister(name)` now resolves raw public names and removes matching parameterized cache variants. `getRegistered()` preserves copied `URLSearchParams` instances.
+- Existing query strings are now merged with supplied `URLSearchParams` for cache names and HTTP reads without generating malformed double-`?` URLs, dropping existing parameters, or duplicating supplied parameters.
+- Render-time include extension detection ignores query/hash suffixes before deriving generated renderer paths.
+- `docs/.vitepress/cache/` and `docs/.vitepress/dist/` are now ignored by Git.
+- The test scope contains 74 native tests, including nine v3 regressions for the module-format default and the bug fixes above.
+- Direct development dependencies remain pinned to Express `5.2.1`, JSDoc `4.0.5`, JSDOM `30.0.1`, Level `10.0.0`, and VitePress `1.6.4`.
+- This archive omits `package-lock.json`; retain or regenerate the lock file with `npm install` before committing.
+- Pushing tag `v3.0.0` runs `.github/workflows/release.yml`, validates the package/tag version, and publishes `templeo@3.0.0` through npm Trusted Publisher/OIDC after all gates pass.
+
+## v2.3.0 reference
+
 - Version `2.3.0` adds backward-compatible Cachier coordination, lifecycle and observability improvements.
 - Cache names canonicalize `URLSearchParams` order, while concurrent reads, writes and compiles for the same key share one in-flight promise.
 - `maxCacheEntries`, `maxCacheBytes` and `cacheTTL` are optional and default to `0`, preserving unlimited non-expiring cache behavior.

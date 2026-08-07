@@ -4,6 +4,34 @@ All notable changes to Templeo are documented in this file.
 
 The historical entries below are consolidated from the repository commit history. Repeated dependency updates, documentation corrections, test maintenance, and closely related refactors are grouped into their corresponding release instead of being listed commit-by-commit.
 
+## [3.0.0] - 2026-08-06
+
+### Breaking
+
+- Generated renderer modules now default to native ECMAScript module semantics (`useCommonJs: false`) and `.mjs` output. Set `useCommonJs: true` to retain CommonJS semantics and `.cjs` output.
+
+### Changed
+
+- Render-time file-cache renderer writes now use the configured `outputPath` instead of writing generated JavaScript beside raw partial templates.
+- File-cache generated renderer paths preserve source hierarchy relative to `relativeTo`; the primary renderer remains at the output root, and temporary output directories are not duplicated into nested paths.
+- Render-time generated renderer extensions now consistently follow `useCommonJs` for memory, file and database cache operations.
+- Added VitePress `docs/.vitepress/cache/` and `docs/.vitepress/dist/` to `.gitignore`.
+
+### Fixed
+
+- Fixed function-style option lookup for `useCommonJs`, which could previously produce `.true` or no generated source extension instead of `.cjs` / `.mjs`.
+- Fixed `CachierDB.compile()` so `URLSearchParams` and explicit extensions are forwarded using the inherited `compile(name, template, params, extension)` signature.
+- Fixed `CachierDB.register()` when both persistence flags are false; memory-only registration no longer dereferences a missing database-storage wrapper.
+- Fixed `Engine.unregister()` / `Cachier.unregister()` so raw public names actually remove their resolved cache entries, including parameterized variants.
+- Fixed `getRegistered()` so returned `URLSearchParams` remain usable and are copied without mutating the cached instance.
+- Fixed cache naming and HTTP reads when a template name already contains a query string; existing and supplied search parameters are preserved, canonicalized and not duplicated.
+- Fixed render-time extension detection for parameterized include paths so query strings are not mistaken for part of the template extension.
+- Fixed render-time file path extraction when the primary template is outside `partialsPath`; generated renderer names no longer collapse to `.mjs` / `.cjs` and create a directory at that filename.
+
+### Tests
+
+- Added eleven v3 regression tests covering ESM-default/CommonJS opt-in naming, native import/require loading, query merging, raw-name unregister behavior, `URLSearchParams` copies, memory-only DB registration, DB compile argument forwarding, render-time primary-template path extraction, the legacy Files fixture path shape, and compile/render-time file output placement and extensions.
+
 ## [2.3.0] - 2026-08-06
 
 ### Added
@@ -193,6 +221,7 @@ The historical entries below are consolidated from the repository commit history
 - Converted compilation and inclusion processing to asynchronous operation.
 - Simplified the engine, cache, director, and testing APIs during the initial development cycle.
 
+[3.0.0]: https://github.com/ugate/templeo/compare/v2.3.0...v3.0.0
 [2.3.0]: https://github.com/ugate/templeo/compare/v2.2.2...v2.3.0
 [2.2.2]: https://github.com/ugate/templeo/compare/v2.2.1...v2.2.2
 [2.2.1]: https://github.com/ugate/templeo/compare/v2.2.0...v2.2.1

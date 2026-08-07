@@ -248,6 +248,8 @@ const cachier = new CachierFiles({
 const engine = Engine.create(cachier);
 ```
 
+Templeo 3 writes generated renderer modules as native ECMAScript modules (`.mjs`) by default. Set `useCommonJs: true` on the cache options to generate CommonJS (`.cjs`) modules instead. Both compile-time and render-time generated files are written under `outputPath` (or Templeo's derived temporary output directory), not beside raw files in `partialsPath`.
+
 __👁️ File/Directory Watchers:<sub id="watchers"></sub>__<br/>
 
 `CachierFiles` can use native Node.js [`fs.watch`](https://nodejs.org/api/fs.html#fswatchfilename-options-listener) to monitor `partialsPath`. Watchers are opt-in through `watchPaths: true` and require no additional dependency.

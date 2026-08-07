@@ -48,7 +48,9 @@ npm run audit:runtime
 npm run docs:dev -- --host 0.0.0.0
 ```
 
-The 65-test suite uses Node.js 24's native test runner, assertions, coverage, HTTPS, crypto, filesystem, and child-process APIs. The direct development dependencies are limited to Express integration, JSDOM validation, Level validation, JSDoc parsing, and VitePress documentation. API Markdown is rendered by the project-owned `docs/generate-api.mjs` script from JSDoc JSON doclets.
+The 74-test suite uses Node.js 24's native test runner, assertions, coverage, HTTPS, crypto, filesystem, and child-process APIs. The direct development dependencies are limited to Express integration, JSDOM validation, Level validation, JSDoc parsing, and VitePress documentation. API Markdown is rendered by the project-owned `docs/generate-api.mjs` script from JSDoc JSON doclets.
+
+Templeo 3 defaults generated renderer modules to native ECMAScript modules (`.mjs`). Set `useCommonJs: true` when CommonJS (`.cjs`) output is required.
 
 ## Local docs workflow
 

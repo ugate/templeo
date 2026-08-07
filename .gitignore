@@ -41,6 +41,8 @@ build/Release
 node_modules/
 jspm_packages/
 docs/api/
+docs/.vitepress/cache/
+docs/.vitepress/dist/
 
 # TypeScript v1 declaration files
 typings/
@@ -103,6 +105,3 @@ dist
 
 # TernJS port file
 .tern-port
-
-docs/.vitepress/cache/
-docs/.vitepress/dist/
